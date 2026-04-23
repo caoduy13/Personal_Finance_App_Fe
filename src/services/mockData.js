@@ -36,6 +36,6 @@ export const mockDashboard = {
 }
 
 export const mockGoals = [
-  { id: 'g1', name: 'Du phong 6 thang', current: 22000000, target: 45000000 },
-  { id: 'g2', name: 'Quy du lich Nhat Ban', current: 12500000, target: 30000000 },
+  { id: 'g1', name: 'Dự phòng 6 tháng', current: 22000000, target: 45000000 },
+  { id: 'g2', name: 'Quỹ du lịch Nhật Bản', current: 12500000, target: 30000000 },
 ]
