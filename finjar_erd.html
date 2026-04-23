@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<title>FinJar — Database Schema</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;font-size:11.5px}
+.canvas{position:relative;width:2600px;min-height:1800px;padding:20px}
+svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.tbl{position:absolute;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.13);z-index:1;min-width:200px}
+.hd{padding:7px 11px;border-radius:6px 6px 0 0;font-weight:700;font-size:12px;letter-spacing:.2px;color:#fff}
+.bd{border:1px solid #dde3ed;border-top:none;border-radius:0 0 6px 6px;overflow:hidden;background:#fff}
+.f{display:flex;justify-content:space-between;align-items:center;padding:4px 11px;border-bottom:1px solid #f0f2f7;gap:12px}
+.f:last-child{border-bottom:none}
+.f:hover{background:#f7f9ff}
+.fn{color:#1a202c;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ft{color:#718096;font-size:10.5px;white-space:nowrap}
+.pk{background:#fff3e0;color:#d97706;font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700}
+.fk{background:#dbeafe;color:#1d4ed8;font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700}
+.sec{position:absolute;font-size:10.5px;font-weight:700;color:#64748b;letter-spacing:.8px;text-transform:uppercase;background:#eef2f7;padding:2px 8px;border-radius:4px;border:1.5px dashed #cbd5e0}
+</style>
+</head>
+<body>
+<div class="canvas" id="C">
+<svg class="lines" id="SVG"></svg>
+
+<!-- SECTION LABELS -->
+<div class="sec" style="left:20px;top:16px">Identity &amp; Access</div>
+<div class="sec" style="left:420px;top:16px">Onboarding</div>
+<div class="sec" style="left:700px;top:16px">Financial Core</div>
+<div class="sec" style="left:1020px;top:16px">Transactions</div>
+<div class="sec" style="left:1380px;top:16px">Limits &amp; Goals</div>
+<div class="sec" style="left:1760px;top:16px">Notifications &amp; Admin</div>
+
+<!-- ===== IDENTITY ===== -->
+<div class="tbl" id="roles" style="left:20px;top:50px;min-width:180px">
+  <div class="hd" style="background:#374151">roles</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">smallint</span></div>
+    <div class="f"><span class="fn">code</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">name</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">description</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="accounts" style="left:20px;top:200px">
+  <div class="hd" style="background:#1e40af">accounts</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> role_id</span><span class="ft">smallint</span></div>
+    <div class="f"><span class="fn">username</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">email</span><span class="ft">varchar(255)</span></div>
+    <div class="f"><span class="fn">password_hash</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">full_name</span><span class="ft">varchar(150)</span></div>
+    <div class="f"><span class="fn">phone</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">avatar_url</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">preferred_currency</span><span class="ft">char(3)</span></div>
+    <div class="f"><span class="fn">is_onboarding_completed</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">last_login_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="refresh_token_sessions" style="left:20px;top:670px">
+  <div class="hd" style="background:#374151">refresh_token_sessions</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">token_hash</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">expires_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">revoked_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">created_by_ip</span><span class="ft">inet</span></div>
+    <div class="f"><span class="fn">user_agent</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="audit_logs" style="left:20px;top:960px">
+  <div class="hd" style="background:#374151">audit_logs</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> actor_account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">action_type</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">entity_type</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">entity_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">description</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">metadata_json</span><span class="ft">jsonb</span></div>
+    <div class="f"><span class="fn">ip_address</span><span class="ft">inet</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<!-- ===== ONBOARDING ===== -->
+<div class="tbl" id="onboarding_profiles" style="left:420px;top:50px">
+  <div class="hd" style="background:#065f46">onboarding_profiles</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">monthly_income</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">occupation_type</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">financial_goal_types</span><span class="ft">text[]</span></div>
+    <div class="f"><span class="fn">budget_method_preference</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">recommended_method</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">completed_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="jar_setups" style="left:420px;top:370px">
+  <div class="hd" style="background:#065f46">jar_setups</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">method_type</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="ai_settings" style="left:420px;top:570px">
+  <div class="hd" style="background:#374151">ai_settings</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> updated_by_admin_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">model_name</span><span class="ft">varchar(100)</span></div>
+    <div class="f"><span class="fn">system_prompt</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">temperature</span><span class="ft">numeric(3,2)</span></div>
+    <div class="f"><span class="fn">max_tokens</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">api_key_encrypted</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">is_enabled</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<!-- ===== FINANCIAL CORE ===== -->
+<div class="tbl" id="financial_accounts" style="left:700px;top:50px">
+  <div class="hd" style="background:#1d4ed8">financial_accounts</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">name</span><span class="ft">varchar(100)</span></div>
+    <div class="f"><span class="fn">account_type</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">connection_mode</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">provider_code</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">provider_name</span><span class="ft">varchar(100)</span></div>
+    <div class="f"><span class="fn">external_account_id</span><span class="ft">varchar(150)</span></div>
+    <div class="f"><span class="fn">masked_account_number</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">currency</span><span class="ft">char(3)</span></div>
+    <div class="f"><span class="fn">current_balance</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">available_balance</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">sync_status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">last_synced_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">is_default</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">is_active</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="categories" style="left:700px;top:630px">
+  <div class="hd" style="background:#6d28d9">categories</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> owner_user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">name</span><span class="ft">varchar(100)</span></div>
+    <div class="f"><span class="fn">icon</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">color</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">is_default</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">display_order</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">is_active</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">deleted_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="jars" style="left:700px;top:960px">
+  <div class="hd" style="background:#0f766e">jars</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> jar_setup_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">name</span><span class="ft">varchar(100)</span></div>
+    <div class="f"><span class="fn">percentage</span><span class="ft">numeric(5,2)</span></div>
+    <div class="f"><span class="fn">balance</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">currency</span><span class="ft">char(3)</span></div>
+    <div class="f"><span class="fn">color</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">icon</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">is_default</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<!-- ===== TRANSACTIONS ===== -->
+<div class="tbl" id="transactions" style="left:1020px;top:50px">
+  <div class="hd" style="background:#b45309">transactions</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> financial_account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> category_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> import_job_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">type</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">note</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">raw_description</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">transaction_date</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">source_type</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">external_transaction_id</span><span class="ft">varchar(150)</span></div>
+    <div class="f"><span class="fn">raw_payload_json</span><span class="ft">jsonb</span></div>
+    <div class="f"><span class="fn">is_deleted</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="jar_allocations" style="left:1020px;top:680px">
+  <div class="hd" style="background:#0f766e">jar_allocations</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> source_financial_account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">total_amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">note</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="jar_allocation_items" style="left:1020px;top:900px">
+  <div class="hd" style="background:#0f766e">jar_allocation_items</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> allocation_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">balance_after_allocation</span><span class="ft">numeric(18,2)</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="jar_transfers" style="left:1020px;top:1090px">
+  <div class="hd" style="background:#0f766e">jar_transfers</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> from_jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> to_jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">note</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<!-- ===== LIMITS & GOALS ===== -->
+<div class="tbl" id="import_jobs" style="left:1380px;top:50px">
+  <div class="hd" style="background:#b45309">import_jobs</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> financial_account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">file_name</span><span class="ft">varchar(255)</span></div>
+    <div class="f"><span class="fn">bank_code</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">progress</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">parsed_count</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">failed_count</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">error_message</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">uploaded_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">updated_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="import_transaction_drafts" style="left:1380px;top:400px">
+  <div class="hd" style="background:#b45309">import_transaction_drafts</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> import_job_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> suggested_category_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> suggested_jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">row_index</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">transaction_date</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">type</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">raw_description</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">is_valid</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">validation_error</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="spending_limits" style="left:1380px;top:790px">
+  <div class="hd" style="background:#be185d">spending_limits</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> category_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">limit_amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">period</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">alert_at_percentage</span><span class="ft">numeric(5,2)</span></div>
+    <div class="f"><span class="fn">is_active</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="goals" style="left:1380px;top:1070px">
+  <div class="hd" style="background:#be185d">goals</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> linked_jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">title</span><span class="ft">varchar(150)</span></div>
+    <div class="f"><span class="fn">target_amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">saved_amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">due_date</span><span class="ft">date</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">note</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<!-- ===== NOTIFICATIONS & ADMIN ===== -->
+<div class="tbl" id="goal_contributions" style="left:1760px;top:50px">
+  <div class="hd" style="background:#be185d">goal_contributions</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> goal_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> source_jar_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> source_financial_account_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">note</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="reminders" style="left:1760px;top:330px">
+  <div class="hd" style="background:#6d28d9">reminders</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> category_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">title</span><span class="ft">varchar(150)</span></div>
+    <div class="f"><span class="fn">amount</span><span class="ft">numeric(18,2)</span></div>
+    <div class="f"><span class="fn">frequency</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">day_of_month</span><span class="ft">smallint</span></div>
+    <div class="f"><span class="fn">next_due_date</span><span class="ft">date</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">notify_days_before</span><span class="ft">smallint</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="broadcasts" style="left:1760px;top:650px">
+  <div class="hd" style="background:#374151">broadcasts</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> created_by_admin_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">title</span><span class="ft">varchar(200)</span></div>
+    <div class="f"><span class="fn">body</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">target_audience</span><span class="ft">varchar(50)</span></div>
+    <div class="f"><span class="fn">status</span><span class="ft">varchar(20)</span></div>
+    <div class="f"><span class="fn">scheduled_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">sent_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">target_count</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">delivered_count</span><span class="ft">int</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+<div class="tbl" id="notifications" style="left:1760px;top:980px">
+  <div class="hd" style="background:#374151">notifications</div>
+  <div class="bd">
+    <div class="f"><span class="fn"><span class="pk">PK</span> id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> user_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn"><span class="fk">FK</span> broadcast_id</span><span class="ft">uuid</span></div>
+    <div class="f"><span class="fn">type</span><span class="ft">varchar(30)</span></div>
+    <div class="f"><span class="fn">title</span><span class="ft">varchar(200)</span></div>
+    <div class="f"><span class="fn">body</span><span class="ft">text</span></div>
+    <div class="f"><span class="fn">is_read</span><span class="ft">boolean</span></div>
+    <div class="f"><span class="fn">read_at</span><span class="ft">timestamptz</span></div>
+    <div class="f"><span class="fn">metadata_json</span><span class="ft">jsonb</span></div>
+    <div class="f"><span class="fn">created_at</span><span class="ft">timestamptz</span></div>
+  </div>
+</div>
+
+</div>
+<script>
+function mid(id){
+  const el=document.getElementById(id);
+  const c=document.getElementById('C');
+  const er=el.getBoundingClientRect();
+  const cr=c.getBoundingClientRect();
+  return{
+    x:er.left-cr.left,y:er.top-cr.top,
+    w:er.width,h:er.height,
+    r(){return{x:this.x+this.w,y:this.y+this.h/2}},
+    l(){return{x:this.x,y:this.y+this.h/2}},
+    b(){return{x:this.x+this.w/2,y:this.y+this.h}},
+    t(){return{x:this.x+this.w/2,y:this.y}}
+  };
+}
+function curve(svg,p1,p2,color='#94a3b8'){
+  const mx=(p1.x+p2.x)/2;
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',`M${p1.x},${p1.y} C${mx},${p1.y} ${mx},${p2.y} ${p2.x},${p2.y}`);
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke',color);
+  path.setAttribute('stroke-width','1.3');
+  path.setAttribute('stroke-dasharray','5 3');
+  svg.appendChild(path);
+  const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('cx',p2.x);dot.setAttribute('cy',p2.y);dot.setAttribute('r','3.5');
+  dot.setAttribute('fill',color);
+  svg.appendChild(dot);
+}
+window.addEventListener('load',()=>{
+  const svg=document.getElementById('SVG');
+  const rels=[
+    ['roles','r','accounts','l','#6b7280'],
+    ['accounts','r','refresh_token_sessions','l','#6b7280'],
+    ['accounts','r','audit_logs','l','#6b7280'],
+    ['accounts','r','onboarding_profiles','l','#059669'],
+    ['accounts','r','jar_setups','l','#059669'],
+    ['accounts','r','ai_settings','l','#6b7280'],
+    ['accounts','r','financial_accounts','l','#2563eb'],
+    ['accounts','r','categories','l','#7c3aed'],
+    ['accounts','r','jars','l','#0d9488'],
+    ['jar_setups','r','jars','l','#0d9488'],
+    ['financial_accounts','r','transactions','l','#d97706'],
+    ['jars','r','transactions','l','#d97706'],
+    ['categories','r','transactions','l','#d97706'],
+    ['financial_accounts','r','jar_allocations','l','#0d9488'],
+    ['jar_allocations','b','jar_allocation_items','t','#0d9488'],
+    ['jars','r','jar_allocation_items','l','#0d9488'],
+    ['jars','b','jar_transfers','t','#0d9488'],
+    ['financial_accounts','r','import_jobs','l','#d97706'],
+    ['import_jobs','b','import_transaction_drafts','t','#d97706'],
+    ['import_jobs','r','transactions','l','#d97706'],
+    ['categories','r','import_transaction_drafts','l','#d97706'],
+    ['jars','r','spending_limits','l','#9d174d'],
+    ['categories','r','spending_limits','l','#9d174d'],
+    ['jars','r','goals','l','#9d174d'],
+    ['goals','r','goal_contributions','l','#9d174d'],
+    ['jars','r','goal_contributions','l','#9d174d'],
+    ['financial_accounts','r','goal_contributions','l','#9d174d'],
+    ['categories','r','reminders','l','#7c3aed'],
+    ['broadcasts','l','notifications','r','#374151'],
+    ['accounts','r','broadcasts','l','#374151'],
+    ['accounts','r','notifications','l','#374151'],
+  ];
+  rels.forEach(([a,ea,b,eb,color])=>{
+    try{
+      const A=mid(a),B=mid(b);
+      const p1=A[ea](),p2=B[eb]();
+      curve(svg,p1,p2,color||'#94a3b8');
+    }catch(e){}
+  });
+});
+</script>
+</body>
+</html>

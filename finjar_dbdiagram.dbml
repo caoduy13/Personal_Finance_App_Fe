@@ -1,0 +1,319 @@
+// FinJar — Database Schema (DBML for dbdiagram.io)
+// Cách dùng: vào dbdiagram.io → Import → Paste nội dung này vào
+
+//// ==================== MIGRATION 1 ====================
+
+Table roles {
+  id          smallint    [pk, increment]
+  code        varchar(30) [unique, not null]
+  name        varchar(50) [not null]
+  description text
+  created_at  timestamptz [not null, default: `now()`]
+}
+
+Table accounts {
+  id                      uuid         [pk, default: `gen_random_uuid()`]
+  role_id                 smallint     [ref: > roles.id, not null]
+  username                varchar(50)  [unique, not null]
+  email                   varchar(255) [unique, not null]
+  password_hash           text         [not null]
+  full_name               varchar(150) [not null]
+  phone                   varchar(20)
+  avatar_url              text
+  status                  varchar(20)  [not null, default: 'Active', note: 'Active | Banned']
+  status_reason           text
+  preferred_currency      char(3)      [not null, default: 'VND']
+  is_onboarding_completed boolean      [not null, default: false]
+  last_login_at           timestamptz
+  created_at              timestamptz  [not null, default: `now()`]
+  updated_at              timestamptz  [not null, default: `now()`]
+}
+
+Table audit_logs {
+  id               uuid        [pk, default: `gen_random_uuid()`]
+  actor_account_id uuid        [ref: > accounts.id, not null]
+  action_type      varchar(50) [not null]
+  entity_type      varchar(50) [not null]
+  entity_id        uuid
+  description      text        [not null]
+  metadata_json    json
+  ip_address       varchar(45)
+  created_at       timestamptz [not null, default: `now()`]
+}
+
+//// ==================== MIGRATION 2 ====================
+
+Table onboarding_profiles {
+  id                       uuid         [pk, default: `gen_random_uuid()`]
+  user_id                  uuid         [ref: - accounts.id, unique, not null]
+  monthly_income           numeric(18,2)
+  occupation_type          varchar(50)
+  financial_goal_types     text
+  budget_method_preference varchar(30)  [not null, default: 'Undecided', note: 'SixJars | Rule503020 | Custom | Undecided']
+  age_range                varchar(30)
+  spending_challenges      text
+  recommended_method       varchar(30)
+  completed_at             timestamptz  [not null]
+  created_at               timestamptz  [not null, default: `now()`]
+  updated_at               timestamptz  [not null, default: `now()`]
+}
+
+Table jar_setups {
+  id          uuid        [pk, default: `gen_random_uuid()`]
+  user_id     uuid        [ref: - accounts.id, unique, not null]
+  method_type varchar(30) [not null, note: 'SixJars | Rule503020 | Custom | Undecided']
+  created_at  timestamptz [not null, default: `now()`]
+  updated_at  timestamptz [not null, default: `now()`]
+}
+
+Table financial_accounts {
+  id                      uuid          [pk, default: `gen_random_uuid()`]
+  user_id                 uuid          [ref: > accounts.id, not null]
+  name                    varchar(100)  [not null]
+  account_type            varchar(20)   [not null, note: 'Cash | Bank | EWallet | Other']
+  connection_mode         varchar(20)   [not null, note: 'Manual | LinkedApi']
+  provider_code           varchar(50)
+  provider_name           varchar(100)
+  external_account_id     varchar(150)
+  external_account_ref    varchar(150)
+  masked_account_number   varchar(50)
+  account_holder_name     varchar(150)
+  currency                char(3)       [not null, default: 'VND']
+  current_balance         numeric(18,2) [not null, default: 0]
+  available_balance       numeric(18,2)
+  balance_as_of           timestamptz
+  sync_status             varchar(20)   [not null, default: 'NeverSynced', note: 'NeverSynced | Synced | Syncing | Error | Disconnected']
+  last_synced_at          timestamptz
+  last_sync_error         text
+  access_token_ref        text
+  token_expires_at        timestamptz
+  consent_expires_at      timestamptz
+  last_sync_cursor        text
+  webhook_subscription_id varchar(150)
+  is_default              boolean       [not null, default: false]
+  is_active               boolean       [not null, default: true]
+  created_at              timestamptz   [not null, default: `now()`]
+  updated_at              timestamptz   [not null, default: `now()`]
+}
+
+Table categories {
+  id            uuid         [pk, default: `gen_random_uuid()`]
+  name          varchar(100) [not null]
+  icon          varchar(50)
+  color         varchar(20)
+  is_default    boolean      [not null, default: false]
+  owner_user_id uuid         [ref: > accounts.id]
+  display_order int          [not null, default: 0]
+  is_active     boolean      [not null, default: true]
+  deleted_at    timestamptz
+  created_at    timestamptz  [not null, default: `now()`]
+  updated_at    timestamptz  [not null, default: `now()`]
+}
+
+Table jars {
+  id           uuid          [pk, default: `gen_random_uuid()`]
+  user_id      uuid          [ref: > accounts.id, not null]
+  jar_setup_id uuid          [ref: > jar_setups.id]
+  name         varchar(100)  [not null]
+  percentage   numeric(5,2)
+  balance      numeric(18,2) [not null, default: 0]
+  currency     char(3)       [not null, default: 'VND']
+  color        varchar(20)
+  icon         varchar(50)
+  is_default   boolean       [not null, default: false]
+  status       varchar(20)   [not null, default: 'Active', note: 'Active | Paused | Archived']
+  created_at   timestamptz   [not null, default: `now()`]
+  updated_at   timestamptz   [not null, default: `now()`]
+}
+
+//// ==================== MIGRATION 3 ====================
+
+Table jar_allocations {
+  id                          uuid          [pk, default: `gen_random_uuid()`]
+  user_id                     uuid          [ref: > accounts.id, not null]
+  source_financial_account_id uuid          [ref: > financial_accounts.id]
+  total_amount                numeric(18,2) [not null]
+  note                        text
+  created_at                  timestamptz   [not null, default: `now()`]
+}
+
+Table jar_allocation_items {
+  id                       uuid          [pk, default: `gen_random_uuid()`]
+  allocation_id            uuid          [ref: > jar_allocations.id, not null]
+  jar_id                   uuid          [ref: > jars.id, not null]
+  amount                   numeric(18,2) [not null]
+  balance_after_allocation numeric(18,2) [not null]
+}
+
+Table jar_transfers {
+  id          uuid          [pk, default: `gen_random_uuid()`]
+  user_id     uuid          [ref: > accounts.id, not null]
+  from_jar_id uuid          [ref: > jars.id, not null]
+  to_jar_id   uuid          [ref: > jars.id, not null]
+  amount      numeric(18,2) [not null, note: 'amount > 0']
+  note        text
+  created_at  timestamptz   [not null, default: `now()`]
+}
+
+Table import_jobs {
+  id                    uuid         [pk, default: `gen_random_uuid()`]
+  user_id               uuid         [ref: > accounts.id, not null]
+  financial_account_id  uuid         [ref: > financial_accounts.id, not null]
+  file_name             varchar(255) [not null]
+  original_content_type varchar(100)
+  stored_file_path      text         [not null]
+  bank_code             varchar(50)
+  status                varchar(30)  [not null, default: 'Pending', note: 'Pending | Processing | AwaitingReview | Completed | Failed']
+  progress              int          [not null, default: 0]
+  estimated_rows        int
+  parsed_count          int          [not null, default: 0]
+  failed_count          int          [not null, default: 0]
+  error_message         text
+  uploaded_at           timestamptz  [not null, default: `now()`]
+  updated_at            timestamptz  [not null, default: `now()`]
+}
+
+Table transactions {
+  id                      uuid          [pk, default: `gen_random_uuid()`]
+  user_id                 uuid          [ref: > accounts.id, not null]
+  financial_account_id    uuid          [ref: > financial_accounts.id, not null]
+  jar_id                  uuid          [ref: > jars.id]
+  category_id             uuid          [ref: > categories.id]
+  import_job_id           uuid          [ref: > import_jobs.id]
+  type                    varchar(20)   [not null, note: 'Income | Expense']
+  amount                  numeric(18,2) [not null, note: 'amount > 0']
+  note                    text
+  raw_description         text
+  transaction_date        timestamptz   [not null]
+  posted_at               timestamptz
+  source_type             varchar(20)   [not null, default: 'Manual', note: 'Manual | Imported | OCR | Synced | System']
+  external_transaction_id varchar(150)
+  raw_payload_json        json
+  is_deleted              boolean       [not null, default: false]
+  deleted_at              timestamptz
+  created_at              timestamptz   [not null, default: `now()`]
+  updated_at              timestamptz   [not null, default: `now()`]
+}
+
+//// ==================== MIGRATION 4 ====================
+
+Table spending_limits {
+  id                  uuid          [pk, default: `gen_random_uuid()`]
+  user_id             uuid          [ref: > accounts.id, not null]
+  jar_id              uuid          [ref: > jars.id]
+  category_id         uuid          [ref: > categories.id]
+  limit_amount        numeric(18,2) [not null]
+  period              varchar(20)   [not null, note: 'Daily | Monthly']
+  alert_at_percentage numeric(5,2)  [not null]
+  is_active           boolean       [not null, default: true]
+  created_at          timestamptz   [not null, default: `now()`]
+  updated_at          timestamptz   [not null, default: `now()`]
+}
+
+Table goals {
+  id            uuid          [pk, default: `gen_random_uuid()`]
+  user_id       uuid          [ref: > accounts.id, not null]
+  title         varchar(150)  [not null]
+  target_amount numeric(18,2) [not null]
+  saved_amount  numeric(18,2) [not null, default: 0]
+  due_date      date          [not null]
+  status        varchar(20)   [not null, default: 'Active', note: 'Active | Completed | Cancelled']
+  linked_jar_id uuid          [ref: > jars.id]
+  note          text
+  created_at    timestamptz   [not null, default: `now()`]
+  updated_at    timestamptz   [not null, default: `now()`]
+}
+
+Table goal_contributions {
+  id                          uuid          [pk, default: `gen_random_uuid()`]
+  goal_id                     uuid          [ref: > goals.id, not null]
+  user_id                     uuid          [ref: > accounts.id, not null]
+  source_jar_id               uuid          [ref: > jars.id]
+  source_financial_account_id uuid          [ref: > financial_accounts.id]
+  amount                      numeric(18,2) [not null, note: 'amount > 0']
+  note                        text
+  created_at                  timestamptz   [not null, default: `now()`]
+}
+
+Table reminders {
+  id                 uuid          [pk, default: `gen_random_uuid()`]
+  user_id            uuid          [ref: > accounts.id, not null]
+  title              varchar(150)  [not null]
+  amount             numeric(18,2)
+  frequency          varchar(20)   [not null, note: 'Daily | Weekly | Monthly | Quarterly | Yearly']
+  day_of_month       smallint
+  start_date         date          [not null]
+  next_due_date      date          [not null]
+  category_id        uuid          [ref: > categories.id]
+  note               text
+  status             varchar(20)   [not null, default: 'Active', note: 'Active | Paused | Completed | Cancelled']
+  notify_days_before smallint      [not null, default: 1]
+  created_at         timestamptz   [not null, default: `now()`]
+  updated_at         timestamptz   [not null, default: `now()`]
+}
+
+Table broadcasts {
+  id                  uuid         [pk, default: `gen_random_uuid()`]
+  created_by_admin_id uuid         [ref: > accounts.id, not null]
+  title               varchar(200) [not null]
+  body                text         [not null]
+  target_audience     varchar(50)  [not null, default: 'All']
+  status              varchar(20)  [not null, default: 'Queued', note: 'Queued | Sent | Failed | Cancelled']
+  scheduled_at        timestamptz
+  sent_at             timestamptz
+  target_count        int          [not null, default: 0]
+  delivered_count     int          [not null, default: 0]
+  created_at          timestamptz  [not null, default: `now()`]
+  updated_at          timestamptz  [not null, default: `now()`]
+}
+
+Table notifications {
+  id            uuid         [pk, default: `gen_random_uuid()`]
+  user_id       uuid         [ref: > accounts.id, not null]
+  type          varchar(30)  [not null, note: 'SpendingAlert | GoalUpdate | Reminder | System | Broadcast']
+  title         varchar(200) [not null]
+  body          text         [not null]
+  is_read       boolean      [not null, default: false]
+  read_at       timestamptz
+  broadcast_id  uuid         [ref: > broadcasts.id]
+  metadata_json json
+  created_at    timestamptz  [not null, default: `now()`]
+}
+
+//// ==================== MIGRATION 5 ====================
+
+Table import_transaction_drafts {
+  id                    uuid          [pk, default: `gen_random_uuid()`]
+  import_job_id         uuid          [ref: > import_jobs.id, not null]
+  row_index             int           [not null]
+  transaction_date      timestamptz
+  amount                numeric(18,2)
+  type                  varchar(20)   [note: 'Income | Expense']
+  raw_description       text
+  suggested_note        text
+  suggested_category_id uuid          [ref: > categories.id]
+  suggested_jar_id      uuid          [ref: > jars.id]
+  is_valid              boolean       [not null, default: true]
+  validation_error      text
+  normalized_payload_json json
+  created_at            timestamptz   [not null, default: `now()`]
+  updated_at            timestamptz   [not null, default: `now()`]
+
+  indexes {
+    (import_job_id, row_index) [unique]
+  }
+}
+
+//// ==================== MIGRATION 6 ====================
+
+Table ai_settings {
+  id                  uuid         [pk, default: `gen_random_uuid()`]
+  updated_by_admin_id uuid         [ref: > accounts.id]
+  model_name          varchar(100) [not null]
+  system_prompt       text         [not null]
+  temperature         numeric(3,2) [not null, default: 0.7]
+  max_tokens          int          [not null, default: 1000]
+  api_key_encrypted   text
+  is_enabled          boolean      [not null, default: true]
+  updated_at          timestamptz  [not null, default: `now()`]
+}
