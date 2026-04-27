@@ -21,6 +21,7 @@ npm run preview
 Project dang duoc chuan hoa theo huong feature-based architecture.
 
 - Chi tiet structure: `docs/FE_STRUCTURE.md`
+- Quy trinh BE ho tro FE khi lech field: `docs/HELP_FE_TEMPLATE.md`
 - Hien tai code van chay voi structure cu, va da co san scaffold moi:
   - `src/app`
   - `src/features`
