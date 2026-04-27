@@ -1,13 +1,13 @@
 // Login: mascot, validation messages, Quên mật khẩu link, and onboarding-aware redirect.
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import LoginMascot from '../../components/auth/LoginMascot'
-import Button from '../../components/ui/Button'
-import Input from '../../components/ui/Input'
-import { getLoginErrorMessage } from '../../constants/authMessages'
-import { ROUTES } from '../../constants/routes'
-import { LOGIN_UI } from '../../constants/registerForm'
-import { useAuth } from '../../hooks/useAuth'
+import LoginMascot from '../components/LoginMascot'
+import Button from '../../../components/ui/Button'
+import Input from '../../../components/ui/Input'
+import { getLoginErrorMessage } from '../constants/authMessages'
+import { ROUTES } from '../../../constants/routes'
+import { LOGIN_UI } from '../../../constants/registerForm'
+import { useAuth } from '../hooks/useAuth'
 
 const errStyle = { color: '#b91c1c', fontSize: 13, margin: '0 0 4px' }
 const pageStyle = {

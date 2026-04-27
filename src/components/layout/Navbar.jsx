@@ -1,5 +1,5 @@
 // Top navbar showing current user information.
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../features/auth'
 import Button from '../ui/Button'
 
 function Navbar() {

@@ -2,10 +2,10 @@
  * Authentication: login, register, and profile update; mock branches use demoUsers rules.
  */
 import { AUTH_ERROR_CODES } from '../constants/authMessages'
-import { DEMO_LOGIN_PASSWORD, MOCK_EMAIL_ACCOUNT_LOCKED } from '../constants/demoUsers'
-import { API_ENDPOINTS } from '../constants/apiEndpoints'
-import api, { USE_MOCK, withMock } from './api'
-import { mockUser } from './mockData'
+import { DEMO_LOGIN_PASSWORD, MOCK_EMAIL_ACCOUNT_LOCKED } from '../../../constants/demoUsers'
+import { API_ENDPOINTS } from '../../../constants/apiEndpoints'
+import api, { USE_MOCK, withMock } from '../../../services/api'
+import { mockUser } from '../../../services/mockData'
 
 const rejectLogin = (code) => {
   const err = new Error(code)

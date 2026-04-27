@@ -18,9 +18,8 @@ import {
   getBudgetingMethodLabel,
   PROFILE_UI,
 } from '../../constants/profile'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, authService } from '../../features/auth'
 import { financialAccountService } from '../../services/financialAccountService'
-import { authService } from '../../services/authService'
 import { formatVnd } from '../../utils/formatVnd'
 
 const card = {

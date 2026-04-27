@@ -1,0 +1,68 @@
+/**
+ * Mascot: 3 anh — hình 1 bình thường, hình 2 nhập pass + show, hình 3 nhập pass ẩn.
+ * Class: .eyes-open | .eyes-closed | .eyes-winking
+ */
+
+.mascot-container {
+  --mascot-fade-ms: 480ms;
+  --mascot-hover-ms: 420ms;
+  /* Deceleration curve — mượt hơn linear / ease mặc định */
+  --mascot-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --mascot-ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mascot-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.mascot-photo-track {
+  width: 100%;
+  height: 100%;
+}
+
+.mascot-photo-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+
+.mascot-photo-stack .mascot-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0;
+  transform: scale(1) translateZ(0);
+  backface-visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--mascot-fade-ms) var(--mascot-ease-out),
+    transform var(--mascot-hover-ms) var(--mascot-ease-soft);
+}
+
+.mascot-photo-stack .mascot-photo.is-active {
+  opacity: 1;
+}
+
+.mascot.happy .mascot-photo-stack .mascot-photo.is-active {
+  transform: scale(1.05) translateZ(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-container {
+    --mascot-fade-ms: 1ms;
+    --mascot-hover-ms: 1ms;
+  }
+}

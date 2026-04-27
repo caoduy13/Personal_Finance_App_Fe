@@ -1,7 +1,7 @@
 // Guard for admin-only routes.
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from '../constants/routes'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../features/auth'
 
 function AdminRoute() {
   const { isAuthenticated, user } = useAuth()

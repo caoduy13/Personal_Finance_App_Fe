@@ -15,7 +15,7 @@ import {
   ONBOARDING_UI,
   SPENDING_CHALLENGE_OPTIONS,
 } from '../../constants/onboarding'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../features/auth'
 import { onboardingService } from '../../services/onboardingService'
 import { formatVnd } from '../../utils/formatVnd'
 

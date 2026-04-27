@@ -1,12 +1,12 @@
 // Register: validation (email, password, confirm) and always redirect to onboarding on success.
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import Button from '../../components/ui/Button'
-import Input from '../../components/ui/Input'
-import { REGISTER_UI } from '../../constants/registerForm'
-import { ROUTES } from '../../constants/routes'
-import { EMAIL_PATTERN, MIN_PASSWORD_LENGTH } from '../../constants/validation'
-import { useAuth } from '../../hooks/useAuth'
+import Button from '../../../components/ui/Button'
+import Input from '../../../components/ui/Input'
+import { REGISTER_UI } from '../../../constants/registerForm'
+import { ROUTES } from '../../../constants/routes'
+import { EMAIL_PATTERN, MIN_PASSWORD_LENGTH } from '../../../constants/validation'
+import { useAuth } from '../hooks/useAuth'
 
 const errStyle = { color: '#b91c1c', fontSize: 12, margin: '4px 0 0' }
 const pageStyle = {

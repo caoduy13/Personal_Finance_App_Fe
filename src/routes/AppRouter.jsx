@@ -2,14 +2,14 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ROUTES } from '../constants/routes'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../features/auth'
 import AdminRoute from './AdminRoute'
 import PrivateRoute from './PrivateRoute'
 
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'))
 const UserManagement = lazy(() => import('../pages/admin/UserManagement'))
-const Login = lazy(() => import('../pages/auth/Login'))
-const Register = lazy(() => import('../pages/auth/Register'))
+const Login = lazy(() => import('../features/auth/pages/Login'))
+const Register = lazy(() => import('../features/auth/pages/Register'))
 const Budget = lazy(() => import('../pages/budget/Budget'))
 const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'))
 const Goals = lazy(() => import('../pages/goals/Goals'))
