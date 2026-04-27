@@ -4,6 +4,7 @@ import { ROUTES } from '../../constants/routes'
 
 const navItems = [
   { label: 'Dashboard', to: ROUTES.DASHBOARD, icon: DashboardIcon },
+  { label: 'Hồ sơ', to: ROUTES.PROFILE, icon: ProfileIcon },
   { label: 'Jars', to: ROUTES.JARS, icon: JarIcon },
   { label: 'Transactions', to: ROUTES.TRANSACTIONS, icon: TransactionIcon },
   { label: 'Budget', to: ROUTES.BUDGET, icon: BudgetIcon },
@@ -126,6 +127,17 @@ function AdminIcon() {
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="8" r="3" />
         <path d="M5.5 19.5a6.5 6.5 0 0 1 13 0" />
+      </svg>
+    </IconFrame>
+  )
+}
+
+function ProfileIcon() {
+  return (
+    <IconFrame>
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M6 18a6 6 0 0 1 12 0" />
+        <circle cx="12" cy="9" r="3" />
       </svg>
     </IconFrame>
   )

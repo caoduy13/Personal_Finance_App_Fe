@@ -1,9 +1,15 @@
 // Realistic mock dataset for FinJar demo mode.
+import { BUDGET_METHOD } from '../constants/onboarding'
+
 export const mockUser = {
   id: 'u1',
   name: 'Nguyen Minh Anh',
   email: 'anh@finjar.app',
-  role: 'ADMIN',
+  phone: '0901234567',
+  role: 'USER',
+  preferred_currency: 'VND',
+  is_onboarding_completed: true,
+  budgeting_method: BUDGET_METHOD.SIX_JARS,
 }
 
 export const mockJars = [

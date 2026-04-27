@@ -18,6 +18,8 @@ const JarList = lazy(() => import('../pages/jars/JarList'))
 const Reports = lazy(() => import('../pages/reports/Reports'))
 const AddTransaction = lazy(() => import('../pages/transactions/AddTransaction'))
 const TransactionList = lazy(() => import('../pages/transactions/TransactionList'))
+const OnboardingPage = lazy(() => import('../pages/onboarding/OnboardingPage'))
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 function AppRouter() {
   const { isAuthenticated } = useAuth()
@@ -37,6 +39,8 @@ function AppRouter() {
           <Route path={ROUTES.BUDGET} element={<Budget />} />
           <Route path={ROUTES.GOALS} element={<Goals />} />
           <Route path={ROUTES.REPORTS} element={<Reports />} />
+          <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
 
         <Route element={<AdminRoute />}>

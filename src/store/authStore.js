@@ -19,6 +19,19 @@ export const useAuthStore = create((set) => ({
     set({ user: result.user, token: result.token, isAuthenticated: true })
     return result
   },
+  register: async (payload) => {
+    const result = await authService.register(payload)
+    localStorage.setItem(tokenKey, result.token)
+    localStorage.setItem(userKey, JSON.stringify(result.user))
+    set({ user: result.user, token: result.token, isAuthenticated: true })
+    return result
+  },
+  setUser: (partial) =>
+    set((s) => {
+      const user = s.user && partial && typeof partial === 'object' ? { ...s.user, ...partial } : s.user
+      if (user) localStorage.setItem(userKey, JSON.stringify(user))
+      return { user: user || s.user }
+    }),
   logout: () => {
     localStorage.removeItem(tokenKey)
     localStorage.removeItem(userKey)

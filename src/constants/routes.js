@@ -9,4 +9,6 @@ export const ROUTES = {
   GOALS: '/goals',
   REPORTS: '/reports',
   ADMIN: '/admin',
+  ONBOARDING: '/onboarding',
+  PROFILE: '/profile',
 }
