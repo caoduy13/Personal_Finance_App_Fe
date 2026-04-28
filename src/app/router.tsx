@@ -1,6 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
 import { AdminDashboardPage, DashboardPage } from "@/features/dashboard";
+import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
+import { JarsPage } from "@/features/jars";
+import { BudgetPage } from "@/features/budget";
+import { AdminUsersPage } from "@/features/admin";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
@@ -36,13 +40,52 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <DashboardPage /> }],
   },
   {
+    path: ROUTES.TRANSACTIONS,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <TransactionsPage /> }],
+  },
+  {
+    path: ROUTES.TRANSACTIONS_ADD,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <AddTransactionPage /> }],
+  },
+  {
+    path: ROUTES.JARS,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <JarsPage /> }],
+  },
+  {
+    path: ROUTES.BUDGET,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <BudgetPage /> }],
+  },
+  {
     path: ROUTES.ADMIN_DASHBOARD,
     element: (
       <ProtectedRoute allowedRoles={["admin"]}>
         <AdminLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <AdminDashboardPage /> }],
+    children: [
+      { index: true, element: <AdminDashboardPage /> },
+      { path: "users", element: <AdminUsersPage /> },
+    ],
   },
   {
     path: ROUTES.UNAUTHORIZED,
