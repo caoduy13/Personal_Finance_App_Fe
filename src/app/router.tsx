@@ -10,6 +10,9 @@ import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
 import { NotFoundPage } from "@/shared/pages/NotFoundPage";
 import { UnauthorizedPage } from "@/shared/pages/UnauthorizedPage";
+import { UserGoalsPage } from "@/shared/pages/UserGoalsPage";
+import { UserNotificationsPage } from "@/shared/pages/UserNotificationsPage";
+import { UserProfilePage } from "@/shared/pages/UserProfilePage";
 import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
 
@@ -74,6 +77,33 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [{ index: true, element: <BudgetPage /> }],
+  },
+  {
+    path: ROUTES.GOALS,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <UserGoalsPage /> }],
+  },
+  {
+    path: ROUTES.NOTIFICATIONS,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <UserNotificationsPage /> }],
+  },
+  {
+    path: ROUTES.PROFILE,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: <UserProfilePage /> }],
   },
   {
     path: ROUTES.ADMIN_DASHBOARD,

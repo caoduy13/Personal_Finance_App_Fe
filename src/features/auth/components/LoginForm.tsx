@@ -31,14 +31,14 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email" className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600">
+        <Label htmlFor="email" className="mb-1.5 inline-block text-sm font-medium text-slate-700">
           Địa chỉ email
         </Label>
         <Input
           id="email"
           type="email"
           autoComplete="email"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="ten@email.com"
           {...register("email")}
         />
@@ -46,14 +46,14 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600">
+        <Label htmlFor="password" className="mb-1.5 inline-block text-sm font-medium text-slate-700">
           Mật khẩu
         </Label>
         <Input
           id="password"
           type="password"
           autoComplete="current-password"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="••••••••"
           {...register("password")}
         />
@@ -64,7 +64,7 @@ export function LoginForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full bg-black text-white hover:bg-slate-900"
+        className="h-11 w-full rounded-md bg-[#0f172a] text-white hover:bg-[#111827]"
         disabled={isPending}
       >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

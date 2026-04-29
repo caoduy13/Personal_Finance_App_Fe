@@ -5,12 +5,12 @@ import { RegisterForm } from "../components/RegisterForm";
 
 export function RegisterPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#eeeff8] px-4 py-10">
-      <div className="relative w-full max-w-md space-y-6">
-        <Card className="border border-slate-200 bg-white text-slate-900 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#eef1fb] px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl border-2 border-[#6366F1] bg-[#e9edfa] p-3">
+        <Card className="border border-[#d7def5] bg-[#f3f6ff] text-slate-900 shadow-none">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-black">
-              <span className="text-lg font-bold">$</span>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-[#0f172a] text-[#6366F1]">
+              <span className="text-lg font-bold">F</span>
             </div>
             <CardTitle className="text-2xl font-semibold">Tạo tài khoản</CardTitle>
             <CardDescription className="text-slate-500">
@@ -22,9 +22,9 @@ export function RegisterPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-slate-500">
+        <p className="pt-4 text-center text-sm text-slate-500">
           Đã có tài khoản?{" "}
-          <Link to={ROUTES.LOGIN} className="font-semibold text-violet-600 hover:underline">
+          <Link to={ROUTES.LOGIN} className="font-semibold text-[#6366F1] hover:underline">
             Đăng nhập
           </Link>
         </p>

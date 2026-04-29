@@ -41,14 +41,14 @@ export function RegisterForm() {
       <div className="space-y-2">
         <Label
           htmlFor="username"
-          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
         >
           Tên đăng nhập
         </Label>
         <Input
           id="username"
           type="text"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="tên_đăng_nhập"
           {...register("username")}
         />
@@ -60,14 +60,14 @@ export function RegisterForm() {
       <div className="space-y-2">
         <Label
           htmlFor="fullName"
-          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
         >
           Họ và tên
         </Label>
         <Input
           id="fullName"
           type="text"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="Nguyen Van A"
           {...register("fullName")}
         />
@@ -79,7 +79,7 @@ export function RegisterForm() {
       <div className="space-y-2">
         <Label
           htmlFor="registerEmail"
-          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
         >
           Địa chỉ email
         </Label>
@@ -87,7 +87,7 @@ export function RegisterForm() {
           id="registerEmail"
           type="email"
           autoComplete="email"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="ten@email.com"
           {...register("email")}
         />
@@ -99,7 +99,7 @@ export function RegisterForm() {
       <div className="space-y-2">
         <Label
           htmlFor="registerPassword"
-          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
         >
           Mật khẩu
         </Label>
@@ -107,7 +107,7 @@ export function RegisterForm() {
           id="registerPassword"
           type="password"
           autoComplete="new-password"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="••••••••"
           {...register("password")}
         />
@@ -119,7 +119,7 @@ export function RegisterForm() {
       <div className="space-y-2">
         <Label
           htmlFor="confirmPassword"
-          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
         >
           Xác nhận mật khẩu
         </Label>
@@ -127,7 +127,7 @@ export function RegisterForm() {
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="••••••••"
           {...register("confirmPassword")}
         />
@@ -142,7 +142,7 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full bg-black text-white hover:bg-slate-900"
+        className="h-11 w-full rounded-md bg-[#0f172a] text-white hover:bg-[#111827]"
         disabled={isPending}
       >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

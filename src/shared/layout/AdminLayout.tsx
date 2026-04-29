@@ -13,6 +13,17 @@ import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
 import { ROUTES } from "@/shared/constants/routes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
 
 const sidebarNavItems = [
   { label: "Dashboard", to: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
@@ -122,24 +133,50 @@ export function AdminLayout() {
               </span>
             </Button>
 
-            <Button
-              variant="ghost"
-              className={cn(
-                "h-12 w-full cursor-pointer justify-start gap-3 rounded-md px-4 text-base font-normal text-red-600 transition hover:bg-red-50 hover:text-red-700",
-              )}
-              onClick={() => logout()}
-              disabled={isPending}
-            >
-              <LogOut className="h-5 w-5 shrink-0 text-red-600" />
-              <span
-                className={cn(
-                  "whitespace-nowrap leading-none",
-                  collapsed && "hidden",
-                )}
-              >
-                {isPending ? "Logging out..." : "Logout"}
-              </span>
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "h-12 w-full cursor-pointer justify-start gap-3 rounded-md px-4 text-base font-normal text-red-600 transition hover:bg-red-50 hover:text-red-700",
+                  )}
+                  disabled={isPending}
+                >
+                  <LogOut className="h-5 w-5 shrink-0 text-red-600" />
+                  <span
+                    className={cn(
+                      "whitespace-nowrap leading-none",
+                      collapsed && "hidden",
+                    )}
+                  >
+                    {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
+                  </span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản trị.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel asChild>
+                    <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                      Ở lại
+                    </Button>
+                  </AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <Button
+                      className="w-full cursor-pointer bg-red-600 text-white hover:bg-red-700 sm:flex-1"
+                      onClick={() => logout()}
+                    >
+                      Đăng xuất
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </aside>
 
@@ -179,16 +216,41 @@ export function AdminLayout() {
                 )}
               </NavLink>
             ) : (
-              <button
-                key="admin-bottom-logout"
-                type="button"
-                className="inline-flex w-full max-w-[68px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                onClick={() => logout()}
-                disabled={isPending}
-              >
-                <item.icon className="h-6 w-6 text-red-600" />
-                <span>{isPending ? "..." : item.label}</span>
-              </button>
+              <AlertDialog key="admin-bottom-logout">
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex w-full max-w-[68px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
+                    disabled={isPending}
+                  >
+                    <item.icon className="h-6 w-6 text-red-600" />
+                    <span>{isPending ? "..." : item.label}</span>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản trị.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel asChild>
+                      <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                        Ở lại
+                      </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button
+                        className="w-full cursor-pointer bg-red-600 text-white hover:bg-red-700 sm:flex-1"
+                        onClick={() => logout()}
+                      >
+                        Đăng xuất
+                      </Button>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ),
           )}
         </div>
