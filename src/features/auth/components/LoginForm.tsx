@@ -16,6 +16,8 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     defaultValues: {
       email: "anh@finjar.app",
       password: "123456",
@@ -27,24 +29,46 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" {...register("email")} />
-        {errors.email ? <p className="text-sm text-red-500">{errors.email.message}</p> : null}
+        <Label htmlFor="email" className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600">
+          Địa chỉ email
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="ten@email.com"
+          {...register("email")}
+        />
+        {errors.email ? <p className="text-sm text-red-400">{errors.email.message}</p> : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
-        {errors.password ? <p className="text-sm text-red-500">{errors.password.message}</p> : null}
+        <Label htmlFor="password" className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600">
+          Mật khẩu
+        </Label>
+        <Input
+          id="password"
+          type="password"
+          autoComplete="current-password"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="••••••••"
+          {...register("password")}
+        />
+        {errors.password ? <p className="text-sm text-red-400">{errors.password.message}</p> : null}
       </div>
 
-      {error ? <p className="text-sm text-red-500">{error.message}</p> : null}
+      {error ? <p className="text-sm text-red-400">{error.message}</p> : null}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        className="h-11 w-full bg-black text-white hover:bg-slate-900"
+        disabled={isPending}
+      >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        <span>{isPending ? "Signing in..." : "Sign in"}</span>
+        <span>{isPending ? "Đang đăng nhập..." : "Đăng nhập"}</span>
       </Button>
     </form>
   );

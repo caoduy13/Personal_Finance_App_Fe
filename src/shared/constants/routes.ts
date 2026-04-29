@@ -10,4 +10,6 @@ export const ROUTES = {
   BUDGET: "/budget",
   ADMIN_DASHBOARD: "/admin",
   ADMIN_USERS: "/admin/users",
+  ADMIN_NOTIFICATIONS: "/admin/notifications",
+  ADMIN_AUDIT_LOGS: "/admin/audit-logs",
 } as const;

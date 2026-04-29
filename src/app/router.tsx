@@ -4,7 +4,7 @@ import { AdminDashboardPage, DashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
-import { AdminUsersPage } from "@/features/admin";
+import { AdminUsersPage, AdminNotificationsPage, AdminAuditLogsPage } from "@/features/admin";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
@@ -85,6 +85,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: "users", element: <AdminUsersPage /> },
+      { path: "notifications", element: <AdminNotificationsPage /> },
+      { path: "audit-logs", element: <AdminAuditLogsPage /> },
     ],
   },
   {

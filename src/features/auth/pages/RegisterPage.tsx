@@ -5,22 +5,27 @@ import { RegisterForm } from "../components/RegisterForm";
 
 export function RegisterPage() {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md space-y-6">
-        <Card>
+    <div className="flex min-h-screen items-center justify-center bg-[#eeeff8] px-4 py-10">
+      <div className="relative w-full max-w-md space-y-6">
+        <Card className="border border-slate-200 bg-white text-slate-900 shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Register</CardTitle>
-            <CardDescription>Create your account to start managing jars and budgets.</CardDescription>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-black">
+              <span className="text-lg font-bold">$</span>
+            </div>
+            <CardTitle className="text-2xl font-semibold">Tạo tài khoản</CardTitle>
+            <CardDescription className="text-slate-500">
+              Thiết lập hồ sơ để bắt đầu quản lý tài chính của bạn.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <RegisterForm />
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link to={ROUTES.LOGIN} className="font-medium text-primary hover:underline">
-            Sign in
+        <p className="text-center text-sm text-slate-500">
+          Đã có tài khoản?{" "}
+          <Link to={ROUTES.LOGIN} className="font-semibold text-violet-600 hover:underline">
+            Đăng nhập
           </Link>
         </p>
       </div>

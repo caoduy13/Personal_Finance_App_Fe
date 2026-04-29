@@ -35,7 +35,7 @@ export const authService = {
 
     const mockRequest = async () => {
       await wait(300);
-      return mockData.auth.register(payload.email, payload.fullName);
+      return mockData.auth.register(payload.username, payload.email, payload.fullName);
     };
 
     return requestWithStrategy(AUTH_STRATEGY.register, realRequest, mockRequest);

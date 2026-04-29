@@ -1,12 +1,13 @@
 import type { AuthResponse, AuthUser } from "@/features/auth/types";
 
-const createAuthUser = (email: string, fullName?: string): AuthUser => {
+const createAuthUser = (email: string, fullName?: string, username?: string): AuthUser => {
   const isAdmin = email.toLowerCase().includes("admin");
+  const resolvedName = fullName ?? username ?? (isAdmin ? "Admin User" : "Finjar User");
 
   return {
     id: isAdmin ? "admin-1" : "user-1",
     email,
-    fullName: fullName ?? (isAdmin ? "Admin User" : "Finjar User"),
+    fullName: resolvedName,
     role: isAdmin ? "admin" : "user",
   };
 };
@@ -294,8 +295,8 @@ export const mockData = {
       user: createAuthUser(email),
       accessToken: `mock-finjar-token-${Date.now()}`,
     }),
-    register: (email: string, fullName: string): AuthResponse => ({
-      user: createAuthUser(email, fullName),
+    register: (username: string, email: string, fullName: string): AuthResponse => ({
+      user: createAuthUser(email, fullName, username),
       accessToken: `mock-finjar-token-${Date.now()}`,
     }),
   },

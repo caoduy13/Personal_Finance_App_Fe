@@ -16,7 +16,10 @@ export function RegisterForm() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     defaultValues: {
+      username: "",
       fullName: "",
       email: "",
       password: "",
@@ -26,6 +29,7 @@ export function RegisterForm() {
 
   const onSubmit = (data: RegisterFormData) => {
     registerUser({
+      username: data.username,
       email: data.email,
       password: data.password,
       fullName: data.fullName,
@@ -33,61 +37,116 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input id="fullName" type="text" {...register("fullName")} />
-        {errors.fullName ? (
-          <p className="text-sm text-red-500">{errors.fullName.message}</p>
+        <Label
+          htmlFor="username"
+          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+        >
+          Tên đăng nhập
+        </Label>
+        <Input
+          id="username"
+          type="text"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="tên_đăng_nhập"
+          {...register("username")}
+        />
+        {errors.username ? (
+          <p className="text-sm text-red-400">{errors.username.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="registerEmail">Email</Label>
+        <Label
+          htmlFor="fullName"
+          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+        >
+          Họ và tên
+        </Label>
+        <Input
+          id="fullName"
+          type="text"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="Nguyen Van A"
+          {...register("fullName")}
+        />
+        {errors.fullName ? (
+          <p className="text-sm text-red-400">{errors.fullName.message}</p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label
+          htmlFor="registerEmail"
+          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+        >
+          Địa chỉ email
+        </Label>
         <Input
           id="registerEmail"
           type="email"
           autoComplete="email"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="ten@email.com"
           {...register("email")}
         />
         {errors.email ? (
-          <p className="text-sm text-red-500">{errors.email.message}</p>
+          <p className="text-sm text-red-400">{errors.email.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="registerPassword">Password</Label>
+        <Label
+          htmlFor="registerPassword"
+          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+        >
+          Mật khẩu
+        </Label>
         <Input
           id="registerPassword"
           type="password"
           autoComplete="new-password"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="••••••••"
           {...register("password")}
         />
         {errors.password ? (
-          <p className="text-sm text-red-500">{errors.password.message}</p>
+          <p className="text-sm text-red-400">{errors.password.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label
+          htmlFor="confirmPassword"
+          className="mb-1.5 inline-block text-xs uppercase tracking-wider text-slate-600"
+        >
+          Xác nhận mật khẩu
+        </Label>
         <Input
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
+          className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-violet-300"
+          placeholder="••••••••"
           {...register("confirmPassword")}
         />
         {errors.confirmPassword ? (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-red-400">
             {errors.confirmPassword.message}
           </p>
         ) : null}
       </div>
 
-      {error ? <p className="text-sm text-red-500">{error.message}</p> : null}
+      {error ? <p className="text-sm text-red-400">{error.message}</p> : null}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        className="h-11 w-full bg-black text-white hover:bg-slate-900"
+        disabled={isPending}
+      >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        <span>{isPending ? "Creating account..." : "Create account"}</span>
+        <span>{isPending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</span>
       </Button>
     </form>
   );
