@@ -1,6 +1,6 @@
 # Frontend Source Structure (Recommended)
 
-Muc tieu la tach ro phan `app`, `features`, `shared` de de mo rong va de maintain.
+The goal is to clearly separate \app`, `features`, and `shared` to make the codebase easier to scale and maintain.`
 
 ## Proposed tree
 
@@ -54,39 +54,16 @@ src/
       services/
 
   shared/
-    components/         # UI dung chung, layout, alert, modal...
-    constants/          # constants dung chung toan app
-    hooks/              # hooks dung chung
+    components/         # UI dùng chung, layout, alert, modal...
+    constants/          # constants dùng chung toàn app
+    hooks/              # hooks dùng chung
     services/           # api client, interceptors
     store/              # global stores
     utils/              # formatters, validators...
     assets/
 
-  legacy/               # tam thoi cho code cu trong giai doan migration
+  legacy/               # tạm thời cho code cũ trong giai đoạn migration
 ```
-
-## Mapping from current code
-
-- `src/routes/*` -> `src/app/router/*`
-- `src/pages/auth/*` -> `src/features/auth/pages/*`
-- `src/pages/dashboard/*` -> `src/features/dashboard/pages/*`
-- `src/pages/transactions/*` -> `src/features/transactions/pages/*`
-- `src/pages/jars/*` -> `src/features/jars/pages/*`
-- `src/pages/budget/*` -> `src/features/budget/pages/*`
-- `src/pages/goals/*` -> `src/features/goals/pages/*`
-- `src/pages/reports/*` -> `src/features/reports/pages/*`
-- `src/pages/admin/*` -> `src/features/admin/pages/*`
-- `src/components/ui/*` -> `src/shared/components/ui/*`
-- `src/components/layout/*` -> `src/shared/components/layout/*`
-- `src/components/shared/*` -> `src/shared/components/common/*`
-- `src/services/api.js` -> `src/shared/services/apiClient.js`
-
-## Migration principles
-
-1. Di chuyen theo tung feature, khong big-bang.
-2. Moi lan di chuyen phai chay lint/build.
-3. Dat import alias (`@/app`, `@/features`, `@/shared`) de import gon va on dinh.
-4. Hoan thanh migration xong moi xoa cac thu muc cu.
 
 ## Naming conventions
 
@@ -95,3 +72,9 @@ src/
 - Service: `somethingService.js`
 - Store: `somethingStore.js`
 - Constant: `UPPER_SNAKE_CASE` key trong file `camelCase.js`
+
+## Feature workflow conventions
+
+1. When implementing a new feature, always create a new branch from the main branch.
+2. After finishing the feature, push that branch to remote.
+3. Open a pull request so the team can review before merge.
