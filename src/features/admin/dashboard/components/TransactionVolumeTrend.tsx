@@ -8,7 +8,7 @@ interface TransactionVolumeTrendProps {
 }
 
 type TrendViewMode = "amount" | "count";
-type TrendTimeframe = "day" | "week" | "month" | "year";
+type TrendTimeframe = "day" | "month" | "year";
 
 interface TrendChartItem {
   label: string;
@@ -16,25 +16,8 @@ interface TrendChartItem {
   count: number;
 }
 
-const TARGET_TOTAL_COUNT = 200;
-
-const allocateCountsByAmount = (amounts: number[], totalCount: number): number[] => {
-  const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0);
-  if (totalAmount <= 0 || totalCount <= 0) return amounts.map(() => 0);
-  const raw = amounts.map((amount) => (amount / totalAmount) * totalCount);
-  const base = raw.map((value) => Math.floor(value));
-  let remainder = totalCount - base.reduce((sum, value) => sum + value, 0);
-  const fractions = raw.map((value, index) => ({ index, fraction: value - Math.floor(value) })).sort((a, b) => b.fraction - a.fraction);
-  for (let i = 0; i < fractions.length && remainder > 0; i += 1) {
-    base[fractions[i].index] += 1;
-    remainder -= 1;
-  }
-  return base;
-};
-
 const timeframeMeta: Record<TrendTimeframe, { label: string; subtitle: string; totalLabel: string; averageLabel: string }> = {
   day: { label: "Ngày", subtitle: "Theo ngày trong 7 ngày gần nhất", totalLabel: "Tổng giá trị (7 ngày)", averageLabel: "Trung bình / ngày" },
-  week: { label: "Tuần", subtitle: "Theo tuần trong 8 tuần gần nhất", totalLabel: "Tổng giá trị (8 tuần)", averageLabel: "Trung bình / tuần" },
   month: { label: "Tháng", subtitle: "Theo tháng trong 12 tháng gần nhất", totalLabel: "Tổng giá trị (12 tháng)", averageLabel: "Trung bình / tháng" },
   year: { label: "Năm", subtitle: "Theo năm trong 5 năm gần nhất", totalLabel: "Tổng giá trị (5 năm)", averageLabel: "Trung bình / năm" },
 };
@@ -44,48 +27,39 @@ export function TransactionVolumeTrend({ items }: TransactionVolumeTrendProps) {
   const [timeframe, setTimeframe] = useState<TrendTimeframe>("day");
 
   const dailyData = useMemo<TrendChartItem[]>(() => {
-    const amounts = items.map((item) => item.value);
-    const counts = allocateCountsByAmount(amounts, TARGET_TOTAL_COUNT);
-    return items.map((item, index) => ({ label: item.label, amount: item.value, count: counts[index] }));
+    return items.map((item) => ({ label: item.label, amount: item.amount, count: item.count }));
   }, [items]);
-
-  const weeklyData = useMemo<TrendChartItem[]>(() => {
-    const weekLabels = ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"];
-    const dailyValues = dailyData.map((item) => item.amount);
-    const base = dailyValues.length > 0 ? dailyValues : [1500, 1700, 2100, 1900, 2300, 2600, 2400];
-    return weekLabels.map((label, index) => {
-      const pivot = base[index % base.length];
-      const amount = Math.round(pivot * (1 + index * 0.04) + (index % 3) * 35);
-      return { label, amount, count: 0 };
-    });
-  }, [dailyData]);
 
   const monthlyData = useMemo<TrendChartItem[]>(() => {
     const monthLabels = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
-    const weeklyAvg = weeklyData.reduce((sum, item) => sum + item.amount, 0) / Math.max(1, weeklyData.length);
+    const dailyAvgAmount = dailyData.reduce((sum, item) => sum + item.amount, 0) / Math.max(1, dailyData.length);
+    const dailyAvgCount = dailyData.reduce((sum, item) => sum + item.count, 0) / Math.max(1, dailyData.length);
     return monthLabels.map((label, index) => {
       const seasonFactor = 0.9 + ((index % 6) * 0.05 + (index > 7 ? 0.06 : 0));
-      return { label, amount: Math.round(weeklyAvg * 4 * seasonFactor), count: 0 };
+      return {
+        label,
+        amount: Math.round(dailyAvgAmount * 30 * seasonFactor),
+        count: Math.round(dailyAvgCount * 30 * seasonFactor),
+      };
     });
-  }, [weeklyData]);
+  }, [dailyData]);
 
   const yearlyData = useMemo<TrendChartItem[]>(() => {
     const yearLabels = ["2022", "2023", "2024", "2025", "2026"];
-    const monthAvg = monthlyData.reduce((sum, item) => sum + item.amount, 0) / Math.max(1, monthlyData.length);
-    return yearLabels.map((label, index) => ({ label, amount: Math.round(monthAvg * 12 * (0.78 + index * 0.11)), count: 0 }));
+    const monthAvgAmount = monthlyData.reduce((sum, item) => sum + item.amount, 0) / Math.max(1, monthlyData.length);
+    const monthAvgCount = monthlyData.reduce((sum, item) => sum + item.count, 0) / Math.max(1, monthlyData.length);
+    return yearLabels.map((label, index) => ({
+      label,
+      amount: Math.round(monthAvgAmount * 12 * (0.78 + index * 0.11)),
+      count: Math.round(monthAvgCount * 12 * (0.78 + index * 0.11)),
+    }));
   }, [monthlyData]);
 
-  const withCounts = (arr: TrendChartItem[]) => {
-    const counts = allocateCountsByAmount(arr.map((item) => item.amount), TARGET_TOTAL_COUNT);
-    return arr.map((item, index) => ({ ...item, count: counts[index] }));
-  };
-
   const chartData = useMemo(() => {
-    if (timeframe === "week") return withCounts(weeklyData);
-    if (timeframe === "month") return withCounts(monthlyData);
-    if (timeframe === "year") return withCounts(yearlyData);
+    if (timeframe === "month") return monthlyData;
+    if (timeframe === "year") return yearlyData;
     return dailyData;
-  }, [dailyData, monthlyData, timeframe, weeklyData, yearlyData]);
+  }, [dailyData, monthlyData, timeframe, yearlyData]);
 
   const totalAmount = useMemo(() => chartData.reduce((sum, item) => sum + item.amount, 0), [chartData]);
   const averageAmount = useMemo(() => Math.round(totalAmount / Math.max(1, chartData.length)), [chartData.length, totalAmount]);
@@ -101,7 +75,7 @@ export function TransactionVolumeTrend({ items }: TransactionVolumeTrendProps) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex rounded-lg border bg-slate-50 p-1">
-              {(["day", "week", "month", "year"] as TrendTimeframe[]).map((key) => (
+              {(["day", "month", "year"] as TrendTimeframe[]).map((key) => (
                 <button
                   key={key}
                   type="button"

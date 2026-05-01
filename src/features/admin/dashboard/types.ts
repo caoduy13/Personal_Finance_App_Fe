@@ -14,7 +14,8 @@ export interface DashboardTransaction {
 
 export interface DashboardTrendPoint {
   label: string;
-  value: number;
+  amount: number;
+  count: number;
 }
 
 export interface DashboardRecentUser {
