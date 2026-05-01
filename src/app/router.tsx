@@ -1,10 +1,14 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
-import { AdminDashboardPage, DashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
-import { AdminUsersPage, AdminNotificationsPage, AdminAuditLogsPage } from "@/features/admin";
+import {
+  AdminDashboardPage,
+  AdminUsersPage,
+  AdminNotificationsPage,
+  AdminAuditLogsPage,
+} from "@/features/admin";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
@@ -40,7 +44,7 @@ export const router = createBrowserRouter([
         <UserLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <DashboardPage /> }],
+    children: [{ index: true, element: <TransactionsPage /> }],
   },
   {
     path: ROUTES.TRANSACTIONS,

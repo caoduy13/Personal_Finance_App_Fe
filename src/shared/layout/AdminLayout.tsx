@@ -3,13 +3,14 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   Bell,
   ClipboardList,
+  LayoutPanelLeft,
   LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Users,
 } from "lucide-react";
-import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
+import { useLogoutMutation } from "@/features/auth/hooks/useAuth";
 import { ROUTES } from "@/shared/constants/routes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/ui/button";
@@ -42,17 +43,16 @@ const bottomNavItems = [
 
 export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const { role } = useAuth();
   const { mutate: logout, isPending } = useLogoutMutation();
 
   const sidebarWidthClass = collapsed ? "md:w-[78px]" : "md:w-[250px]";
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#f5f6ff] pb-20 md:pb-0">
       <div className="flex min-h-screen w-full">
         <aside
           className={cn(
-            "hidden shrink-0 flex-col border-r bg-slate-50 p-3 transition-all duration-300 md:flex",
+            "hidden shrink-0 flex-col border-r bg-white p-3 transition-all duration-300 md:sticky md:top-0 md:flex md:h-screen md:self-start md:overflow-y-auto",
             sidebarWidthClass,
           )}
         >
@@ -63,10 +63,16 @@ export function AdminLayout() {
                 collapsed ? "pointer-events-none opacity-0" : "opacity-100",
               )}
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Admin
-              </p>
-              <p className="truncate text-sm font-medium">{role ?? "admin"}</p>
+              <div className="flex items-center gap-2 mt-3 mx-2">
+                <div className="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-[#4F46E5] text-white">
+                  <LayoutPanelLeft className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-[26px] font-bold leading-6 text-[#4F46E5]">
+                    AdminPortal
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -79,7 +85,8 @@ export function AdminLayout() {
                 className={({ isActive }) =>
                   cn(
                     "group flex h-12 cursor-pointer items-center gap-3 rounded-md border-r-2 border-transparent px-4 text-base text-slate-500 transition hover:bg-slate-100 hover:text-black",
-                    isActive && "border-[#6366F1] bg-slate-200 font-semibold text-black",
+                    isActive &&
+                      "border-[#6366F1] bg-slate-200 font-semibold text-black",
                   )
                 }
                 title={collapsed ? item.label : undefined}
@@ -89,7 +96,9 @@ export function AdminLayout() {
                     <item.icon
                       className={cn(
                         "h-5 w-5 shrink-0",
-                        isActive ? "text-[#6366F1]" : "text-slate-500 group-hover:text-[#6366F1]",
+                        isActive
+                          ? "text-[#6366F1]"
+                          : "text-slate-500 group-hover:text-[#6366F1]",
                       )}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
@@ -157,12 +166,16 @@ export function AdminLayout() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản trị.
+                    Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản
+                    trị.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel asChild>
-                    <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full cursor-pointer sm:flex-1"
+                    >
                       Ở lại
                     </Button>
                   </AlertDialogCancel>
@@ -180,7 +193,7 @@ export function AdminLayout() {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-4 md:p-8">
+        <main className="min-w-0 flex-1 bg-[#f7f8ff] p-4 md:p-8">
           <Outlet />
         </main>
       </div>
@@ -207,7 +220,9 @@ export function AdminLayout() {
                     <item.icon
                       className={cn(
                         "h-6 w-6",
-                        isActive ? "text-[#6366F1]" : "text-slate-500 group-hover:text-[#6366F1]",
+                        isActive
+                          ? "text-[#6366F1]"
+                          : "text-slate-500 group-hover:text-[#6366F1]",
                       )}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
@@ -231,12 +246,16 @@ export function AdminLayout() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản trị.
+                      Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng hệ thống quản
+                      trị.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel asChild>
-                      <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                      <Button
+                        variant="outline"
+                        className="w-full cursor-pointer sm:flex-1"
+                      >
                         Ở lại
                       </Button>
                     </AlertDialogCancel>
