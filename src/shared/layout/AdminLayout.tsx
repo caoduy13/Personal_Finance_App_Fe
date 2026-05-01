@@ -52,7 +52,7 @@ export function AdminLayout() {
       <div className="flex min-h-screen w-full">
         <aside
           className={cn(
-            "hidden shrink-0 flex-col border-r bg-white p-3 transition-all duration-300 md:flex",
+            "hidden shrink-0 flex-col border-r bg-white p-3 transition-all duration-300 md:sticky md:top-0 md:flex md:h-screen md:self-start md:overflow-y-auto",
             sidebarWidthClass,
           )}
         >
