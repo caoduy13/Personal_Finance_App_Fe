@@ -30,9 +30,7 @@ export function RecentUsersList({ users }: { users: DashboardRecentUser[] }) {
                 >
                   {user.status}
                 </span>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{new Date(user.createdAt).toLocaleDateString("vi-VN")}</p>
               </div>
             </div>
           );
