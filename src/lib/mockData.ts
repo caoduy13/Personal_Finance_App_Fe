@@ -14,6 +14,8 @@ const createAuthUser = (
     email,
     fullName: resolvedName,
     role: isAdmin ? "admin" : "user",
+    isOnboardingCompleted: isAdmin ? true : false,
+    is_onboarding_completed: isAdmin ? true : false,
   };
 };
 

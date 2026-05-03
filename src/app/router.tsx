@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
+import { OnboardingPage } from "@/features/onboarding";
 import { AdminDashboardPage, DashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
 import { JarsPage } from "@/features/jars";
@@ -31,6 +32,14 @@ export const router = createBrowserRouter([
       <GuestRoute>
         <RegisterPage />
       </GuestRoute>
+    ),
+  },
+  {
+    path: ROUTES.ONBOARDING,
+    element: (
+      <ProtectedRoute>
+        <OnboardingPage />
+      </ProtectedRoute>
     ),
   },
   {
