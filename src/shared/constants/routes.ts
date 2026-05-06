@@ -14,6 +14,7 @@ export const ROUTES = {
   PROFILE: "/profile",
   ADMIN_DASHBOARD: "/admin",
   ADMIN_USERS: "/admin/users",
+  ADMIN_USER_DETAIL: (id: string) => `/admin/users/${id}`,
   ADMIN_NOTIFICATIONS: "/admin/notifications",
   ADMIN_AUDIT_LOGS: "/admin/audit-logs",
 } as const;
