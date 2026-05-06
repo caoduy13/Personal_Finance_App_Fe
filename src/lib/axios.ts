@@ -4,11 +4,13 @@ import { useAuthStore } from "@/features/auth/store";
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
-  timeout: 15000,
+  // Render free tier có cold start ~30s, nâng timeout lên đủ rộng cho lần đầu
+  timeout: 45000,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  // JWT đính qua header Bearer; KHÔNG dùng cookie → tránh CORS preflight phức tạp
+  withCredentials: false,
 });
 
 apiClient.interceptors.request.use((config) => {
