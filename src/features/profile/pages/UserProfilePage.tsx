@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Camera, Pencil, Settings, User, X } from "lucide-react";
 import {
   Card,
@@ -23,6 +23,16 @@ export function UserProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarBlobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (avatarBlobUrlRef.current) {
+        URL.revokeObjectURL(avatarBlobUrlRef.current);
+        avatarBlobUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const handleOpenFilePicker = () => {
     fileInputRef.current?.click();
@@ -33,7 +43,12 @@ export function UserProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (avatarBlobUrlRef.current) {
+      URL.revokeObjectURL(avatarBlobUrlRef.current);
+      avatarBlobUrlRef.current = null;
+    }
     const previewUrl = URL.createObjectURL(file);
+    avatarBlobUrlRef.current = previewUrl;
     setAvatarPreview(previewUrl);
     setAvatarLoadFailed(false);
   };

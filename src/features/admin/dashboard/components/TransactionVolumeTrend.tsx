@@ -123,7 +123,7 @@ export function TransactionVolumeTrend({ items }: TransactionVolumeTrendProps) {
 
         <div className="h-72 w-full rounded-lg bg-slate-50 p-3 [&_.recharts-surface:focus]:outline-none [&_.recharts-wrapper:focus]:outline-none">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 8, right: 10, left: 16, bottom: 0 }} accessibilityLayer={false}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 10, left: 16, bottom: 0 }}>
               <defs>
                 <linearGradient id="amountGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6366F1" stopOpacity={0.35} />
@@ -144,7 +144,10 @@ export function TransactionVolumeTrend({ items }: TransactionVolumeTrendProps) {
                 tickFormatter={(value) => (mode === "amount" ? `${Number(value).toLocaleString()}` : `${value}`)}
               />
               <Tooltip
-                formatter={(value: number, name: string) => [Number(value).toLocaleString(), name.toLowerCase().includes("amount") ? "Giá trị" : "Số lượng"]}
+                formatter={(value: number, name: string) => [
+                  Number(value).toLocaleString(),
+                  name,
+                ]}
                 labelStyle={{ fontWeight: 600 }}
                 contentStyle={{ borderRadius: "12px", borderColor: "#E2E8F0" }}
               />
