@@ -19,6 +19,7 @@ import { UserNotificationsPage } from "@/shared/pages/UserNotificationsPage";
 import { UserProfilePage } from "@/features/profile";
 import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
+import AdminCategoriesPage from "@/features/admin/category/pages/AdminCategoriesPage";
 
 export const router = createBrowserRouter([
   {
@@ -38,76 +39,21 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: ROUTES.DASHBOARD,
     element: (
       <ProtectedRoute>
         <UserLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <TransactionsPage /> }],
-  },
-  {
-    path: ROUTES.TRANSACTIONS,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <TransactionsPage /> }],
-  },
-  {
-    path: ROUTES.TRANSACTIONS_ADD,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <AddTransactionPage /> }],
-  },
-  {
-    path: ROUTES.JARS,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <JarsPage /> }],
-  },
-  {
-    path: ROUTES.BUDGET,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <BudgetPage /> }],
-  },
-  {
-    path: ROUTES.GOALS,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <UserGoalsPage /> }],
-  },
-  {
-    path: ROUTES.NOTIFICATIONS,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <UserNotificationsPage /> }],
-  },
-  {
-    path: ROUTES.PROFILE,
-    element: (
-      <ProtectedRoute>
-        <UserLayout />
-      </ProtectedRoute>
-    ),
-    children: [{ index: true, element: <UserProfilePage /> }],
+    children: [
+      { path: ROUTES.DASHBOARD, element: <TransactionsPage /> },
+      { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
+      { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
+      { path: ROUTES.JARS, element: <JarsPage /> },
+      { path: ROUTES.BUDGET, element: <BudgetPage /> },
+      { path: ROUTES.GOALS, element: <UserGoalsPage /> },
+      { path: ROUTES.NOTIFICATIONS, element: <UserNotificationsPage /> },
+      { path: ROUTES.PROFILE, element: <UserProfilePage /> },
+    ],
   },
   {
     path: ROUTES.ADMIN_DASHBOARD,
@@ -121,6 +67,7 @@ export const router = createBrowserRouter([
       { path: "users", element: <AdminUsersPage /> },
       { path: "notifications", element: <AdminNotificationsPage /> },
       { path: "audit-logs", element: <AdminAuditLogsPage /> },
+      { path: "categories", element: <AdminCategoriesPage /> },
     ],
   },
   {
