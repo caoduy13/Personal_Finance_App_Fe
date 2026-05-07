@@ -1,4 +1,5 @@
 import type { AuthResponse, AuthUser } from "@/features/auth/types";
+import type { CurrentUser } from "@/features/profile/types";
 
 const createAuthUser = (
   email: string,
@@ -307,6 +308,19 @@ export const mockData = {
     ): AuthResponse => ({
       user: createAuthUser(email, fullName, username),
       accessToken: `mock-finjar-token-${Date.now()}`,
+    }),
+  },
+  profile: {
+    getMe: (): CurrentUser => ({
+      id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+      username: "anh",
+      firstName: "Văn Anh",
+      lastName: "Nguyễn",
+      email: "anh@finjar.app",
+      phone: "0901234567",
+      avatarUrl: "/avatar.jpg",
+      preferredCurrency: "VND",
+      isOnboardingCompleted: true,
     }),
   },
 } as const;
