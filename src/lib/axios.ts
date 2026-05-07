@@ -2,6 +2,16 @@ import axios from "axios";
 import { env } from "@/lib/env";
 import { useAuthStore } from "@/features/auth/store";
 
+/** Request thuần, không interceptor — bootstrap auth GET /User/me sau login/register. */
+export const apiBare = axios.create({
+  baseURL: env.API_URL,
+  timeout: 45000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: false,
+});
+
 export const apiClient = axios.create({
   baseURL: env.API_URL,
   // Render free tier có cold start ~30s, nâng timeout lên đủ rộng cho lần đầu

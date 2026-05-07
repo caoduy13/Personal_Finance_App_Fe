@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+swagger-v1.json
+e2e-*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -5,6 +5,24 @@ import { authService } from "../services";
 import { useAuthStore } from "../store";
 import { ROUTES } from "@/shared/constants/routes";
 
+function useAuthSuccessNavigation() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from =
+    (location.state as { from?: { pathname?: string } } | null)?.from
+      ?.pathname ?? ROUTES.DASHBOARD;
+
+  return (response: AuthResponse) => {
+    navigate(
+      response.user.role === "admin" ? ROUTES.ADMIN_DASHBOARD : from,
+      {
+        replace: true,
+      },
+    );
+  };
+}
+
 export function useAuth() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const role = useAuthStore((state) => state.role);
@@ -24,13 +42,8 @@ export function useAuth() {
 }
 
 export function useLoginMutation() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { setAuth } = useAuthStore();
-
-  const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? ROUTES.DASHBOARD;
+  const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (payload) => authService.login(payload),
@@ -40,20 +53,24 @@ export function useLoginMutation() {
         role: response.user.role,
         user: response.user,
       });
-      navigate(response.user.role === "admin" ? ROUTES.ADMIN_DASHBOARD : from, {
-        replace: true,
-      });
+      goAfterAuth(response);
     },
   });
 }
 
 export function useRegisterMutation() {
-  const navigate = useNavigate();
+  const { setAuth } = useAuthStore();
+  const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, RegisterRequest>({
     mutationFn: (payload) => authService.register(payload),
-    onSuccess: () => {
-      navigate(ROUTES.LOGIN, { replace: true });
+    onSuccess: (response) => {
+      setAuth({
+        accessToken: response.accessToken,
+        role: response.user.role,
+        user: response.user,
+      });
+      goAfterAuth(response);
     },
   });
 }
