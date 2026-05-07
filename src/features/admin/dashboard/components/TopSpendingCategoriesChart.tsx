@@ -16,7 +16,7 @@ export function TopSpendingCategoriesChart({ items }: { items: DashboardSpending
         {items.length === 0 ? <p className="text-sm text-muted-foreground">Chưa có dữ liệu chi tiêu.</p> : null}
         <div className="h-64 [&_.recharts-wrapper:focus]:outline-none [&_.recharts-surface:focus]:outline-none [&_.recharts-sector:focus]:outline-none [&_.recharts-sector:focus-visible]:outline-none [&_path:focus]:outline-none [&_path:focus-visible]:outline-none">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart accessibilityLayer={false}>
+            <PieChart>
               <Pie data={items} dataKey="value" nameKey="label" innerRadius={58} outerRadius={88} paddingAngle={2}>
                 {items.map((item, index) => (
                   <Cell key={item.label} fill={COLORS[index % COLORS.length]} />

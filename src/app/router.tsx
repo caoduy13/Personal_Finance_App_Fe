@@ -44,6 +44,7 @@ export const router = createBrowserRouter([
         <UserLayout />
       </ProtectedRoute>
     ),
+    // P3: tạm dùng trang giao dịch cho cả /dashboard (tránh trùng nav label với /transactions — sẽ tách khi có User Dashboard).
     children: [{ index: true, element: <TransactionsPage /> }],
   },
   {
