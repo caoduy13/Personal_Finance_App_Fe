@@ -8,6 +8,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Tags,
   Users,
 } from "lucide-react";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuth";
@@ -29,6 +30,7 @@ import {
 const sidebarNavItems = [
   { label: "Dashboard", to: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
   { label: "Users", to: ROUTES.ADMIN_USERS, icon: Users },
+  { label: "Categories", to: ROUTES.ADMIN_CATEGORIES, icon: Tags },
   { label: "Notifications", to: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
   { label: "Audit Logs", to: ROUTES.ADMIN_AUDIT_LOGS, icon: ClipboardList },
 ] as const;
