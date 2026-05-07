@@ -1,16 +1,16 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
 import { OnboardingPage } from "@/features/onboarding";
-import { AdminDashboardPage, DashboardPage } from "@/features/dashboard";
-import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
-import { JarsPage } from "@/features/jars";
-import { BudgetPage } from "@/features/budget";
 import {
+  AdminDashboardPage,
   AdminUsersPage,
   AdminUserDetailPage,
   AdminNotificationsPage,
   AdminAuditLogsPage,
 } from "@/features/admin";
+import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
+import { JarsPage } from "@/features/jars";
+import { BudgetPage } from "@/features/budget";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
@@ -18,7 +18,7 @@ import { NotFoundPage } from "@/shared/pages/NotFoundPage";
 import { UnauthorizedPage } from "@/shared/pages/UnauthorizedPage";
 import { UserGoalsPage } from "@/shared/pages/UserGoalsPage";
 import { UserNotificationsPage } from "@/shared/pages/UserNotificationsPage";
-import { UserProfilePage } from "@/shared/pages/UserProfilePage";
+import { UserProfilePage } from "@/features/profile";
 import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
 
@@ -54,7 +54,8 @@ export const router = createBrowserRouter([
         <UserLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <DashboardPage /> }],
+    // P3: tạm dùng trang giao dịch cho cả /dashboard (tránh trùng nav label với /transactions — sẽ tách khi có User Dashboard).
+    children: [{ index: true, element: <TransactionsPage /> }],
   },
   {
     path: ROUTES.TRANSACTIONS,

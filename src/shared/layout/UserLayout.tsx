@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Bell,
   CircleUserRound,
@@ -52,8 +52,10 @@ const mobileMoreItems = [
 export function UserLayout() {
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
+  const location = useLocation();
   const { user } = useAuth();
   const { mutate: logout, isPending } = useLogoutMutation();
+  const isProfileRoute = location.pathname === ROUTES.PROFILE;
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20 md:pb-0">
@@ -119,9 +121,17 @@ export function UserLayout() {
             >
               <button
                 type="button"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className={cn(
+                  "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100",
+                  isProfileRoute && "bg-slate-100 text-black",
+                )}
               >
-                <CircleUserRound className="h-5 w-5 text-slate-600" />
+                <CircleUserRound
+                  className={cn(
+                    "h-5 w-5 text-slate-600",
+                    isProfileRoute && "text-[#6366F1]",
+                  )}
+                />
                 <span className="max-w-[140px] truncate">{user?.fullName ?? "Tài khoản"}</span>
               </button>
 
@@ -134,13 +144,18 @@ export function UserLayout() {
                 )}
               >
                 <div className="rounded-xl border bg-white p-1.5 shadow-lg">
-                  <Link
+                  <NavLink
                     to={ROUTES.PROFILE}
-                    className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100",
+                        isActive && "bg-slate-100 text-black",
+                      )
+                    }
                     onClick={() => setOpenProfileMenu(false)}
                   >
                     Hồ sơ
-                  </Link>
+                  </NavLink>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button
