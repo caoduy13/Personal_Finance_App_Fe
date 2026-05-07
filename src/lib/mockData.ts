@@ -318,7 +318,7 @@ export const mockData = {
       lastName: "Nguyễn",
       email: "anh@finjar.app",
       phone: "0901234567",
-      avatarUrl: null,
+      avatarUrl: "../../public/avatar.jpg",
       preferredCurrency: "VND",
       isOnboardingCompleted: true,
     }),
