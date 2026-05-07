@@ -4,4 +4,7 @@ export const API_ENDPOINT = {
     REGISTER: "/auth/register",
     LOGOUT: "/auth/logout",
   },
+  USER: {
+    ME: "/user/me",
+  },
 } as const;

@@ -16,7 +16,7 @@ import { NotFoundPage } from "@/shared/pages/NotFoundPage";
 import { UnauthorizedPage } from "@/shared/pages/UnauthorizedPage";
 import { UserGoalsPage } from "@/shared/pages/UserGoalsPage";
 import { UserNotificationsPage } from "@/shared/pages/UserNotificationsPage";
-import { UserProfilePage } from "@/shared/pages/UserProfilePage";
+import { UserProfilePage } from "@/features/profile";
 import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
 
