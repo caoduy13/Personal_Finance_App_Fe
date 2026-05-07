@@ -19,12 +19,12 @@ import {
   SPENDING_CHALLENGE_OPTIONS,
   type BudgetMethodId,
 } from "@/constants/onboarding";
+import { userService } from "@/features/user";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAuthStore } from "@/features/auth/store";
-import {
-  onboardingService,
-  type SuggestionRow,
-} from "@/services/onboardingService";
+import { onboardingService } from "@/features/onboarding/services";
+import type { SuggestionRow } from "@/features/onboarding/types";
 
 const TOTAL_STEPS = 4;
 const vndFormatter = new Intl.NumberFormat("vi-VN", {
@@ -43,6 +43,7 @@ function toggleInList<T>(list: T[], value: T): T[] {
 
 function OnboardingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const setUser = useAuthStore((s) => s.setUser);
   const [step, setStep] = useState(1);
@@ -106,7 +107,13 @@ function OnboardingPage() {
       const form = buildFormPayload();
       const result = await onboardingService.complete(form);
       if (result?.success !== false) {
-        setUser({ isOnboardingCompleted: true, is_onboarding_completed: true });
+        try {
+          await userService.syncAuthFromServer();
+        } catch {
+          setUser({ isOnboardingCompleted: true, is_onboarding_completed: true });
+        }
+        void queryClient.invalidateQueries({ queryKey: ["user"] });
+        void queryClient.invalidateQueries({ queryKey: ["categories"] });
         navigate(ROUTES.DASHBOARD, { replace: true });
       } else {
         setSubmitError(ONBOARDING_UI.submitError);

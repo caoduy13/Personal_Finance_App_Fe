@@ -12,8 +12,9 @@ export const env = {
   /** Cờ rollback toàn bộ về mock data, hữu ích khi BE down. */
   FORCE_MOCK,
   /**
-   * Bật POST /auth/login-register thật + GET /User/me sau khi có token.
-   * Khi false: login/register dùng mock (anh@finjar.app, …).
+   * Bật gọi BE thật cho auth; đồng thời bật /User/me, onboarding (POST /Onboarding),
+   * danh mục (GET /api/v1/categories) khi `VITE_FORCE_MOCK` không ép mock.
+   * Khi false: luồng trên vẫn dùng mockData.
    */
   USE_REAL_AUTH,
   DEV_PREFILL_LOGIN_EMAIL: import.meta.env.VITE_DEV_PREFILL_LOGIN_EMAIL?.trim() ?? "",

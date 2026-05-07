@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 import { authService } from "../services";
@@ -42,12 +42,15 @@ export function useAuth() {
 }
 
 export function useLoginMutation() {
+  const queryClient = useQueryClient();
   const { setAuth } = useAuthStore();
   const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (payload) => authService.login(payload),
     onSuccess: (response) => {
+      void queryClient.invalidateQueries({ queryKey: ["user"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
       setAuth({
         accessToken: response.accessToken,
         role: response.user.role,
@@ -59,12 +62,15 @@ export function useLoginMutation() {
 }
 
 export function useRegisterMutation() {
+  const queryClient = useQueryClient();
   const { setAuth } = useAuthStore();
   const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, RegisterRequest>({
     mutationFn: (payload) => authService.register(payload),
     onSuccess: (response) => {
+      void queryClient.invalidateQueries({ queryKey: ["user"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
       setAuth({
         accessToken: response.accessToken,
         role: response.user.role,
@@ -77,12 +83,15 @@ export function useRegisterMutation() {
 
 export function useLogoutMutation() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { clearAuth } = useAuthStore();
 
   return useMutation<void, Error, void>({
     mutationFn: () => authService.logout(),
     onSuccess: () => {
       clearAuth();
+      void queryClient.removeQueries({ queryKey: ["user"] });
+      void queryClient.removeQueries({ queryKey: ["categories"] });
       navigate(ROUTES.LOGIN, { replace: true });
     },
   });
