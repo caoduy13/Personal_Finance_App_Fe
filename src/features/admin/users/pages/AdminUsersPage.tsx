@@ -87,6 +87,8 @@ export function AdminUsersPage() {
   }, [keywordInput]);
 
   useEffect(() => {
+    // Sync: khi đổi bộ lọc, quay lại trang 1 (không phải subscription tới hệ thống bên ngoài).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional derived pagination reset
     setPageIndex(1);
   }, [keyword, statusFilter]);
 
@@ -116,6 +118,8 @@ export function AdminUsersPage() {
 
   useEffect(() => {
     if (pagination && pageIndex > pagination.totalPages) {
+      // Sync: sau khi API báo ít trang hơn, clamp pageIndex (tránh lệch UI/query).
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional clamp to server totalPages
       setPageIndex(Math.max(1, pagination.totalPages));
     }
   }, [pagination, pageIndex]);
