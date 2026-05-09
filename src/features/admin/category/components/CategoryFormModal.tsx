@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -56,7 +56,7 @@ export function CategoryFormModal({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<CategoryModalFormValues>({
@@ -70,8 +70,8 @@ export function CategoryFormModal({
     },
   });
 
-  const isActive = watch("isActive");
-  const colorValue = watch("color");
+  const isActive = useWatch({ control, name: "isActive", defaultValue: true });
+  const colorValue = useWatch({ control, name: "color", defaultValue: "#6366F1" });
 
   useEffect(() => {
     if (!open) return;
