@@ -117,14 +117,19 @@ export function CategoriesPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-muted-foreground">Đang tải danh mục...</p>
+      <p className="text-sm text-violet-600/80">Đang tải danh mục...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-2">
-        <p className="text-sm text-red-500">Không tải được danh mục.</p>
-        <Button type="button" variant="outline" onClick={() => void refetch()}>
+      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+        <p className="text-sm text-red-600">Không tải được danh mục.</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          onClick={() => void refetch()}
+        >
           Thử lại
         </Button>
       </div>
@@ -133,25 +138,36 @@ export function CategoriesPage() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#0f172a]">Danh mục</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Danh mục hệ thống (chỉ xem) và danh mục của bạn (tạo / sửa / xóa).
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
+              Phân loại
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">
+              Danh mục
+            </h1>
+            <p className="mt-1 max-w-xl text-sm text-slate-600">
+              Danh mục hệ thống (chỉ xem) và danh mục của bạn (tạo / sửa / xóa).
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            onClick={openCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo danh mục
+          </Button>
         </div>
-        <Button
-          type="button"
-          className="cursor-pointer bg-[#6366F1] hover:bg-[#4f46e5]"
-          onClick={openCreate}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Tạo danh mục
-        </Button>
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">
+        <h2 className="mb-3 text-sm font-semibold text-[#6366F1]">
           Danh mục mặc định
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -161,7 +177,7 @@ export function CategoriesPage() {
             data.defaultCategories.map((c) => (
               <span
                 key={c.id}
-                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700"
+                className="inline-flex items-center rounded-full border border-violet-200/90 bg-white/90 px-3 py-1 text-sm text-slate-700 shadow-sm shadow-violet-500/5"
               >
                 {c.name}
               </span>
@@ -171,7 +187,7 @@ export function CategoriesPage() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">
+        <h2 className="mb-3 text-sm font-semibold text-[#6366F1]">
           Danh mục của bạn
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -183,10 +199,10 @@ export function CategoriesPage() {
             data.customCategories.map((c) => (
               <Card
                 key={c.id}
-                className="border-[#d7def5] shadow-none transition hover:border-[#b8c4f5]"
+                className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{c.name}</CardTitle>
+                  <CardTitle className="text-base text-[#0f172a]">{c.name}</CardTitle>
                   <CardDescription>
                     {[c.icon && `Icon: ${c.icon}`, c.color && `Màu: ${c.color}`]
                       .filter(Boolean)
@@ -198,7 +214,7 @@ export function CategoriesPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer"
+                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
                     onClick={() => openEdit(c)}
                   >
                     <Pencil className="mr-1 h-3.5 w-3.5" />
@@ -208,7 +224,7 @@ export function CategoriesPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer text-red-600 hover:bg-red-50"
+                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
                     onClick={() => setDeleteId(c.id)}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
@@ -268,7 +284,7 @@ export function CategoriesPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -321,7 +337,7 @@ export function CategoriesPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}
