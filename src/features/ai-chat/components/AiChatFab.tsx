@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Bot, MessageCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -45,8 +45,8 @@ export function AiChatFab() {
           <header className="flex shrink-0 items-center justify-between gap-2 border-b border-violet-100 bg-linear-to-r from-[#6366F1] to-indigo-500 px-3 py-2.5">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <div className="relative shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-xs font-bold text-white backdrop-blur-sm">
-                  AI
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-white backdrop-blur-sm">
+                  <Bot className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </div>
                 <span
                   className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#6366F1] bg-emerald-400"

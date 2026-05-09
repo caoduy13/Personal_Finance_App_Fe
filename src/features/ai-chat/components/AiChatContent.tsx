@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Bot, CircleUserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { aiChatService, type AiChatMessage } from "../services";
 
@@ -94,13 +95,25 @@ export function AiChatContent({ className }: { className?: string }) {
             const avatar = (
               <div
                 className={cn(
-                  "mt-1 h-8 w-8 shrink-0 rounded-full",
+                  "mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                   isUser
-                    ? "bg-[#6366F1]/20 ring-2 ring-[#6366F1]/30"
+                    ? "bg-[#6366F1]/15 ring-2 ring-[#6366F1]/35"
                     : "bg-linear-to-br from-violet-200 to-indigo-400 ring-2 ring-violet-200/80",
                 )}
                 aria-hidden
-              />
+              >
+                {isUser ? (
+                  <CircleUserRound
+                    className="h-[18px] w-[18px] text-[#6366F1]"
+                    strokeWidth={2}
+                  />
+                ) : (
+                  <Bot
+                    className="h-[18px] w-[18px] text-white drop-shadow-sm"
+                    strokeWidth={2}
+                  />
+                )}
+              </div>
             );
             const body = (
               <div
