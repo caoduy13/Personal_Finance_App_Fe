@@ -1,13 +1,17 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from "./types";
 import { apiClient } from "@/lib/axios";
 import { mockData } from "@/lib/mockData";
-import { requestWithStrategy, type RequestMode, wait } from "@/lib/requestStrategy";
+import {
+  requestWithStrategy,
+  type RequestMode,
+  wait,
+} from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants";
 
 const AUTH_STRATEGY = {
-  login: "mock" as RequestMode,
-  register: "mock" as RequestMode,
-  logout: "mock" as RequestMode,
+  login: "real" as RequestMode,
+  register: "real" as RequestMode,
+  logout: "real" as RequestMode,
 } as const;
 
 export const authService = {
@@ -35,10 +39,19 @@ export const authService = {
 
     const mockRequest = async () => {
       await wait(300);
-      return mockData.auth.register(payload.username, payload.email, payload.fullName);
+      return mockData.auth.register(
+        payload.username,
+        payload.email,
+        payload.firstName,
+        payload.lastName,
+      );
     };
 
-    return requestWithStrategy(AUTH_STRATEGY.register, realRequest, mockRequest);
+    return requestWithStrategy(
+      AUTH_STRATEGY.register,
+      realRequest,
+      mockRequest,
+    );
   },
 
   async logout(): Promise<void> {

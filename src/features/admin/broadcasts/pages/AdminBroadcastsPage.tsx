@@ -1,16 +1,29 @@
+import { useState } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { Label } from "@/shared/components/ui/label";
 import { useAdminBroadcasts } from "@/features/admin/broadcasts";
+import { CreateBroadcastForm } from "../components/CreateBroadcastForm";
+
+const STATUS_OPTIONS = [
+  { value: "Sent", label: "Đã gửi" },
+  { value: "Queued", label: "Đang chờ / đã lên lịch" },
+  { value: "Failed", label: "Thất bại" },
+  { value: "Cancelled", label: "Đã hủy" },
+] as const;
 
 export function AdminBroadcastsPage() {
+  const [listStatus, setListStatus] =
+    useState<(typeof STATUS_OPTIONS)[number]["value"]>("Sent");
+
   const { data, isLoading, isError } = useAdminBroadcasts({
     pageIndex: 1,
     pageSize: 20,
-    status: "Sent",
+    status: listStatus,
   });
 
   if (isLoading)
@@ -25,9 +38,40 @@ export function AdminBroadcastsPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-semibold">Notifications</h1>
+
       <Card>
         <CardHeader>
-          <CardTitle>Broadcast History</CardTitle>
+          <CardTitle>Tạo broadcast</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CreateBroadcastForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle>Lịch sử broadcast</CardTitle>
+          <div className="flex flex-col gap-1.5 sm:w-64">
+            <Label htmlFor="broadcast-list-status" className="text-xs">
+              Trạng thái
+            </Label>
+            <select
+              id="broadcast-list-status"
+              className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={listStatus}
+              onChange={(e) =>
+                setListStatus(
+                  e.target.value as (typeof STATUS_OPTIONS)[number]["value"],
+                )
+              }
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {broadcasts.length === 0 ? (
