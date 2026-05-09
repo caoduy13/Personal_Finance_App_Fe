@@ -6,7 +6,7 @@ import { BudgetPage } from "@/features/budget";
 import {
   AdminDashboardPage,
   AdminUsersPage,
-  AdminNotificationsPage,
+  AdminBroadcastsPage,
   AdminAuditLogsPage,
 } from "@/features/admin";
 import { ROUTES } from "@/shared/constants/routes";
@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: "users", element: <AdminUsersPage /> },
-      { path: "notifications", element: <AdminNotificationsPage /> },
+      { path: "notifications", element: <AdminBroadcastsPage /> },
       { path: "audit-logs", element: <AdminAuditLogsPage /> },
       { path: "categories", element: <AdminCategoriesPage /> },
     ],
