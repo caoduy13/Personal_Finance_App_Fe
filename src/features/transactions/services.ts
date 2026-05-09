@@ -18,10 +18,10 @@ import type {
 } from "./types";
 
 const TRANSACTION_STRATEGY = {
-  list: "mock" as RequestMode,
-  create: "mock" as RequestMode,
-  update: "mock" as RequestMode,
-  remove: "mock" as RequestMode,
+  list: "real" as RequestMode,
+  create: "real" as RequestMode,
+  update: "real" as RequestMode,
+  remove: "real" as RequestMode,
 } as const;
 
 interface TransactionApiRow {
@@ -29,7 +29,8 @@ interface TransactionApiRow {
   type: string;
   transactionsAmount: number;
   note?: string | null;
-  date: string;
+  date?: string;
+  transactionDate?: string;
   financialAccount?: { id?: string | null; name?: string | null };
   jar?: { id?: string | null; name?: string | null };
   category?: { id?: string | null; name?: string | null };
@@ -37,19 +38,43 @@ interface TransactionApiRow {
 
 interface TransactionsListApiBody {
   data: TransactionApiRow[];
-  pagination: TransactionPagination;
+  pagination?: TransactionPagination;
 }
 
 function mapRow(row: TransactionApiRow): TransactionItem {
+  const date = row.date ?? row.transactionDate ?? new Date().toISOString();
   return {
     id: row.id,
     type: row.type as TransactionType,
     amount: Number(row.transactionsAmount),
     note: row.note ?? "",
-    transactionDate: row.date,
+    transactionDate: date,
     financialAccountName: row.financialAccount?.name,
     jarName: row.jar?.name,
     categoryName: row.category?.name,
+  };
+}
+
+function mapCreatedResponse(
+  raw: unknown,
+  payload: CreateTransactionPayload,
+): TransactionItem {
+  if (raw != null && typeof raw === "object" && "id" in raw) {
+    const row = raw as TransactionApiRow;
+    if (row.id && row.type != null && row.transactionsAmount != null) {
+      return mapRow({
+        ...row,
+        note: row.note ?? payload.note ?? "",
+        date: row.date ?? row.transactionDate ?? payload.date,
+      });
+    }
+  }
+  return {
+    id: crypto.randomUUID(),
+    type: payload.type,
+    amount: payload.amount,
+    note: payload.note ?? "",
+    transactionDate: payload.date ?? new Date().toISOString(),
   };
 }
 
@@ -73,12 +98,33 @@ function buildListParams(params?: TransactionListParams) {
 export const transactionService = {
   async list(params?: TransactionListParams): Promise<TransactionListResult> {
     const realRequest = async () => {
-      const body = (await apiClient.get(API_ENDPOINT.TRANSACTIONS, {
+      const raw = (await apiClient.get(API_ENDPOINT.TRANSACTIONS, {
         params: buildListParams(params),
-      })) as TransactionsListApiBody;
+      })) as unknown;
+
+      if (raw != null && typeof raw === "object" && "data" in raw) {
+        const body = raw as TransactionsListApiBody;
+        const rows = Array.isArray(body.data) ? body.data : [];
+        const pagination = body.pagination ?? {
+          page: params?.pageIndex ?? 1,
+          pageSize: params?.pageSize ?? (rows.length || 20),
+          totalCount: rows.length,
+          totalPages: 1,
+        };
+        return {
+          items: rows.map(mapRow),
+          pagination,
+        };
+      }
+
       return {
-        items: body.data.map(mapRow),
-        pagination: body.pagination,
+        items: [],
+        pagination: {
+          page: 1,
+          pageSize: 20,
+          totalCount: 0,
+          totalPages: 0,
+        },
       };
     };
 
@@ -114,28 +160,17 @@ export const transactionService = {
   async create(payload: CreateTransactionPayload): Promise<TransactionItem> {
     const realRequest = async () => {
       const body = {
-        financialAccountId: payload.financialAccountId ?? undefined,
+        financialAccountId: payload.financialAccountId ?? null,
         type: payload.type,
         transactionsAmount: payload.amount,
-        categoryId: payload.categoryId ?? undefined,
-        fromJarId: payload.fromJarId ?? undefined,
-        toJarId: payload.toJarId ?? undefined,
-        note: payload.note ?? null,
+        categoryId: payload.categoryId ?? null,
+        fromJarId: payload.fromJarId ?? null,
+        toJarId: payload.toJarId ?? null,
+        note: payload.note?.trim() ? payload.note.trim() : null,
         date: payload.date ?? new Date().toISOString(),
       };
-      const row = (await apiClient.post(API_ENDPOINT.TRANSACTIONS, body)) as {
-        id: string;
-        type: string;
-        transactionsAmount: number;
-        date: string;
-      };
-      return {
-        id: row.id,
-        type: row.type as TransactionType,
-        amount: Number(row.transactionsAmount),
-        note: payload.note ?? "",
-        transactionDate: row.date,
-      };
+      const raw = await apiClient.post<unknown>(API_ENDPOINT.TRANSACTIONS, body);
+      return mapCreatedResponse(raw, payload);
     };
 
     const mockRequest = async (): Promise<TransactionItem> => {
@@ -145,7 +180,7 @@ export const transactionService = {
         type: payload.type,
         amount: payload.amount,
         note: payload.note ?? "",
-        transactionDate: new Date().toISOString(),
+        transactionDate: payload.date ?? new Date().toISOString(),
       };
     };
 

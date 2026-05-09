@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { ROUTES } from "@/shared/constants";
@@ -51,16 +51,18 @@ export function AddTransactionPage() {
 
   const loadingDeps = loadingAccounts || loadingCategories || loadingJars;
 
-  const validateAndBuild = (): {
-    type: TransactionType;
-    amount: number;
-    note?: string;
-    categoryId?: string | null;
-    financialAccountId?: string | null;
-    fromJarId?: string | null;
-    toJarId?: string | null;
-    date: string;
-  } | null => {
+  const validateAndBuild = ():
+    | {
+        type: TransactionType;
+        amount: number;
+        note?: string;
+        categoryId?: string | null;
+        financialAccountId?: string | null;
+        fromJarId?: string | null;
+        toJarId?: string | null;
+        date: string;
+      }
+    | null => {
     setFormError(null);
     const num = Number(amount);
     if (!Number.isFinite(num) || num <= 0) {
