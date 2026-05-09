@@ -28,9 +28,20 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    return response.data?.data !== undefined
-      ? response.data.data
-      : response.data;
+    const body = response.data;
+    // Phân trang BE: `{ data, pagination }` — giữ nguyên, không unwrap chỉ mảng.
+    if (
+      body &&
+      typeof body === "object" &&
+      "data" in body &&
+      "pagination" in body
+    ) {
+      return body;
+    }
+    if (body?.data !== undefined) {
+      return body.data;
+    }
+    return body;
   },
   (error) => {
     if (error.response?.status === 401) {

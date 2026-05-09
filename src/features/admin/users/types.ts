@@ -4,11 +4,44 @@ export enum AccountRole {
   Admin = 2,
 }
 
-export interface AdminUserItem {
+/** Khớp `AdminUserResponse` từ API (JSON camelCase). */
+export interface AdminUserDto {
   id: string;
-  username: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  fullName: string;
-  status: "Active" | "Banned";
-  roleCode: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  preferredCurrency: string;
+  isOnboardingCompleted: boolean;
+  status: string;
+  statusReason: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface AdminUsersPagination {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface AdminUsersPagedResponse {
+  data: AdminUserDto[];
+  pagination: AdminUsersPagination;
+}
+
+export interface GetAdminUsersParams {
+  pageIndex: number;
+  pageSize: number;
+  status?: string;
+  keyword?: string;
+}
+
+export interface UpdateUserStatusBody {
+  userId: string;
+  status: string;
+  statusReason?: string | null;
 }
