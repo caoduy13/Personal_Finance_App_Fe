@@ -216,14 +216,19 @@ export function RemindersPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-muted-foreground">Đang tải nhắc lịch...</p>
+      <p className="text-sm text-violet-600/80">Đang tải nhắc lịch...</p>
     );
   }
   if (isError || data === undefined) {
     return (
-      <div className="space-y-2">
-        <p className="text-sm text-red-500">Không tải được nhắc lịch.</p>
-        <Button type="button" variant="outline" onClick={() => void refetch()}>
+      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+        <p className="text-sm text-red-600">Không tải được nhắc lịch.</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          onClick={() => void refetch()}
+        >
           Thử lại
         </Button>
       </div>
@@ -232,54 +237,72 @@ export function RemindersPage() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#0f172a]">Nhắc lịch</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Nhắc thanh toán định kỳ (điện, học phí…).
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
+              Thanh toán định kỳ
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Nhắc lịch</h1>
+            <p className="mt-1 max-w-xl text-sm text-slate-600">
+              Nhắc thanh toán định kỳ (điện, học phí…).
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            onClick={openCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo nhắc lịch
+          </Button>
         </div>
-        <Button
-          type="button"
-          className="cursor-pointer bg-[#6366F1] hover:bg-[#4f46e5]"
-          onClick={openCreate}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Tạo nhắc lịch
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {list.length === 0 ? (
-          <p className="text-sm text-slate-500 md:col-span-2">
-            Chưa có nhắc lịch nào.
-          </p>
+          <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none md:col-span-2">
+            <CardContent className="py-10 text-center text-sm text-slate-600">
+              Chưa có nhắc lịch nào. Nhấn &quot;Tạo nhắc lịch&quot; để thêm.
+            </CardContent>
+          </Card>
         ) : (
           list.map((r) => (
             <Card
               key={r.id}
-              className="border-[#d7def5] shadow-none transition hover:border-[#b8c4f5]"
+              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{r.title}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base text-[#0f172a]">{r.title}</CardTitle>
+                <CardDescription className="text-slate-600">
                   {r.frequency} · {r.status}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-slate-600">
-                <p>Số tiền: {formatCurrency(r.amount)}</p>
+                <p>
+                  Số tiền:{" "}
+                  <span className="font-semibold text-[#6366F1]">
+                    {formatCurrency(r.amount)}
+                  </span>
+                </p>
                 <p>
                   Lần tới:{" "}
-                  {r.nextDueDate
-                    ? format(new Date(r.nextDueDate), "PPp", { locale: vi })
-                    : "—"}
+                  <span className="font-medium text-slate-800">
+                    {r.nextDueDate
+                      ? format(new Date(r.nextDueDate), "PPp", { locale: vi })
+                      : "—"}
+                  </span>
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer"
+                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
                     onClick={() => openEdit(r)}
                   >
                     Sửa
@@ -288,7 +311,7 @@ export function RemindersPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer text-red-600 hover:bg-red-50"
+                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
                     onClick={() => setCancelId(r.id)}
                   >
                     Hủy nhắc nhở
@@ -410,7 +433,7 @@ export function RemindersPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -512,7 +535,7 @@ export function RemindersPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}

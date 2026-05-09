@@ -372,7 +372,7 @@ export function AdminUsersPage() {
       </Card>
 
       <Dialog open={detailOpen} onOpenChange={closeDetail}>
-        <DialogContent className="scrollbar-none max-h-[90vh] max-w-lg overflow-y-auto border-t-[3px] border-t-[#6366F1] sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-t-[3px] border-t-[#6366F1] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className={adminTitle}>Chi tiết người dùng</DialogTitle>
             <DialogDescription className="text-slate-600">
