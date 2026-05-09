@@ -1,24 +1,26 @@
-import type { AuthResponse, AuthUser } from "@/features/auth/types";
+import type { AuthResponse } from "@/features/auth/types";
 import type { CurrentUser } from "@/features/profile/types";
 
-const createAuthUser = (
+function createAuthResponse(
   email: string,
-  fullName?: string,
-  username?: string,
-): AuthUser => {
+  opts?: { username?: string; firstName?: string; lastName?: string },
+): AuthResponse {
   const isAdmin = email.toLowerCase().includes("admin");
-  const resolvedName =
-    fullName ?? username ?? (isAdmin ? "Admin User" : "Finjar User");
+  const username =
+    opts?.username ?? (isAdmin ? "admin" : "user");
+  const firstName = opts?.firstName ?? (isAdmin ? "Admin" : "User");
+  const lastName = opts?.lastName ?? "Mock";
 
   return {
     id: isAdmin ? "admin-1" : "user-1",
+    username,
+    firstName,
+    lastName,
     email,
-    fullName: resolvedName,
-    role: isAdmin ? "admin" : "user",
-    isOnboardingCompleted: isAdmin ? true : false,
-    is_onboarding_completed: isAdmin ? true : false,
+    role: isAdmin ? "Admin" : "User",
+    accessToken: `mock-finjar-token-${Date.now()}`,
   };
-};
+}
 
 const now = new Date().toISOString();
 
@@ -712,19 +714,14 @@ export const mockData = {
     ],
   },
   auth: {
-    login: (email: string): AuthResponse => ({
-      user: createAuthUser(email),
-      accessToken: `mock-finjar-token-${Date.now()}`,
-    }),
+    login: (email: string): AuthResponse => createAuthResponse(email),
     register: (
       username: string,
       email: string,
-      fullName: string,
-    ): AuthResponse => ({
-      user: createAuthUser(email, fullName, username),
-      accessToken: `mock-finjar-token-${Date.now()}`,
-    }),
-  },
+      firstName: string,
+      lastName: string,
+    ): AuthResponse =>
+      createAuthResponse(email, { username, firstName, lastName }),
   profile: {
     getMe: (): CurrentUser => ({
       id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",

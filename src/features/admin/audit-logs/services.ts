@@ -1,58 +1,85 @@
 import { apiClient } from "@/lib/axios";
-import { mockData } from "@/lib/mockData";
-import { requestWithStrategy, type RequestMode, wait } from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
-import type { AdminAuditLogItem, AdminAuditLogListResult, AdminAuditLogParams } from "./types";
+import type {
+  AdminAuditLogItem,
+  AdminAuditLogListResult,
+  AdminAuditLogParams,
+} from "./types";
 
-const AUDIT_STRATEGY = {
-  list: "mock" as RequestMode,
-} as const;
+/** Query PascalCase — khớp Swagger (`AdminId`, `Page`, …). */
+function buildAuditQueryParams(params?: AdminAuditLogParams) {
+  const q: Record<string, string | number> = {
+    Page: params?.page ?? 1,
+    PageSize: params?.pageSize ?? 50,
+  };
+  const aid = params?.adminId?.trim();
+  if (aid) q.AdminId = aid;
+  const at = params?.actionType?.trim();
+  if (at) q.ActionType = at;
+  const et = params?.entityType?.trim();
+  if (et) q.EntityType = et;
+  if (params?.fromDate) q.FromDate = params.fromDate;
+  if (params?.toDate) q.ToDate = params.toDate;
+  return q;
+}
 
-function mapMockLog(row: (typeof mockData.tables.audit_logs)[number]): AdminAuditLogItem {
+function normalizeItem(row: Record<string, unknown>): AdminAuditLogItem {
+  const id = row.id ?? row.Id;
+  const created = row.createdAt ?? row.CreatedAt;
   return {
-    id: row.id,
-    adminUsername: "admin",
-    actionType: row.action_type,
-    entityType: row.entity_type,
-    description: row.description,
-    createdAt: row.created_at,
+    id: String(id),
+    adminUsername: String(row.adminUsername ?? row.AdminUsername ?? ""),
+    actionType: String(row.actionType ?? row.ActionType ?? ""),
+    entityType: String(row.entityType ?? row.EntityType ?? ""),
+    description: String(row.description ?? row.Description ?? ""),
+    createdAt:
+      typeof created === "string"
+        ? created
+        : created != null
+          ? String(created)
+          : "",
+  };
+}
+
+function normalizeList(raw: unknown): AdminAuditLogListResult {
+  if (!raw || typeof raw !== "object") {
+    return {
+      items: [],
+      pagination: {
+        pageIndex: 1,
+        pageSize: 50,
+        totalCount: 0,
+        totalPages: 1,
+      },
+    };
+  }
+  const o = raw as Record<string, unknown>;
+  const rawItems = (o.items ?? o.Items) as unknown[] | undefined;
+  const rawPag = (o.pagination ?? o.Pagination) as Record<string, unknown> | undefined;
+  const items = Array.isArray(rawItems)
+    ? rawItems.map((x) =>
+        normalizeItem(x && typeof x === "object" ? (x as Record<string, unknown>) : {}),
+      )
+    : [];
+  const pageIndex = Number(rawPag?.pageIndex ?? rawPag?.PageIndex ?? 1);
+  const pageSize = Number(rawPag?.pageSize ?? rawPag?.PageSize ?? 50);
+  const totalCount = Number(rawPag?.totalCount ?? rawPag?.TotalCount ?? items.length);
+  const totalPages = Number(
+    rawPag?.totalPages ??
+      rawPag?.TotalPages ??
+      Math.max(1, Math.ceil(totalCount / pageSize)),
+  );
+  return {
+    items,
+    pagination: { pageIndex, pageSize, totalCount, totalPages },
   };
 }
 
 export const adminAuditLogService = {
   async list(params?: AdminAuditLogParams): Promise<AdminAuditLogListResult> {
-    const realRequest = async () => {
-      const body = (await apiClient.get(API_ENDPOINT.ADMIN.AUDIT_LOGS, {
-        params: {
-          adminId: params?.adminId,
-          actionType: params?.actionType,
-          entityType: params?.entityType,
-          fromDate: params?.fromDate,
-          toDate: params?.toDate,
-          page: params?.page ?? 1,
-          pageSize: params?.pageSize ?? 50,
-        },
-      })) as {
-        items: AdminAuditLogItem[];
-        pagination: AdminAuditLogListResult["pagination"];
-      };
-      return { items: body.items, pagination: body.pagination };
-    };
-
-    const mockRequest = async (): Promise<AdminAuditLogListResult> => {
-      await wait(200);
-      const items = mockData.tables.audit_logs.map(mapMockLog);
-      return {
-        items,
-        pagination: {
-          pageIndex: 1,
-          pageSize: items.length,
-          totalCount: items.length,
-          totalPages: 1,
-        },
-      };
-    };
-
-    return requestWithStrategy(AUDIT_STRATEGY.list, realRequest, mockRequest);
+    const raw = await apiClient.get<unknown>(API_ENDPOINT.ADMIN.AUDIT_LOGS, {
+      params: buildAuditQueryParams(params),
+    });
+    return normalizeList(raw);
   },
 };

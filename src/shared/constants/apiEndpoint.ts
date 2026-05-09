@@ -30,10 +30,12 @@ export const API_ENDPOINT = {
   TRANSACTIONS: "/Transactions",
   GOALS: "/goals",
   ADMIN: {
-    DASHBOARD: "/api/v1/admin/dashboard",
-    USERS: "/api/v1/admin/users",
-    CATEGORIES: "/api/v1/admin/categories",
-    BROADCASTS: "/api/v1/admin/broadcasts",
-    AUDIT_LOGS: "/api/v1/admin/audit-logs",
+    DASHBOARD: "/admin/dashboard",
+    USERS: "/admin/users",
+    CATEGORIES: "/admin/categories",
+    BROADCASTS: "/admin/broadcasts",
+    AUDIT_LOGS: "/admin/audit-logs",
+    AI_SETTINGS: "/admin/ai-settings",
+    CHANGE_ROLE: "/change-role",
   },
 } as const;

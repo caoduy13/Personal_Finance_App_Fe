@@ -4,6 +4,12 @@ import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 import { authService } from "../services";
 import { useAuthStore } from "../store";
 import { ROUTES } from "@/shared/constants/routes";
+import type { UserRole } from "@/shared/types";
+import { toast } from "sonner";
+
+function apiRoleToAppRole(apiRole: string): UserRole {
+  return apiRole.trim().toLowerCase() === "admin" ? "admin" : "user";
+}
 
 export function useAuth() {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -35,12 +41,21 @@ export function useLoginMutation() {
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (payload) => authService.login(payload),
     onSuccess: (response) => {
+      const user = {
+        id: response.id,
+        username: response.username,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        email: response.email,
+        role: response.role,
+      };
+      const appRole = apiRoleToAppRole(response.role);
       setAuth({
         accessToken: response.accessToken,
-        role: response.user.role,
-        user: response.user,
+        role: appRole,
+        user,
       });
-      navigate(response.user.role === "admin" ? ROUTES.ADMIN_DASHBOARD : from, {
+      navigate(appRole === "admin" ? ROUTES.ADMIN_DASHBOARD : from, {
         replace: true,
       });
     },
@@ -67,6 +82,7 @@ export function useLogoutMutation() {
     onSuccess: () => {
       clearAuth();
       navigate(ROUTES.LOGIN, { replace: true });
+      toast.success("Đăng xuất thành công");
     },
   });
 }

@@ -39,10 +39,14 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // JWT qua header Bearer — không cần cookie cross-origin; `true` bắt buộc BE trả
+  // Access-Control-Allow-Credentials (và không được dùng * cho origin).
   withCredentials: false,
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.withCredentials = false;
+
   const token = useAuthStore.getState().accessToken;
 
   if (token) {
@@ -52,9 +56,22 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-/** Trả về JSON body gốc (`response.data`), không tách lớp `{ data: T }` để tránh mất pagination. */
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const body = response.data;
+    if (
+      body &&
+      typeof body === "object" &&
+      "data" in body &&
+      "pagination" in body
+    ) {
+      return body;
+    }
+    if (body?.data !== undefined) {
+      return body.data;
+    }
+    return body;
+  },
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().clearAuth();

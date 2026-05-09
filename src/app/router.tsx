@@ -8,6 +8,7 @@ import {
   AdminUsersPage,
   AdminBroadcastsPage,
   AdminAuditLogsPage,
+  AdminAiSettingsPage,
 } from "@/features/admin";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
@@ -68,6 +69,7 @@ export const router = createBrowserRouter([
       { path: "notifications", element: <AdminBroadcastsPage /> },
       { path: "audit-logs", element: <AdminAuditLogsPage /> },
       { path: "categories", element: <AdminCategoriesPage /> },
+      { path: "ai-settings", element: <AdminAiSettingsPage /> },
     ],
   },
   {

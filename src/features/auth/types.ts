@@ -13,15 +13,17 @@ export interface RegisterRequest {
   lastName: string;
 }
 
+/** Session user; `role` is the string from the API (e.g. "User", "Admin"). */
 export interface AuthUser {
   id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  fullName: string;
-  role: UserRole;
+  role: string;
 }
 
-export interface AuthResponse {
-  user: AuthUser;
+export interface AuthResponse extends AuthUser {
   accessToken: string;
 }
 
@@ -32,6 +34,10 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  setAuth: (payload: { accessToken: string; role: UserRole; user: AuthUser }) => void;
+  setAuth: (payload: {
+    accessToken: string;
+    role: UserRole;
+    user: AuthUser;
+  }) => void;
   clearAuth: () => void;
 }
