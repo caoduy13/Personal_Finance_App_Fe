@@ -2,7 +2,7 @@ import axios from "axios";
 import { env } from "@/lib/env";
 import { useAuthStore } from "@/features/auth/store";
 
-/** Raw axios — dùng khi cần body đầy đủ (vd. pagination + data). */
+/** Raw axios — dùng khi cần body đầy đủ (vd: pagination + data). */
 export const apiBare = axios.create({
   baseURL: env.API_URL,
   timeout: 45000,
@@ -43,6 +43,8 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.withCredentials = false;
+
   const token = useAuthStore.getState().accessToken;
 
   if (token) {
@@ -52,7 +54,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-/** Trả về JSON body gốc (`response.data`), không tách lớp `{ data: T }` để tránh mất pagination. */
+/** Trả về JSON body gốc (`response.data`), không tách lớp `{ data }` để tránh mất pagination. */
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {

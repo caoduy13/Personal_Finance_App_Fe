@@ -20,6 +20,13 @@ import type { Category } from "../type";
 import { CategoryFormModal } from "../components/CategoryFormModal";
 import { CategoryActiveToggle } from "../components/CategoryActiveToggle";
 import { Label } from "@/shared/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 
 const STATUS_FILTER_OPTIONS: {
   value: AdminCategoryStatusFilter;
@@ -128,20 +135,23 @@ export default function AdminCategoriesPage() {
             <Label htmlFor="admin-category-status" className="text-xs">
               Trạng thái
             </Label>
-            <select
-              id="admin-category-status"
-              className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
               value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as AdminCategoryStatusFilter)
+              onValueChange={(v) =>
+                setStatusFilter(v as AdminCategoryStatusFilter)
               }
             >
-              {STATUS_FILTER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="admin-category-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button
             type="button"

@@ -8,6 +8,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
   Tags,
   Users,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const sidebarNavItems = [
   { label: "Users", to: ROUTES.ADMIN_USERS, icon: Users },
   { label: "Categories", to: ROUTES.ADMIN_CATEGORIES, icon: Tags },
   { label: "Notifications", to: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
+  { label: "AI Settings", to: ROUTES.ADMIN_AI_SETTINGS, icon: Sparkles },
   { label: "Audit Logs", to: ROUTES.ADMIN_AUDIT_LOGS, icon: ClipboardList },
 ] as const;
 
@@ -54,7 +56,7 @@ export function AdminLayout() {
       <div className="flex min-h-screen w-full">
         <aside
           className={cn(
-            "hidden shrink-0 flex-col border-r bg-white p-3 transition-all duration-300 md:sticky md:top-0 md:flex md:h-screen md:self-start md:overflow-y-auto",
+            "scrollbar-none hidden shrink-0 flex-col border-r bg-white p-3 transition-all duration-300 md:sticky md:top-0 md:flex md:h-screen md:self-start md:overflow-y-auto",
             sidebarWidthClass,
           )}
         >

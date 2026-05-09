@@ -4,6 +4,7 @@ import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 import { authService } from "../services";
 import { useAuthStore } from "../store";
 import { ROUTES } from "@/shared/constants/routes";
+import { toast } from "sonner";
 
 function useAuthSuccessNavigation() {
   const navigate = useNavigate();
@@ -88,6 +89,7 @@ export function useLogoutMutation() {
       clearAuth();
       void queryClient.clear();
       navigate(ROUTES.LOGIN, { replace: true });
+      toast.success("Đăng xuất thành công");
     },
   });
 }
