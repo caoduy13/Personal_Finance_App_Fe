@@ -19,13 +19,11 @@ import {
   SPENDING_CHALLENGE_OPTIONS,
   type BudgetMethodId,
 } from "@/constants/onboarding";
+import { userService } from "@/features/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAuthStore } from "@/features/auth/store";
-import {
-  onboardingService,
-  syncAuthUserAfterOnboarding,
-} from "@/features/onboarding/services";
+import { onboardingService } from "@/features/onboarding/services";
 import type { SuggestionRow } from "@/features/onboarding/types";
 
 const TOTAL_STEPS = 4;
@@ -110,7 +108,7 @@ function OnboardingPage() {
       const result = await onboardingService.complete(form);
       if (result?.success !== false) {
         try {
-          await syncAuthUserAfterOnboarding();
+          await userService.syncAuthFromServer();
         } catch {
           setUser({ isOnboardingCompleted: true, is_onboarding_completed: true });
         }

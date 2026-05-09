@@ -158,42 +158,6 @@ function applyMockOnboardingComplete(form: OnboardingFeForm): void {
   }
 }
 
-function mapMeResponseToAuthPatch(raw: unknown): {
-  email: string;
-  fullName: string;
-  isOnboardingCompleted: boolean;
-  is_onboarding_completed: boolean;
-} {
-  if (raw == null || typeof raw !== "object") throw new Error("INVALID_ME");
-  const r = raw as Record<string, unknown>;
-  let firstName = String(r.firstName ?? "").trim();
-  let lastName = String(r.lastName ?? "").trim();
-  if (!firstName && !lastName && typeof r.fullName === "string") {
-    const parts = r.fullName.trim().split(/\s+/).filter(Boolean);
-    firstName = parts[0] ?? "";
-    lastName = parts.length > 1 ? parts.slice(1).join(" ") : "";
-  }
-  const email = String(r.email ?? "");
-  const fullName =
-    `${firstName} ${lastName}`.trim() ||
-    (typeof r.fullName === "string" ? r.fullName.trim() : "") ||
-    email;
-  const done = Boolean(r.isOnboardingCompleted);
-  return {
-    email,
-    fullName,
-    isOnboardingCompleted: done,
-    is_onboarding_completed: done,
-  };
-}
-
-/** Refresh auth store từ `/User/me` sau khi onboarding (tránh phụ thuộc `features/user` ở PR stack sớm). */
-export async function syncAuthUserAfterOnboarding(): Promise<void> {
-  const raw = await apiClient.get<unknown>(API_ENDPOINT.USER.ME);
-  const patch = mapMeResponseToAuthPatch(raw);
-  useAuthStore.getState().updateUser(patch);
-}
-
 export const onboardingService = {
   async complete(feFormData: OnboardingFeForm): Promise<OnboardingCompleteResult> {
     const body = mapFeFormToSwaggerBody(feFormData);
