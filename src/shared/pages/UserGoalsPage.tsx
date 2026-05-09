@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, PiggyBank, Plus, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useJars } from "@/features/jars/hooks/useJars";
 import {
   useCreateGoal,
   useDeleteGoal,
-  useGoal,
   useGoals,
   useUpdateGoal,
 } from "@/features/goals";
+import { goalService } from "@/features/goals/services";
 import type { GoalListItem } from "@/features/goals";
 import { ROUTES } from "@/shared/constants/routes";
 import { Button } from "@/shared/components/ui/button";
@@ -74,6 +75,7 @@ function toDatetimeLocalValue(d: Date) {
 }
 
 export function UserGoalsPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useGoals();
   const { data: jars = [] } = useJars();
   const { mutateAsync: createGoal, isPending: creating } = useCreateGoal();
@@ -83,8 +85,6 @@ export function UserGoalsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editListItem, setEditListItem] = useState<GoalListItem | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const { data: editDetail } = useGoal(editListItem?.id);
 
   const [cTitle, setCTitle] = useState("");
   const [cTarget, setCTarget] = useState("");
@@ -98,19 +98,25 @@ export function UserGoalsPage() {
   const [eJar, setEJar] = useState("__none__");
   const [eNote, setENote] = useState("");
 
-  useEffect(() => {
-    if (!editListItem) return;
-    setETitle(editListItem.title);
-    setETarget(String(editListItem.targetAmount));
-    const d = editListItem.dueDate ? new Date(editListItem.dueDate) : new Date();
-    setEDue(toDatetimeLocalValue(Number.isNaN(d.getTime()) ? new Date() : d));
-    setEJar(editListItem.linkedJarId ?? "__none__");
-  }, [editListItem]);
-
-  useEffect(() => {
-    if (!editDetail) return;
-    setENote(editDetail.note ?? "");
-  }, [editDetail]);
+  const openEdit = async (g: GoalListItem) => {
+    try {
+      const detail = await queryClient.fetchQuery({
+        queryKey: ["goals", "detail", g.id],
+        queryFn: () => goalService.getById(g.id),
+      });
+      setETitle(detail.title);
+      setETarget(String(detail.targetAmount));
+      const d = detail.dueDate ? new Date(detail.dueDate) : new Date();
+      setEDue(toDatetimeLocalValue(Number.isNaN(d.getTime()) ? new Date() : d));
+      setEJar(detail.linkedJarId ?? "__none__");
+      setENote(detail.note ?? "");
+      setEditListItem(g);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Không tải được chi tiết mục tiêu.",
+      );
+    }
+  };
 
   const openCreate = () => {
     setCTitle("");
@@ -294,7 +300,7 @@ export function UserGoalsPage() {
                       variant="outline"
                       size="sm"
                       className="cursor-pointer h-8 border-violet-200/80 px-2 hover:bg-violet-50 hover:text-[#4F46E5]"
-                      onClick={() => setEditListItem(goal)}
+                      onClick={() => void openEdit(goal)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -328,7 +334,7 @@ export function UserGoalsPage() {
                     <button
                       type="button"
                       className="font-semibold underline-offset-2 hover:underline"
-                      onClick={() => setEditListItem(goal)}
+                      onClick={() => void openEdit(goal)}
                     >
                       sửa mục tiêu
                     </button>{" "}
@@ -506,7 +512,6 @@ export function UserGoalsPage() {
                 <Input
                   value={eNote}
                   onChange={(ev) => setENote(ev.target.value)}
-                  placeholder={editDetail ? undefined : "Đang tải..."}
                 />
               </div>
             </div>
