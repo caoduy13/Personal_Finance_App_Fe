@@ -6,6 +6,13 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { useAdminBroadcasts } from "@/features/admin/broadcasts";
 import { CreateBroadcastForm } from "../components/CreateBroadcastForm";
 
@@ -55,22 +62,23 @@ export function AdminBroadcastsPage() {
             <Label htmlFor="broadcast-list-status" className="text-xs">
               Trạng thái
             </Label>
-            <select
-              id="broadcast-list-status"
-              className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
               value={listStatus}
-              onChange={(e) =>
-                setListStatus(
-                  e.target.value as (typeof STATUS_OPTIONS)[number]["value"],
-                )
+              onValueChange={(v) =>
+                setListStatus(v as (typeof STATUS_OPTIONS)[number]["value"])
               }
             >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="broadcast-list-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">

@@ -33,10 +33,9 @@ export const adminUserService = {
   async getUsers(
     params: GetAdminUsersParams,
   ): Promise<AdminUsersPagedResponse> {
-    return apiClient.get<AdminUsersPagedResponse>(
-      API_ENDPOINT.ADMIN.USERS,
-      { params: buildUserQueryParams(params) },
-    ) as unknown as Promise<AdminUsersPagedResponse>;
+    return apiClient.get<AdminUsersPagedResponse>(API_ENDPOINT.ADMIN.USERS, {
+      params: buildUserQueryParams(params),
+    }) as unknown as Promise<AdminUsersPagedResponse>;
   },
 
   async getUserById(id: string): Promise<AdminUserDto> {
@@ -49,14 +48,11 @@ export const adminUserService = {
     id: string,
     body: { status: string; statusReason?: string | null },
   ): Promise<AdminUserDto> {
-    return apiClient.patch(
-      `${API_ENDPOINT.ADMIN.USERS}/${id}/status`,
-      {
-        userId: id,
-        status: body.status,
-        statusReason: body.statusReason ?? null,
-      },
-    ) as unknown as Promise<AdminUserDto>;
+    return apiClient.patch(`${API_ENDPOINT.ADMIN.USERS}/${id}/status`, {
+      userId: id,
+      status: body.status,
+      statusReason: body.statusReason ?? null,
+    }) as unknown as Promise<AdminUserDto>;
   },
 
   async changeRole(accountId: string, role: AccountRole): Promise<string> {

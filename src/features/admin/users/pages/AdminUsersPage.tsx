@@ -22,6 +22,13 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
   useAdminUserDetail,
   useAdminUsers,
   useChangeUserRoleMutation,
@@ -157,21 +164,23 @@ export function AdminUsersPage() {
             </div>
             <div className="w-full min-w-[140px] md:w-44">
               <Label htmlFor="user-status-filter">Trạng thái</Label>
-              <select
-                id="user-status-filter"
-                className={cn(
-                  "mt-1.5 box-border flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm leading-none shadow-sm focus-visible:outline-none focus-visible:ring-1",
-                  adminFocusField,
-                )}
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as "" | "Active" | "Banned")
+              <Select
+                value={statusFilter === "" ? "__all__" : statusFilter}
+                onValueChange={(v) =>
+                  setStatusFilter(
+                    v === "__all__" ? "" : (v as "Active" | "Banned"),
+                  )
                 }
               >
-                <option value="">Tất cả</option>
-                <option value="Active">Active</option>
-                <option value="Banned">Banned</option>
-              </select>
+                <SelectTrigger id="user-status-filter" className="mt-1.5">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Banned">Banned</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -535,20 +544,21 @@ export function AdminUsersPage() {
           </AlertDialogHeader>
           <div>
             <Label htmlFor="role-row-pick">Vai trò</Label>
-            <select
-              id="role-row-pick"
-              className={cn(
-                "mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1",
-                adminFocusField,
-              )}
-              value={roleRowPick}
-              onChange={(e) =>
-                setRoleRowPick(Number(e.target.value) as AccountRole)
+            <Select
+              modal={false}
+              value={String(roleRowPick)}
+              onValueChange={(v) =>
+                setRoleRowPick(Number(v) as AccountRole)
               }
             >
-              <option value={AccountRole.User}>User</option>
-              <option value={AccountRole.Admin}>Admin</option>
-            </select>
+              <SelectTrigger id="role-row-pick" className="mt-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(AccountRole.User)}>User</SelectItem>
+                <SelectItem value={String(AccountRole.Admin)}>Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
