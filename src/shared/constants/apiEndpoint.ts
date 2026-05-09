@@ -1,16 +1,33 @@
 export const API_ENDPOINT = {
   AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register",
-    LOGOUT: "/auth/logout",
+    LOGIN: "/api/v1/auth/login",
+    REGISTER: "/api/v1/auth/register",
+    LOGOUT: "/api/v1/auth/logout",
   },
   USER: {
-    ME: "/user/me",
+    ME: "/User/me",
+    SETUP: "/User/me/setup",
   },
-  CATEGORIES: "/categories",
-  FINANCIAL_ACCOUNT: "/financial-accounts",
-  JAR: "/jars",
-  TRANSACTIONS: "/transactions",
+  ONBOARDING: "/Onboarding",
+  CATEGORIES: {
+    LIST: "/api/v1/categories",
+    DETAIL: (id: string) => `/api/v1/categories/${id}`,
+  },
+  ADMIN_CATEGORIES: {
+    LIST: "/api/v1/admin/categories",
+    DETAIL: (id: string) => `/api/v1/admin/categories/${id}`,
+  },
+  IMPORTS: {
+    IMAGE: "/api/v1/imports/image",
+  },
+  HEALTH: {
+    PING: "/health",
+    DB_RENDER: "/health/db/render",
+    DB_LOCAL: "/health/db/local",
+  },
+  FINANCIAL_ACCOUNT: "/FinancialAccount",
+  JAR: "/Jar",
+  TRANSACTIONS: "/Transactions",
   GOALS: "/goals",
   ADMIN: {
     DASHBOARD: "/admin/dashboard",
