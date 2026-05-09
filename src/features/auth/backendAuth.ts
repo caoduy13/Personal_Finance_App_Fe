@@ -99,6 +99,28 @@ export async function buildAuthResponse(
 
   const role = normalizeRoleFromJwt(accessToken);
 
+  if (role === "admin") {
+    const fullName =
+      [bootstrap.firstName, bootstrap.lastName]
+        .map((p) => (p ?? "").trim())
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      bootstrap.username ||
+      bootstrap.email ||
+      "";
+    return {
+      accessToken,
+      user: {
+        id: bootstrap.id,
+        email: bootstrap.email ?? "",
+        fullName,
+        role,
+        isOnboardingCompleted: true,
+      },
+    };
+  }
+
   const me = (await apiBare.get<BackendMeResponse>("/User/me", {
     headers: { Authorization: `Bearer ${accessToken}` },
   })) as unknown as BackendMeResponse;

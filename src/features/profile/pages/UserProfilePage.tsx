@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { Navigate } from "react-router-dom";
 import { Camera, Pencil, Settings, User, X } from "lucide-react";
 import {
   Card,
@@ -6,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ROUTES } from "@/shared/constants/routes";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 
 function FieldRow({ label, value }: { label: string; value: string }) {
@@ -18,7 +21,12 @@ function FieldRow({ label, value }: { label: string; value: string }) {
 }
 
 export function UserProfilePage() {
+  const { role } = useAuth();
   const { data, isLoading, isError, error } = useCurrentUser();
+
+  if (role === "admin") {
+    return <Navigate to={ROUTES.ADMIN_DASHBOARD} replace />;
+  }
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
