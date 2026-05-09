@@ -14,21 +14,10 @@ import {
 import {
   useAdminCategory,
   useDeleteCategoryMutation,
-  type AdminCategoryStatusFilter,
 } from "../hooks/useAdminCategory";
 import type { Category } from "../type";
 import { CategoryFormModal } from "../components/CategoryFormModal";
 import { CategoryActiveToggle } from "../components/CategoryActiveToggle";
-import { Label } from "@/shared/components/ui/label";
-
-const STATUS_FILTER_OPTIONS: {
-  value: AdminCategoryStatusFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Tất cả" },
-  { value: "active", label: "Đang hoạt động" },
-  { value: "inactive", label: "Đã tắt" },
-];
 
 function IconToken({ icon }: { icon: string }) {
   return (
@@ -39,19 +28,13 @@ function IconToken({ icon }: { icon: string }) {
 }
 
 export default function AdminCategoriesPage() {
-  const [statusFilter, setStatusFilter] =
-    useState<AdminCategoryStatusFilter>("all");
+  const { data, isLoading, isError } = useAdminCategory();
+  const deleteMutation = useDeleteCategoryMutation();
+
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
-
-  const formNeedsFullList = formOpen && statusFilter !== "all";
-  const { data, isLoading, isError } = useAdminCategory(statusFilter);
-  const { data: allCategoriesData } = useAdminCategory("all", {
-    enabled: formNeedsFullList,
-  });
-  const deleteMutation = useDeleteCategoryMutation();
 
   const openCreate = () => {
     setFormMode("create");
@@ -69,10 +52,6 @@ export default function AdminCategoriesPage() {
   if (isError || !data) return <p className="text-sm text-red-500">Không thể tải danh mục mặc định.</p>;
 
   const categories = data.data;
-  const categoriesForFormModal =
-    statusFilter === "all"
-      ? categories
-      : (allCategoriesData?.data ?? categories);
   const activeCount = categories.filter((item) => item.isActive).length;
 
   return (
@@ -87,9 +66,7 @@ export default function AdminCategoriesPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">
-              {statusFilter === "all" ? "Tổng danh mục" : "Đang hiển thị"}
-            </p>
+            <p className="text-xs text-muted-foreground">Tổng danh mục</p>
             <p className="mt-1 text-2xl font-semibold">{categories.length}</p>
           </CardContent>
         </Card>
@@ -109,40 +86,9 @@ export default function AdminCategoriesPage() {
         </Card>
       </div>
 
-      {statusFilter !== "all" ? (
-        <p className="text-xs text-muted-foreground">
-          Thống kê trên hàng thẻ theo đúng danh sách sau khi lọc (API query{" "}
-          <span className="font-mono text-[11px]">isActive</span>).
-        </p>
-      ) : null}
-
       <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:space-y-0">
-          <div className="flex flex-col gap-1">
-            <CardTitle>Danh mục mặc định</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Lọc theo trạng thái hiển thị cho người dùng.
-            </p>
-          </div>
-          <div className="flex flex-col gap-1.5 sm:w-56">
-            <Label htmlFor="admin-category-status" className="text-xs">
-              Trạng thái
-            </Label>
-            <select
-              id="admin-category-status"
-              className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as AdminCategoryStatusFilter)
-              }
-            >
-              {STATUS_FILTER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+          <CardTitle>Danh mục mặc định</CardTitle>
           <Button
             type="button"
             variant="outline"
@@ -154,11 +100,6 @@ export default function AdminCategoriesPage() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Không có danh mục nào khớp bộ lọc.
-            </p>
-          ) : null}
           {categories.map((item) => (
             <div
               key={item.id}
@@ -208,7 +149,7 @@ export default function AdminCategoriesPage() {
         onOpenChange={setFormOpen}
         mode={formMode}
         initialCategory={editingCategory}
-        categories={categoriesForFormModal}
+        categories={categories}
       />
 
       <AlertDialog

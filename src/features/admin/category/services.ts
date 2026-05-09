@@ -21,28 +21,26 @@ const CATEGORY_STRATEGY = {
 } as const;
 
 export const adminCategoryService = {
-  /** `undefined` = không gửi query (backend trả cả hai trạng thái). */
-  getCategories: async (isActive?: boolean): Promise<CategoriesList> => {
+  getCategories: async (): Promise<CategoriesList> => {
     const realRequest = () =>
-      apiClient.get<CategoriesList>(API_ENDPOINT.ADMIN.CATEGORIES, {
-        params: isActive === undefined ? {} : { isActive },
-      }) as unknown as Promise<CategoriesList>;
+      apiClient.get<CategoriesList>(
+        API_ENDPOINT.ADMIN.CATEGORIES,
+      ) as unknown as Promise<CategoriesList>;
 
     const mockRequest = async () => {
       await wait(200);
-      let rows = mockData.tables.categories
-        .map((item) => ({
-          id: item.id,
-          name: item.name,
-          icon: item.icon,
-          color: item.color,
-          order: item.display_order,
-          isActive: item.is_active,
-        }))
-        .sort((a, b) => a.order - b.order);
-      if (isActive === true) rows = rows.filter((r) => r.isActive);
-      if (isActive === false) rows = rows.filter((r) => !r.isActive);
-      return { data: rows };
+      return {
+        data: mockData.tables.categories
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            icon: item.icon,
+            color: item.color,
+            order: item.display_order,
+            isActive: item.is_active,
+          }))
+          .sort((a, b) => a.order - b.order),
+      };
     };
 
     return requestWithStrategy(
