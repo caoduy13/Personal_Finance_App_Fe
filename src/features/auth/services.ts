@@ -1,4 +1,5 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from "./types";
+import { mapAxiosAuthError } from "./backendAuth";
 import { apiClient } from "@/lib/axios";
 import { mockData } from "@/lib/mockData";
 import {
@@ -8,6 +9,36 @@ import {
 } from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants";
 
+/**
+ * Body login/register từ BE (camelCase, một object).
+ * `isOnboardingCompleted`: BE gửi boolean; nếu thiếu, FE coi như đã xong để không kẹt wizard.
+ */
+interface BackendAuthResponse {
+  id: string;
+  username: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  accessToken: string;
+  role?: string | null;
+  isOnboardingCompleted?: boolean;
+}
+
+function adaptAuthResponse(be: BackendAuthResponse): AuthResponse {
+  const first = be.firstName?.trim() ?? "";
+  const last = be.lastName?.trim() ?? "";
+  return {
+    id: be.id,
+    username: be.username,
+    firstName: first || be.username,
+    lastName: last,
+    email: be.email,
+    role: String(be.role ?? "User"),
+    isOnboardingCompleted: be.isOnboardingCompleted ?? true,
+    accessToken: be.accessToken,
+  };
+}
+
 const AUTH_STRATEGY = {
   login: "real" as RequestMode,
   register: "real" as RequestMode,
@@ -16,11 +47,20 @@ const AUTH_STRATEGY = {
 
 export const authService = {
   async login(payload: LoginRequest): Promise<AuthResponse> {
-    const realRequest = () =>
-      apiClient.post<AuthResponse>(
-        API_ENDPOINT.AUTH.LOGIN,
-        payload,
-      ) as unknown as Promise<AuthResponse>;
+    const realRequest = async () => {
+      try {
+        const be = (await apiClient.post<BackendAuthResponse>(
+          API_ENDPOINT.AUTH.LOGIN,
+          {
+            email: payload.email.trim(),
+            password: payload.password,
+          },
+        )) as unknown as BackendAuthResponse;
+        return adaptAuthResponse(be);
+      } catch (e) {
+        throw mapAxiosAuthError(e);
+      }
+    };
 
     const mockRequest = async () => {
       await wait(300);
@@ -31,11 +71,23 @@ export const authService = {
   },
 
   async register(payload: RegisterRequest): Promise<AuthResponse> {
-    const realRequest = () =>
-      apiClient.post<AuthResponse>(
-        API_ENDPOINT.AUTH.REGISTER,
-        payload,
-      ) as unknown as Promise<AuthResponse>;
+    const realRequest = async () => {
+      try {
+        const be = (await apiClient.post<BackendAuthResponse>(
+          API_ENDPOINT.AUTH.REGISTER,
+          {
+            username: payload.username.trim(),
+            email: payload.email.trim(),
+            password: payload.password,
+            firstName: payload.firstName.trim(),
+            lastName: payload.lastName.trim(),
+          },
+        )) as unknown as BackendAuthResponse;
+        return adaptAuthResponse(be);
+      } catch (e) {
+        throw mapAxiosAuthError(e);
+      }
+    };
 
     const mockRequest = async () => {
       await wait(300);
@@ -47,11 +99,7 @@ export const authService = {
       );
     };
 
-    return requestWithStrategy(
-      AUTH_STRATEGY.register,
-      realRequest,
-      mockRequest,
-    );
+    return requestWithStrategy(AUTH_STRATEGY.register, realRequest, mockRequest);
   },
 
   async logout(): Promise<void> {

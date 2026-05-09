@@ -13,7 +13,6 @@ export interface RegisterRequest {
   lastName: string;
 }
 
-/** Session user; `role` is the string from the API (e.g. "User", "Admin"). */
 export interface AuthUser {
   id: string;
   username: string;
@@ -21,6 +20,7 @@ export interface AuthUser {
   lastName: string;
   email: string;
   role: string;
+  isOnboardingCompleted?: boolean;
 }
 
 export interface AuthResponse extends AuthUser {

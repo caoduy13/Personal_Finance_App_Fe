@@ -33,8 +33,8 @@ export function RegisterForm() {
       username: data.username,
       email: data.email,
       password: data.password,
-      firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
+      firstName: data.firstName,
+      lastName: data.lastName,
     });
   };
 
