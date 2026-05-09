@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/axios";
 import { mockData } from "@/lib/mockData";
 import {
   requestWithStrategy,
@@ -13,13 +14,12 @@ import type {
   JarsOverviewApi,
   UpdateJarPayload,
 } from "./types";
-import { apiClient } from "@/lib/axios";
 
 const JAR_STRATEGY = {
-  overview: "mock" as RequestMode,
-  create: "mock" as RequestMode,
-  update: "mock" as RequestMode,
-  remove: "mock" as RequestMode,
+  overview: "real" as RequestMode,
+  create: "real" as RequestMode,
+  update: "real" as RequestMode,
+  remove: "real" as RequestMode,
 } as const;
 
 function mapRowToItem(row: JarApiRow): JarItem {
@@ -28,8 +28,8 @@ function mapRowToItem(row: JarApiRow): JarItem {
     name: row.name,
     percentage: null,
     balance: Number(row.balance),
-    color: row.color,
-    icon: row.icon,
+    color: row.color ?? "#888888",
+    icon: row.icon ?? "wallet",
     status: row.status,
   };
 }
@@ -37,10 +37,7 @@ function mapRowToItem(row: JarApiRow): JarItem {
 export const jarService = {
   async getOverview(): Promise<JarsOverviewApi> {
     const realRequest = async () => {
-      const body = (await apiClient.get(
-        `${API_ENDPOINT.JAR}`,
-      )) as JarsOverviewApi;
-      return body;
+      return (await apiClient.get(API_ENDPOINT.JAR)) as JarsOverviewApi;
     };
 
     const mockRequest = async (): Promise<JarsOverviewApi> => {
@@ -72,11 +69,13 @@ export const jarService = {
 
   async create(payload: CreateJarPayload): Promise<JarItem> {
     const realRequest = async () => {
-      const row = (await apiClient.post(`${API_ENDPOINT.JAR}`, payload)) as {
+      const row = (await apiClient.post(API_ENDPOINT.JAR, payload)) as {
         id: string;
         name: string;
         balance: number;
         status: string;
+        color?: string;
+        icon?: string;
       };
       return {
         id: row.id,
@@ -84,8 +83,8 @@ export const jarService = {
         percentage: null,
         balance: Number(row.balance),
         status: row.status,
-        color: payload.color,
-        icon: payload.icon,
+        color: row.color ?? payload.color,
+        icon: row.icon ?? payload.icon,
       };
     };
 
@@ -116,12 +115,13 @@ export const jarService = {
         color: string;
         icon: string;
         status: string;
+        balance?: number;
       };
       return {
         id: row.id,
         name: row.name,
         percentage: null,
-        balance: 0,
+        balance: Number(row.balance ?? 0),
         color: row.color,
         icon: row.icon,
         status: row.status,
