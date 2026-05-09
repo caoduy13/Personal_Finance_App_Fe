@@ -21,6 +21,7 @@ import { UserProfilePage } from "@/features/profile";
 import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
 import AdminCategoriesPage from "@/features/admin/category/pages/AdminCategoriesPage";
+import { OnboardingPage } from "@/features/onboarding";
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,15 @@ export const router = createBrowserRouter([
       <GuestRoute>
         <RegisterPage />
       </GuestRoute>
+    ),
+  },
+  {
+    /** Khảo sát ban đầu: chỉ role `user` chưa xong onboarding (admin vào `/admin`). */
+    path: ROUTES.ONBOARDING,
+    element: (
+      <ProtectedRoute>
+        <OnboardingPage />
+      </ProtectedRoute>
     ),
   },
   {

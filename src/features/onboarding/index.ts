@@ -1,8 +1,9 @@
-export { default as OnboardingPage } from "./OnboardingPage";
-export { default } from "./OnboardingPage";
-export { onboardingService } from "./services";
+export { OnboardingPage } from "./pages/OnboardingPage";
+export { onboardingService, getSuggestionRows } from "./services";
+export { useOnboardingForm, ONBOARDING_TOTAL_STEPS } from "./hooks/useOnboardingForm";
 export type {
-  OnboardingCompleteResult,
-  OnboardingFeForm,
-  SuggestionRow,
-} from "./types";
+  OnboardingForm,
+  OnboardingFormValues,
+  OnboardingFormOutput,
+} from "./schema";
+export type { SuggestionRow } from "./types";

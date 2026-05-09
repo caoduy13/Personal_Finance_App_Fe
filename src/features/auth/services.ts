@@ -1,7 +1,6 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from "./types";
-import { mapAxiosAuthError, splitFullName } from "./backendAuth";
+import { mapAxiosAuthError } from "./backendAuth";
 import { apiClient } from "@/lib/axios";
-import { extractRoleFromToken } from "@/lib/jwt";
 import { mockData } from "@/lib/mockData";
 import {
   requestWithStrategy,
@@ -10,7 +9,10 @@ import {
 } from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants";
 
-/** BE trả phẳng, không bọc `{ data }`, không có `user` lồng nhau. */
+/**
+ * Body login/register từ BE (camelCase, một object).
+ * `isOnboardingCompleted`: BE gửi boolean; nếu thiếu, FE coi như đã xong để không kẹt wizard.
+ */
 interface BackendAuthResponse {
   id: string;
   username: string;
@@ -18,22 +20,22 @@ interface BackendAuthResponse {
   lastName?: string | null;
   email: string;
   accessToken: string;
+  role?: string | null;
   isOnboardingCompleted?: boolean;
 }
 
 function adaptAuthResponse(be: BackendAuthResponse): AuthResponse {
   const first = be.firstName?.trim() ?? "";
   const last = be.lastName?.trim() ?? "";
-  const fullName = `${first} ${last}`.trim() || be.username || be.email;
   return {
+    id: be.id,
+    username: be.username,
+    firstName: first || be.username,
+    lastName: last,
+    email: be.email,
+    role: String(be.role ?? "User"),
+    isOnboardingCompleted: be.isOnboardingCompleted ?? true,
     accessToken: be.accessToken,
-    user: {
-      id: be.id,
-      email: be.email,
-      fullName,
-      role: extractRoleFromToken(be.accessToken),
-      isOnboardingCompleted: be.isOnboardingCompleted ?? false,
-    },
   };
 }
 
@@ -70,7 +72,6 @@ export const authService = {
 
   async register(payload: RegisterRequest): Promise<AuthResponse> {
     const realRequest = async () => {
-      const { firstName, lastName } = splitFullName(payload.fullName);
       try {
         const be = (await apiClient.post<BackendAuthResponse>(
           API_ENDPOINT.AUTH.REGISTER,
@@ -78,8 +79,8 @@ export const authService = {
             username: payload.username.trim(),
             email: payload.email.trim(),
             password: payload.password,
-            firstName,
-            lastName,
+            firstName: payload.firstName.trim(),
+            lastName: payload.lastName.trim(),
           },
         )) as unknown as BackendAuthResponse;
         return adaptAuthResponse(be);
@@ -90,7 +91,12 @@ export const authService = {
 
     const mockRequest = async () => {
       await wait(300);
-      return mockData.auth.register(payload.username, payload.email, payload.fullName);
+      return mockData.auth.register(
+        payload.username,
+        payload.email,
+        payload.firstName,
+        payload.lastName,
+      );
     };
 
     return requestWithStrategy(AUTH_STRATEGY.register, realRequest, mockRequest);

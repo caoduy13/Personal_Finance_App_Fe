@@ -11,6 +11,7 @@ export const ROUTES = {
   GOALS: "/goals",
   NOTIFICATIONS: "/notifications",
   PROFILE: "/profile",
+  ONBOARDING: "/onboarding",
   ADMIN_DASHBOARD: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_NOTIFICATIONS: "/admin/notifications",

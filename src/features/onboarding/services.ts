@@ -9,131 +9,85 @@ import {
   wait,
 } from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants";
-import type {
-  OnboardingCompleteResult,
-  OnboardingFeForm,
-  SuggestionRow,
-} from "./types";
+import type { OnboardingForm } from "./schema";
+import type { SuggestionRow } from "./types";
 
-const onboardingRequestMode = (): RequestMode => "real";
+const ONBOARDING_MODE = { complete: "real" as RequestMode };
 
-const sixJarsSuggestions = [
+const sixJarsTemplate = [
   { name: "Sinh hoạt", percentage: 55, icon: "🏠" },
   { name: "Giáo dục", percentage: 10, icon: "📚" },
   { name: "Tiết kiệm", percentage: 10, icon: "💰" },
   { name: "Giải trí", percentage: 10, icon: "🎮" },
   { name: "Đầu tư", percentage: 10, icon: "📈" },
   { name: "Từ thiện", percentage: 5, icon: "❤️" },
-];
+] as const;
 
-const rule503020Suggestions = [
+const rule503020Template = [
   { name: "Nhu cầu thiết yếu", percentage: 50, icon: "🏠" },
   { name: "Mong muốn", percentage: 30, icon: "🎯" },
   { name: "Tiết kiệm", percentage: 20, icon: "💰" },
-];
+] as const;
 
-export function mapFeFormToSwaggerBody(form: OnboardingFeForm): {
-  monthlyIncome: number;
-  occupationType: string | null;
-  financialGoalTypes: string[];
-  budgetMethodPreference: string | null;
-  ageRange: string | null;
-  spendingChallenges: string[];
-} {
-  const income = Number(form?.monthlyIncome);
+function toRequestBody(form: OnboardingForm) {
+  const income = Number(form.monthlyIncome);
   return {
     monthlyIncome: Number.isFinite(income) ? Math.round(income) : 0,
-    occupationType: form?.occupation?.trim() ? form.occupation : null,
-    financialGoalTypes: Array.isArray(form?.financialGoals)
-      ? [...form.financialGoals]
-      : [],
-    budgetMethodPreference: form?.budgetingMethod ?? null,
-    ageRange: form?.ageRange?.trim() ? form.ageRange : null,
-    spendingChallenges: Array.isArray(form?.spendingChallenges)
-      ? [...form.spendingChallenges]
-      : [],
+    occupationType: form.occupation?.trim() ? form.occupation : null,
+    financialGoalTypes: [...form.financialGoals],
+    budgetMethodPreference: form.budgetingMethod ?? null,
+    ageRange: form.ageRange?.trim() ? form.ageRange : null,
+    spendingChallenges: [...form.spendingChallenges],
   };
 }
 
-export function enrichJarsWithMonthlyAmount(
-  jars: Array<{ name?: string; percentage?: number; icon?: string }>,
+/** Gợi ý hũ — template local (không gọi BE). */
+export function getSuggestionRows(
+  method: BudgetMethodId | null,
   monthlyIncomeVnd: number,
 ): SuggestionRow[] {
-  const income = Number(monthlyIncomeVnd);
-  const base = Number.isFinite(income) ? income : 0;
-  return (jars ?? []).map((j) => ({
-    name: String(j.name ?? ""),
-    percentage: Number(j.percentage) || 0,
-    icon: String(j.icon ?? ""),
-    monthlyAmount: Math.round((base * (Number(j.percentage) || 0)) / 100),
+  if (!method || method === BUDGET_METHOD.CUSTOM) return [];
+
+  const jars =
+    method === BUDGET_METHOD.SIX_JARS
+      ? sixJarsTemplate
+      : method === BUDGET_METHOD.RULE_503020
+        ? rule503020Template
+        : [];
+
+  const base = Number.isFinite(monthlyIncomeVnd) ? monthlyIncomeVnd : 0;
+  return jars.map((j) => ({
+    name: j.name,
+    percentage: j.percentage,
+    icon: j.icon,
+    monthlyAmount: Math.round((base * j.percentage) / 100),
   }));
 }
 
-type JarSuggestion = { name?: string; percentage?: number; icon?: string };
-
-export function normalizeSuggestionsResponse(res: unknown): JarSuggestion[] {
-  if (res == null) return [];
-  if (Array.isArray(res)) return res;
-  if (typeof res !== "object") return [];
-  const r = res as Record<string, unknown>;
-  if (Array.isArray(r.jars)) return r.jars as JarSuggestion[];
-  const data = r.data;
-  if (data != null && typeof data === "object") {
-    const d = data as Record<string, unknown>;
-    if (Array.isArray(d.jars)) return d.jars as JarSuggestion[];
-  }
-  if (Array.isArray(data)) return data as JarSuggestion[];
-  return [];
-}
-
-function normalizeOnboardingCompleteResponse(
-  res: unknown,
-): OnboardingCompleteResult {
-  if (res == null) return { success: false, user: null };
-  if (typeof res !== "object" || Array.isArray(res))
-    return { success: false, user: null };
-  const r = res as Record<string, unknown>;
-  if (r.user && typeof r.user === "object") {
-    return { success: r.success !== false, user: r.user as Record<string, unknown> };
-  }
-  const data = r.data;
-  if (
-    data &&
-    typeof data === "object" &&
-    (data as Record<string, unknown>).user &&
-    typeof (data as Record<string, unknown>).user === "object"
-  ) {
-    return {
-      success: true,
-      user: (data as Record<string, unknown>).user as Record<string, unknown>,
-    };
-  }
-  if ("is_onboarding_completed" in r || "id" in r) {
-    return { success: true, user: r as Record<string, unknown> };
-  }
-  return {
-    success: Boolean(r.success),
-    user: (r.user as Record<string, unknown> | null) ?? null,
-  };
-}
-
-function applyMockOnboardingComplete(form: OnboardingFeForm): void {
+function patchMockTables(form: OnboardingForm): void {
   const u = useAuthStore.getState().user;
   if (!u?.id) return;
 
   const nowIso = new Date().toISOString();
+  const accounts = mockData.tables.accounts as unknown as Array<{
+    id: string;
+    email: string;
+    is_onboarding_completed?: boolean;
+    updated_at: string;
+  }>;
   const acc =
-    mockData.tables.accounts.find((a) => a.id === u.id) ??
-    mockData.tables.accounts.find((a) => a.email === u.email);
+    accounts.find((a) => a.id === u.id) ??
+    accounts.find((a) => a.email === u.email);
 
   if (acc) {
     acc.is_onboarding_completed = true;
     acc.updated_at = nowIso;
   }
 
-  const existing = mockData.tables.onboarding_profiles.find(
-    (p) => p.user_id === u.id,
-  );
+  const profiles = mockData.tables.onboarding_profiles as unknown as Array<
+    Record<string, unknown> & { user_id?: string }
+  >;
+  const existing = profiles.find((p) => p.user_id === u.id);
   const shared = {
     monthly_income: form.monthlyIncome,
     occupation_type: form.occupation || "other",
@@ -149,7 +103,7 @@ function applyMockOnboardingComplete(form: OnboardingFeForm): void {
   if (existing) {
     Object.assign(existing, shared);
   } else {
-    mockData.tables.onboarding_profiles.push({
+    profiles.push({
       id: crypto.randomUUID(),
       user_id: u.id,
       ...shared,
@@ -158,90 +112,27 @@ function applyMockOnboardingComplete(form: OnboardingFeForm): void {
   }
 }
 
-function mapMeResponseToAuthPatch(raw: unknown): {
-  email: string;
-  fullName: string;
-  isOnboardingCompleted: boolean;
-  is_onboarding_completed: boolean;
-} {
-  if (raw == null || typeof raw !== "object") throw new Error("INVALID_ME");
-  const r = raw as Record<string, unknown>;
-  let firstName = String(r.firstName ?? "").trim();
-  let lastName = String(r.lastName ?? "").trim();
-  if (!firstName && !lastName && typeof r.fullName === "string") {
-    const parts = r.fullName.trim().split(/\s+/).filter(Boolean);
-    firstName = parts[0] ?? "";
-    lastName = parts.length > 1 ? parts.slice(1).join(" ") : "";
-  }
-  const email = String(r.email ?? "");
-  const fullName =
-    `${firstName} ${lastName}`.trim() ||
-    (typeof r.fullName === "string" ? r.fullName.trim() : "") ||
-    email;
-  const done = Boolean(r.isOnboardingCompleted);
-  return {
-    email,
-    fullName,
-    isOnboardingCompleted: done,
-    is_onboarding_completed: done,
-  };
-}
-
-/** Refresh auth store từ `/User/me` sau khi onboarding (tránh phụ thuộc `features/user` ở PR stack sớm). */
-export async function syncAuthUserAfterOnboarding(): Promise<void> {
-  const raw = await apiClient.get<unknown>(API_ENDPOINT.USER.ME);
-  const patch = mapMeResponseToAuthPatch(raw);
-  useAuthStore.getState().updateUser(patch);
-}
-
 export const onboardingService = {
-  async complete(feFormData: OnboardingFeForm): Promise<OnboardingCompleteResult> {
-    const body = mapFeFormToSwaggerBody(feFormData);
+  /**
+   * Một lần duy nhất ở cuối wizard (bước 4) — `useOnboardingForm.submit` / `useMutation`.
+   * Các bước 1–3 không gọi BE (chỉ validate + gợi ý local).
+   */
+  async complete(form: OnboardingForm): Promise<void> {
+    const body = toRequestBody(form);
 
     const realRequest = async () => {
-      const raw = await apiClient.post(API_ENDPOINT.ONBOARDING, body);
-      const normalized = normalizeOnboardingCompleteResponse(raw);
-      if (normalized.success) return normalized;
-      return { success: true, user: null };
+      await apiClient.post(API_ENDPOINT.ONBOARDING, body);
     };
 
     const mockRequest = async () => {
       await wait(280);
-      applyMockOnboardingComplete(feFormData);
-      return normalizeOnboardingCompleteResponse({
-        success: true,
-        user: {
-          is_onboarding_completed: true,
-          budgeting_method: feFormData.budgetingMethod,
-          onboarding_survey: body,
-        },
-      });
+      patchMockTables(form);
     };
 
-    return requestWithStrategy(
-      onboardingRequestMode(),
+    await requestWithStrategy(
+      ONBOARDING_MODE.complete,
       realRequest,
       mockRequest,
     );
-  },
-
-  /**
-   * Gợi ý hũ theo phương pháp — luôn dùng template local (BE chưa có endpoint ổn định).
-   */
-  async getSuggestions(method: BudgetMethodId): Promise<unknown> {
-    await wait(0);
-    if (method === BUDGET_METHOD.SIX_JARS) return { jars: sixJarsSuggestions };
-    if (method === BUDGET_METHOD.RULE_503020)
-      return { jars: rule503020Suggestions };
-    return { jars: [] };
-  },
-
-  async getSuggestionsForIncome(
-    method: BudgetMethodId,
-    monthlyIncomeVnd: number,
-  ): Promise<SuggestionRow[]> {
-    const raw = await onboardingService.getSuggestions(method);
-    const jars = normalizeSuggestionsResponse(raw);
-    return enrichJarsWithMonthlyAmount(jars, monthlyIncomeVnd);
   },
 };

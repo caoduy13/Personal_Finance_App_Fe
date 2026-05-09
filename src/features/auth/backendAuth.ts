@@ -1,8 +1,8 @@
 import type { AxiosError } from "axios";
 import axios from "axios";
-import { apiBare } from "@/lib/axios";
+import { apiClient } from "@/lib/axios";
 import type { AuthResponse } from "./types";
-import type { UserRole } from "@/shared/types";
+import { API_ENDPOINT } from "@/shared/constants";
 
 interface BackendAuthShape {
   id: string;
@@ -11,6 +11,7 @@ interface BackendAuthShape {
   firstName?: string | null;
   lastName?: string | null;
   email?: string;
+  role?: string | null;
 }
 
 interface BackendMeResponse {
@@ -24,6 +25,7 @@ interface BackendMeResponse {
   avatarUrl?: string | null;
   preferredCurrency?: string;
   isOnboardingCompleted?: boolean;
+  role?: string | null;
 }
 
 /** Full name từ form đăng ký → first/last đúng contract BE (Swagger). */
@@ -38,57 +40,6 @@ export function splitFullName(fullName: string): { firstName: string; lastName: 
   return { firstName: parts[0]!, lastName: parts.slice(1).join(" ") };
 }
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const [, payload] = token.split(".");
-    if (!payload) return null;
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const pad = base64.length % 4;
-    const padded = pad ? base64 + "=".repeat(4 - pad) : base64;
-    const json = atob(padded);
-    return JSON.parse(json) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-const JWT_ROLE_KEYS = [
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
-  "role",
-] as const;
-
-function normalizeRoleFromJwt(accessToken: string): UserRole {
-  const payload = decodeJwtPayload(accessToken);
-  if (!payload) return "user";
-  for (const key of JWT_ROLE_KEYS) {
-    const raw = payload[key];
-    if (typeof raw === "string") {
-      const normalized = normalizeRole(raw);
-      if (normalized) return normalized;
-    }
-    if (Array.isArray(raw) && typeof raw[0] === "string") {
-      const normalized = normalizeRole(raw[0]);
-      if (normalized) return normalized;
-    }
-  }
-  return "user";
-}
-
-function normalizeRole(role: string): UserRole | null {
-  const r = role.trim().toLowerCase();
-  if (r.includes("super")) return "admin";
-  if (r === "admin" || r === "administrator") return "admin";
-  if (r === "user" || r === "member") return "user";
-  return null;
-}
-
-function buildFullName(me: BackendMeResponse): string {
-  const parts = [me.firstName, me.lastName]
-    .map((p) => (p ?? "").trim())
-    .filter(Boolean);
-  return parts.join(" ").trim() || me.email;
-}
-
 export async function buildAuthResponse(
   bootstrap: BackendAuthShape,
 ): Promise<AuthResponse> {
@@ -97,21 +48,28 @@ export async function buildAuthResponse(
     throw new Error("Thiếu access token trong phản hồi đăng nhập.");
   }
 
-  const role = normalizeRoleFromJwt(accessToken);
-
-  const me = (await apiBare.get<BackendMeResponse>("/User/me", {
+  const me = (await apiClient.get<BackendMeResponse>(API_ENDPOINT.USER.ME, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })) as unknown as BackendMeResponse;
 
+  const firstName = (me.firstName ?? "").trim();
+  const lastName = (me.lastName ?? "").trim();
+  const role =
+    me.role ?? bootstrap.role ?? "User";
+
   return {
     accessToken,
-    user: {
-      id: me.id ?? bootstrap.id,
-      email: me.email ?? bootstrap.email ?? "",
-      fullName: buildFullName(me),
-      role,
-      isOnboardingCompleted: me.isOnboardingCompleted ?? false,
-    },
+    id: me.id ?? bootstrap.id,
+    username:
+      me.username?.trim() ??
+      me.userName?.trim() ??
+      bootstrap.username?.trim() ??
+      "",
+    firstName,
+    lastName,
+    email: me.email ?? bootstrap.email ?? "",
+    role: String(role),
+    isOnboardingCompleted: me.isOnboardingCompleted ?? true,
   };
 }
 

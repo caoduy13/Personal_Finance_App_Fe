@@ -29,13 +29,12 @@ export function RegisterForm() {
   });
 
   const onSubmit = (data: RegisterFormData) => {
-    const fullName =
-      `${data.firstName} ${data.lastName}`.trim() || data.username.trim();
     registerUser({
       username: data.username,
       email: data.email,
       password: data.password,
-      fullName,
+      firstName: data.firstName,
+      lastName: data.lastName,
     });
   };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import {
   Bell,
   CircleUserRound,
@@ -54,9 +54,19 @@ export function UserLayout() {
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { mutate: logout, isPending } = useLogoutMutation();
   const isProfileRoute = location.pathname === ROUTES.PROFILE;
+
+  /* Chỉ user thường (không phải admin) bị bắt làm onboarding khi BE báo chưa xong. */
+  if (
+    user &&
+    !isAdmin &&
+    user.isOnboardingCompleted === false &&
+    location.pathname !== ROUTES.ONBOARDING
+  ) {
+    return <Navigate to={ROUTES.ONBOARDING} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20 md:pb-0">
@@ -139,6 +149,7 @@ export function UserLayout() {
                     .join(" ")
                     .trim() ||
                     user?.username ||
+                    user?.email ||
                     "Tài khoản"}
                 </span>
               </button>
