@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { useAdminAuditLogs } from "../hooks/useAdminAuditLogs";
-import { ScheduleDateTimePicker } from "@/features/admin/broadcasts/components/ScheduleDateTimePicker";
+import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;

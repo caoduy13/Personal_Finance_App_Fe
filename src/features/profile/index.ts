@@ -1,4 +1,5 @@
 export { UserProfilePage } from "./pages/UserProfilePage";
 export { useCurrentUser, currentUserQueryKey } from "./hooks/useCurrentUser";
-export { profileService } from "./services";
-export type { CurrentUser } from "./types";
+export { useUpdateProfile } from "./hooks/useUpdateProfile";
+export { profileService, normalizeMePayload } from "./services";
+export type { CurrentUser, UpdateProfilePayload } from "./types";

@@ -1,71 +1,102 @@
-import { mockData } from "@/lib/mockData";
 import { apiClient } from "@/lib/axios";
-import {
-  requestWithStrategy,
-  type RequestMode,
-  wait,
-} from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
-import type { FinancialAccountItem } from "./types";
+import type {
+  CreateLinkApiFinancialAccountPayload,
+  CreateManualFinancialAccountPayload,
+  FinancialAccountItem,
+  UpdateFinancialAccountPayload,
+} from "./types";
 
-const STRATEGY = { list: "mock" as RequestMode };
+const BASE = API_ENDPOINT.FINANCIAL_ACCOUNT;
 
-function mapApiRow(row: {
-  id: string;
-  name: string;
-  accountType: string;
-  connectionMode: string;
-  currency: string;
-  currentBalance: number;
-  isActive: boolean;
-  isDefault: boolean;
-}): FinancialAccountItem {
+function strId(v: unknown): string {
+  return String(v ?? "");
+}
+
+function optStr(v: unknown): string | null {
+  if (v == null || v === "") return null;
+  return String(v);
+}
+
+function normalizeRow(raw: Record<string, unknown>): FinancialAccountItem {
   return {
-    id: row.id,
-    name: row.name,
-    accountType: row.accountType,
-    connectionMode: row.connectionMode,
-    currency: row.currency,
-    currentBalance: Number(row.currentBalance),
-    isActive: row.isActive,
-    isDefault: row.isDefault,
+    id: strId(raw.id),
+    name: String(raw.name ?? ""),
+    accountType: String(raw.accountType ?? ""),
+    connectionMode: String(raw.connectionMode ?? ""),
+    currency: String(raw.currency ?? "VND"),
+    currentBalance: Number(raw.currentBalance ?? 0),
+    isActive: Boolean(raw.isActive),
+    isDefault: Boolean(raw.isDefault),
+    providerName: optStr(raw.providerName),
+    maskedAccountNumber: optStr(raw.maskedAccountNumber),
+    syncStatus: String(raw.syncStatus ?? "—"),
   };
 }
 
+function asRowArray(raw: unknown): FinancialAccountItem[] {
+  const list = Array.isArray(raw) ? raw : [];
+  return list.map((x) => normalizeRow(x as Record<string, unknown>));
+}
+
 export const financialAccountService = {
+  /** GET — axios có thể đã unwrap `{ data: [...] }` thành mảng. */
   async list(): Promise<FinancialAccountItem[]> {
-    const realRequest = async () => {
-      const body = (await apiClient.get(API_ENDPOINT.FINANCIAL_ACCOUNT)) as {
-        data: Array<{
-          id: string;
-          name: string;
-          accountType: string;
-          connectionMode: string;
-          currency: string;
-          currentBalance: number;
-          isActive: boolean;
-          isDefault: boolean;
-        }>;
-      };
-      return (body.data ?? []).map(mapApiRow).filter((a) => a.isActive);
-    };
+    const raw = await apiClient.get(BASE);
+    if (Array.isArray(raw)) {
+      return asRowArray(raw);
+    }
+    if (raw && typeof raw === "object" && "data" in raw) {
+      return asRowArray((raw as { data: unknown }).data);
+    }
+    return [];
+  },
 
-    const mockRequest = async (): Promise<FinancialAccountItem[]> => {
-      await wait(150);
-      return mockData.tables.financial_accounts
-        .filter((r) => r.is_active)
-        .map((r) => ({
-          id: r.id,
-          name: r.name,
-          accountType: r.account_type,
-          connectionMode: r.connection_mode,
-          currency: r.currency,
-          currentBalance: r.current_balance,
-          isActive: r.is_active,
-          isDefault: r.is_default,
-        }));
-    };
+  async createManual(
+    payload: CreateManualFinancialAccountPayload,
+  ): Promise<void> {
+    await apiClient.post(`${BASE}/Manual`, {
+      name: payload.name.trim(),
+      accountType: payload.accountType,
+      currentBalance: payload.currentBalance,
+      currency: payload.currency ?? "VND",
+      isDefault: payload.isDefault,
+    });
+  },
 
-    return requestWithStrategy(STRATEGY.list, realRequest, mockRequest);
+  async createLinkApi(
+    payload: CreateLinkApiFinancialAccountPayload,
+  ): Promise<void> {
+    await apiClient.post(`${BASE}/LinkApi`, {
+      bankName: payload.bankName.trim(),
+      bankCode: payload.bankCode?.trim() || null,
+      accountNumber: payload.accountNumber.trim(),
+      accountHolderName: payload.accountHolderName?.trim() || null,
+      isDefault: payload.isDefault,
+    });
+  },
+
+  async update(
+    id: string,
+    payload: UpdateFinancialAccountPayload,
+  ): Promise<void> {
+    const body: Record<string, string | number | boolean> = {};
+    if (payload.name !== undefined && payload.name !== null) {
+      body.name = payload.name;
+    }
+    if (
+      payload.currentBalance !== undefined &&
+      payload.currentBalance !== null
+    ) {
+      body.currentBalance = payload.currentBalance;
+    }
+    if (payload.isDefault !== undefined && payload.isDefault !== null) {
+      body.isDefault = payload.isDefault;
+    }
+    await apiClient.patch(`${BASE}/${id}`, body);
+  },
+
+  async deactivate(id: string): Promise<void> {
+    await apiClient.delete(`${BASE}/${id}`);
   },
 };

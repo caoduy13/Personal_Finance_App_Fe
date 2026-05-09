@@ -38,7 +38,15 @@ apiClient.interceptors.response.use(
     ) {
       return body;
     }
-    if (body?.data !== undefined) {
+    /* Chỉ unwrap `{ data: T }` khi đó là wrapper đơn (một key).
+       GET /jars trả `{ methodType, totalJarBalance, unallocatedBalance, data }`
+       — phải giữ nguyên object để FE đọc đủ. */
+    if (
+      body &&
+      typeof body === "object" &&
+      "data" in body &&
+      Object.keys(body).length === 1
+    ) {
       return body.data;
     }
     return body;

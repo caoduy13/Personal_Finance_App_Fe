@@ -1,8 +1,14 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
+import { DashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
+import { AccountsPage } from "@/features/financial-accounts";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
+import { CategoriesPage } from "@/features/categories";
+import { RemindersPage } from "@/features/reminders";
+import { OcrImportPage } from "@/features/imports";
+import { AiChatPage } from "@/features/ai-chat";
 import {
   AdminDashboardPage,
   AdminUsersPage,
@@ -56,11 +62,17 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { path: ROUTES.DASHBOARD, element: <TransactionsPage /> },
+      { path: ROUTES.DASHBOARD, element: <DashboardPage /> },
       { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
+      { path: ROUTES.ACCOUNTS, element: <AccountsPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },
       { path: ROUTES.BUDGET, element: <BudgetPage /> },
+      { path: ROUTES.LIMITS, element: <BudgetPage /> },
+      { path: ROUTES.CATEGORIES, element: <CategoriesPage /> },
+      { path: ROUTES.REMINDERS, element: <RemindersPage /> },
+      { path: ROUTES.IMPORTS_OCR, element: <OcrImportPage /> },
+      { path: ROUTES.AI_CHAT, element: <AiChatPage /> },
       { path: ROUTES.GOALS, element: <UserGoalsPage /> },
       { path: ROUTES.NOTIFICATIONS, element: <UserNotificationsPage /> },
       { path: ROUTES.PROFILE, element: <UserProfilePage /> },

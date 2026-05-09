@@ -1,12 +1,17 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Camera, Pencil, Settings, User, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useUpdateProfile } from "../hooks/useUpdateProfile";
 
 function FieldRow({ label, value }: { label: string; value: string }) {
   return (
@@ -19,6 +24,14 @@ function FieldRow({ label, value }: { label: string; value: string }) {
 
 export function UserProfilePage() {
   const { data, isLoading, isError, error } = useCurrentUser();
+  const { mutateAsync: saveProfile, isPending: saving } = useUpdateProfile();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftFirstName, setDraftFirstName] = useState("");
+  const [draftLastName, setDraftLastName] = useState("");
+  const [draftPhone, setDraftPhone] = useState("");
+  const [draftAvatarUrl, setDraftAvatarUrl] = useState("");
+
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
@@ -36,6 +49,42 @@ export function UserProfilePage() {
     const previewUrl = URL.createObjectURL(file);
     setAvatarPreview(previewUrl);
     setAvatarLoadFailed(false);
+  };
+
+  const startEdit = () => {
+    if (!data) return;
+    setDraftFirstName(data.firstName);
+    setDraftLastName(data.lastName);
+    setDraftPhone(data.phone ?? "");
+    setDraftAvatarUrl(data.avatarUrl ?? "");
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    if (data) {
+      setDraftFirstName(data.firstName);
+      setDraftLastName(data.lastName);
+      setDraftPhone(data.phone ?? "");
+      setDraftAvatarUrl(data.avatarUrl ?? "");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!data) return;
+    try {
+      await saveProfile({
+        firstName: draftFirstName.trim(),
+        lastName: draftLastName.trim(),
+        phone: draftPhone.trim() === "" ? null : draftPhone.trim(),
+        avatarUrl: draftAvatarUrl.trim() === "" ? null : draftAvatarUrl.trim(),
+      });
+      setIsEditing(false);
+      setAvatarPreview(null);
+      toast.success("Đã cập nhật hồ sơ");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Không lưu được hồ sơ");
+    }
   };
 
   if (isLoading) {
@@ -67,7 +116,8 @@ export function UserProfilePage() {
   const displayName =
     [data.lastName, data.firstName].filter(Boolean).join(" ").trim() || "—";
 
-  const effectiveAvatar = avatarPreview ?? data.avatarUrl;
+  const effectiveAvatar =
+    avatarPreview ?? (draftAvatarUrl.trim() || data.avatarUrl);
   const canShowAvatarImage =
     Boolean(effectiveAvatar && effectiveAvatar.trim()) && !avatarLoadFailed;
 
@@ -122,38 +172,112 @@ export function UserProfilePage() {
                 </button>
               </div>
 
-              <div className="mt-4 flex w-full justify-center">
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-2/3 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-3 text-sm font-medium text-black transition-colors hover:bg-violet-100 focus:outline-none focus-visible:outline-none"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Chỉnh sửa
-                </button>
+              <div className="mt-4 flex w-full flex-wrap justify-center gap-2">
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-2/3 min-w-[200px] cursor-pointer items-center justify-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-3 text-sm font-medium text-black transition-colors hover:bg-violet-100 focus:outline-none focus-visible:outline-none"
+                    onClick={startEdit}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Chỉnh sửa
+                  </button>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      className="cursor-pointer bg-[#6366F1] text-white hover:bg-[#4F46E5]"
+                      disabled={saving}
+                      onClick={() => void handleSave()}
+                    >
+                      {saving ? "Đang lưu…" : "Lưu"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="cursor-pointer"
+                      disabled={saving}
+                      onClick={cancelEdit}
+                    >
+                      Hủy
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </CardHeader>
 
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4">
-                <FieldRow label="Họ" value={data.lastName || "—"} />
-                <FieldRow label="Tên" value={data.firstName || "—"} />
-                <FieldRow label="Số điện thoại" value={data.phone ?? "—"} />
+            {isEditing ? (
+              <div className="mx-auto max-w-xl space-y-4 rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="pf-first">Tên</Label>
+                    <Input
+                      id="pf-first"
+                      value={draftFirstName}
+                      onChange={(e) => setDraftFirstName(e.target.value)}
+                      autoComplete="given-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pf-last">Họ</Label>
+                    <Input
+                      id="pf-last"
+                      value={draftLastName}
+                      onChange={(e) => setDraftLastName(e.target.value)}
+                      autoComplete="family-name"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pf-phone">Số điện thoại</Label>
+                  <Input
+                    id="pf-phone"
+                    value={draftPhone}
+                    onChange={(e) => setDraftPhone(e.target.value)}
+                    autoComplete="tel"
+                    placeholder="Tuỳ chọn"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pf-avatar">URL ảnh đại diện</Label>
+                  <Input
+                    id="pf-avatar"
+                    value={draftAvatarUrl}
+                    onChange={(e) => setDraftAvatarUrl(e.target.value)}
+                    placeholder="https://…"
+                  />
+                  <p className="text-xs text-slate-500">
+                    BE lưu URL; chọn file ở menu avatar chỉ xem trước cục bộ
+                    trừ khi bạn upload và dán link vào đây.
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Email và tên đăng nhập chỉ đọc — liên hệ hỗ trợ nếu cần đổi.
+                </p>
               </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4">
-                <FieldRow label="Email" value={data.email} />
-                <FieldRow label="Tiền tệ" value={data.preferredCurrency} />
-                <FieldRow
-                  label="Onboarding"
-                  value={
-                    data.isOnboardingCompleted
-                      ? "Đã hoàn thành"
-                      : "Chưa hoàn thành"
-                  }
-                />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4">
+                  <FieldRow label="Họ" value={data.lastName || "—"} />
+                  <FieldRow label="Tên" value={data.firstName || "—"} />
+                  <FieldRow label="Số điện thoại" value={data.phone ?? "—"} />
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4">
+                  <FieldRow label="Email" value={data.email} />
+                  <FieldRow label="Tiền tệ" value={data.preferredCurrency} />
+                  <FieldRow
+                    label="Onboarding"
+                    value={
+                      data.isOnboardingCompleted
+                        ? "Đã hoàn thành"
+                        : "Chưa hoàn thành"
+                    }
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -194,7 +318,7 @@ export function UserProfilePage() {
               className="w-full cursor-pointer border-b px-4 py-3 text-sm font-medium text-[#6366F1] hover:bg-slate-50"
               onClick={handleOpenFilePicker}
             >
-              Đổi ảnh đại diện
+              Chọn ảnh (xem trước)
             </button>
             <button
               type="button"

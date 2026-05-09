@@ -1,6 +1,4 @@
 import { apiClient } from "@/lib/axios";
-import { mockData } from "@/lib/mockData";
-import { requestWithStrategy, type RequestMode, wait } from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 import type {
   CreateGoalPayload,
@@ -11,114 +9,138 @@ import type {
   UpdateGoalResult,
 } from "./types";
 
-const GOAL_STRATEGY = {
-  list: "mock" as RequestMode,
-  detail: "mock" as RequestMode,
-  create: "mock" as RequestMode,
-  update: "mock" as RequestMode,
-  remove: "mock" as RequestMode,
-} as const;
+const BASE = API_ENDPOINT.GOALS;
 
-function mapTableGoal(row: (typeof mockData.tables.goals)[number]): GoalListItem {
-  const target = Number(row.target_amount);
-  const saved = Number(row.saved_amount);
-  const progress = target > 0 ? Math.round((saved / target) * 1000) / 10 : 0;
+function asRowArray(raw: unknown): Record<string, unknown>[] {
+  if (Array.isArray(raw)) {
+    return raw as Record<string, unknown>[];
+  }
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "data" in raw &&
+    Array.isArray((raw as { data: unknown }).data)
+  ) {
+    return (raw as { data: Record<string, unknown>[] }).data;
+  }
+  return [];
+}
+
+function mapGoalListItem(row: Record<string, unknown>): GoalListItem {
+  const due =
+    typeof row.dueDate === "string"
+      ? row.dueDate
+      : row.dueDate != null
+        ? new Date(row.dueDate as string | number).toISOString()
+        : "";
+  const lid = row.linkedJarId;
+  const lname = row.linkedJarName;
   return {
-    id: row.id,
-    title: row.title,
-    targetAmount: target,
-    savedAmount: saved,
-    progressPercentage: progress,
-    dueDate: row.due_date,
-    status: row.status,
-    suggestedMonthlyContribution: 0,
+    id: String(row.id ?? ""),
+    title: String(row.title ?? ""),
+    targetAmount: Number(row.targetAmount ?? 0),
+    savedAmount: Number(row.savedAmount ?? 0),
+    progressPercentage: Number(row.progressPercentage ?? 0),
+    dueDate: due,
+    status: String(row.status ?? ""),
+    suggestedMonthlyContribution: Number(row.suggestedMonthlyContribution ?? 0),
+    linkedJarId: lid != null && lid !== "" ? String(lid) : null,
+    linkedJarName:
+      lname != null && String(lname).trim() !== "" ? String(lname) : null,
+  };
+}
+
+function mapGoalDetail(row: Record<string, unknown>): GoalDetail {
+  const base = mapGoalListItem(row);
+  const n = row.note;
+  return {
+    ...base,
+    daysRemaining: Number(row.daysRemaining ?? 0),
+    note: n != null && String(n).trim() !== "" ? String(n) : null,
+  };
+}
+
+function mapCreateResult(row: Record<string, unknown>): CreateGoalResult {
+  const due =
+    typeof row.dueDate === "string"
+      ? row.dueDate
+      : row.dueDate != null
+        ? new Date(row.dueDate as string | number).toISOString()
+        : "";
+  return {
+    id: String(row.id ?? ""),
+    title: String(row.title ?? ""),
+    targetAmount: Number(row.targetAmount ?? 0),
+    savedAmount: Number(row.savedAmount ?? 0),
+    progressPercentage: Number(row.progressPercentage ?? 0),
+    status: String(row.status ?? ""),
+    dueDate: due,
+  };
+}
+
+function mapUpdateResult(row: Record<string, unknown>): UpdateGoalResult {
+  const due =
+    typeof row.dueDate === "string"
+      ? row.dueDate
+      : row.dueDate != null
+        ? new Date(row.dueDate as string | number).toISOString()
+        : "";
+  return {
+    id: String(row.id ?? ""),
+    title: String(row.title ?? ""),
+    targetAmount: Number(row.targetAmount ?? 0),
+    dueDate: due,
+    status: String(row.status ?? ""),
   };
 }
 
 export const goalService = {
   async list(): Promise<GoalListItem[]> {
-    const realRequest = async () => {
-      return (await apiClient.get(API_ENDPOINT.GOALS)) as GoalListItem[];
-    };
-
-    const mockRequest = async () => {
-      await wait(200);
-      return mockData.tables.goals.map(mapTableGoal);
-    };
-
-    return requestWithStrategy(GOAL_STRATEGY.list, realRequest, mockRequest);
+    const raw = await apiClient.get(BASE);
+    return asRowArray(raw).map(mapGoalListItem);
   },
 
   async getById(id: string): Promise<GoalDetail> {
-    const realRequest = async () => {
-      return (await apiClient.get(`${API_ENDPOINT.GOALS}/${id}`)) as GoalDetail;
-    };
-
-    const mockRequest = async () => {
-      await wait(200);
-      const row = mockData.tables.goals.find((g) => g.id === id);
-      if (!row) throw new Error("Goal not found");
-      const base = mapTableGoal(row);
-      return {
-        ...base,
-        daysRemaining: 30,
-        linkedJarId: row.linked_jar_id ?? null,
-      };
-    };
-
-    return requestWithStrategy(GOAL_STRATEGY.detail, realRequest, mockRequest);
+    const raw = (await apiClient.get(`${BASE}/${id}`)) as unknown;
+    return mapGoalDetail(raw as Record<string, unknown>);
   },
 
   async create(payload: CreateGoalPayload): Promise<CreateGoalResult> {
-    const realRequest = async () => {
-      return (await apiClient.post(API_ENDPOINT.GOALS, payload)) as CreateGoalResult;
+    const body = {
+      title: payload.title,
+      targetAmount: payload.targetAmount,
+      dueDate: payload.dueDate,
+      linkedJarId: payload.linkedJarId ?? undefined,
+      note: payload.note ?? undefined,
     };
-
-    const mockRequest = async () => {
-      await wait(200);
-      return {
-        id: crypto.randomUUID(),
-        title: payload.title,
-        targetAmount: payload.targetAmount,
-        savedAmount: 0,
-        progressPercentage: 0,
-        status: "Active",
-        dueDate: payload.dueDate,
-      };
-    };
-
-    return requestWithStrategy(GOAL_STRATEGY.create, realRequest, mockRequest);
+    const raw = (await apiClient.post(BASE, body)) as unknown;
+    return mapCreateResult(raw as Record<string, unknown>);
   },
 
   async update(id: string, payload: UpdateGoalPayload): Promise<UpdateGoalResult> {
-    const realRequest = async () => {
-      return (await apiClient.patch(`${API_ENDPOINT.GOALS}/${id}`, payload)) as UpdateGoalResult;
-    };
-
-    const mockRequest = async () => {
-      await wait(200);
-      return {
-        id,
-        title: payload.title ?? "Goal",
-        targetAmount: payload.targetAmount ?? 0,
-        dueDate: payload.dueDate ?? new Date().toISOString(),
-        status: "Active",
-      };
-    };
-
-    return requestWithStrategy(GOAL_STRATEGY.update, realRequest, mockRequest);
+    const body: Record<string, unknown> = {};
+    if (payload.title !== undefined && payload.title !== null) {
+      body.title = payload.title;
+    }
+    if (payload.targetAmount != null) {
+      body.targetAmount = payload.targetAmount;
+    }
+    if (payload.dueDate != null) {
+      body.dueDate = payload.dueDate;
+    }
+    if (payload.linkedJarId !== undefined) {
+      body.linkedJarId = payload.linkedJarId;
+    }
+    if (payload.note !== undefined && payload.note !== null) {
+      body.note = payload.note;
+    }
+    const raw = (await apiClient.patch(`${BASE}/${id}`, body)) as unknown;
+    return mapUpdateResult(raw as Record<string, unknown>);
   },
 
   async remove(id: string): Promise<{ message: string }> {
-    const realRequest = async () => {
-      return (await apiClient.delete(`${API_ENDPOINT.GOALS}/${id}`)) as { message: string };
+    return (await apiClient.delete(`${BASE}/${id}`)) as {
+      message: string;
     };
-
-    const mockRequest = async () => {
-      await wait(200);
-      return { message: "Goal deleted" };
-    };
-
-    return requestWithStrategy(GOAL_STRATEGY.remove, realRequest, mockRequest);
   },
 };

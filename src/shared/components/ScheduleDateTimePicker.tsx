@@ -3,7 +3,11 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/shared/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +18,7 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
-/** Chuỗi `yyyy-MM-ddTHH:mm` (local) cho input ẩn / submit form. */
+/** Chuỗi `yyyy-MM-ddTHH:mm` (local) cho submit form. */
 function toDatetimeLocalValue(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
@@ -25,13 +29,15 @@ function fromDatetimeLocalValue(s: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-type ScheduleDateTimePickerProps = {
+export type ScheduleDateTimePickerProps = {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
-  /** Mặc định true (lịch broadcast). Đặt false khi cần chọn ngày quá khứ (vd. lọc audit). */
+  /** Mặc định true (lịch broadcast). Đặt false khi cần ngày quá khứ (audit, giao dịch…). */
   disablePast?: boolean;
+  /** Hiện nút «Xóa» để để trống. Mặc định true; đặt false khi bắt buộc có ngày giờ. */
+  allowClear?: boolean;
 };
 
 function TimeColumn({
@@ -86,6 +92,7 @@ export function ScheduleDateTimePicker({
   onChange,
   className,
   disablePast = true,
+  allowClear = true,
 }: ScheduleDateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
   const parsed = React.useMemo(() => fromDatetimeLocalValue(value), [value]);
@@ -160,14 +167,21 @@ export function ScheduleDateTimePicker({
                 : {})}
               initialFocus
             />
-            <div className="mt-1 flex items-center justify-between gap-2 border-t border-indigo-100/80 px-1 pt-2">
-              <button
-                type="button"
-                className="text-xs font-medium text-[#6366F1] hover:underline"
-                onClick={() => onChange("")}
-              >
-                Xóa
-              </button>
+            <div
+              className={cn(
+                "mt-1 flex items-center gap-2 border-t border-indigo-100/80 px-1 pt-2",
+                allowClear ? "justify-between" : "justify-end",
+              )}
+            >
+              {allowClear ? (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-[#6366F1] hover:underline"
+                  onClick={() => onChange("")}
+                >
+                  Xóa
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="text-xs font-medium text-[#6366F1] hover:underline"

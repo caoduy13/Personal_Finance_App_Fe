@@ -7,11 +7,14 @@ export interface GoalListItem {
   dueDate: string;
   status: string;
   suggestedMonthlyContribution: number;
+  /** Hũ mà BE dùng để tính savedAmount (số dư hũ). */
+  linkedJarId: string | null;
+  linkedJarName: string | null;
 }
 
 export interface GoalDetail extends GoalListItem {
   daysRemaining: number;
-  linkedJarId: string | null;
+  note?: string | null;
 }
 
 export interface CreateGoalPayload {

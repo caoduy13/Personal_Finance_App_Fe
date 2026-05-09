@@ -29,7 +29,10 @@ interface BackendMeResponse {
 }
 
 /** Full name từ form đăng ký → first/last đúng contract BE (Swagger). */
-export function splitFullName(fullName: string): { firstName: string; lastName: string } {
+export function splitFullName(fullName: string): {
+  firstName: string;
+  lastName: string;
+} {
   const trimmed = fullName.trim();
   const parts = trimmed.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { firstName: "User", lastName: "Finjar" };
@@ -54,8 +57,7 @@ export async function buildAuthResponse(
 
   const firstName = (me.firstName ?? "").trim();
   const lastName = (me.lastName ?? "").trim();
-  const role =
-    me.role ?? bootstrap.role ?? "User";
+  const role = me.role ?? bootstrap.role ?? "User";
 
   return {
     accessToken,
@@ -74,9 +76,14 @@ export async function buildAuthResponse(
 }
 
 export function mapAxiosAuthError(error: unknown): Error {
-  if (!axios.isAxiosError(error)) return error instanceof Error ? error : new Error(String(error));
+  if (!axios.isAxiosError(error))
+    return error instanceof Error ? error : new Error(String(error));
 
-  const ax = error as AxiosError<{ error?: string; message?: string; title?: string }>;
+  const ax = error as AxiosError<{
+    error?: string;
+    message?: string;
+    title?: string;
+  }>;
   const data = ax.response?.data;
   const msg =
     (typeof data === "object" && data?.error && String(data.error)) ||

@@ -4,11 +4,13 @@ import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
 import { ROUTES } from "@/shared/constants";
 import { useFinancialAccounts } from "@/features/financial-accounts";
 import { useUserCategories } from "@/features/categories";
@@ -40,11 +42,11 @@ export function AddTransactionPage() {
   const [financialAccountId, setFinancialAccountId] = useState("");
   const [fromJarId, setFromJarId] = useState("");
   const [toJarId, setToJarId] = useState("");
-  /** `datetime-local` */
+  /** Chuỗi local `yyyy-MM-ddTHH:mm` — khớp `ScheduleDateTimePicker`. */
   const [dateLocal, setDateLocal] = useState(() => {
     const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   });
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -68,7 +70,16 @@ export function AddTransactionPage() {
       return null;
     }
 
-    const dateIso = new Date(dateLocal).toISOString();
+    if (!dateLocal?.trim()) {
+      setFormError("Chọn thời gian giao dịch.");
+      return null;
+    }
+    const parsedAt = new Date(dateLocal);
+    if (Number.isNaN(parsedAt.getTime())) {
+      setFormError("Thời gian giao dịch không hợp lệ.");
+      return null;
+    }
+    const dateIso = parsedAt.toISOString();
     const cat = categoryId || null;
     const noteTrim = note.trim() || undefined;
 
@@ -176,18 +187,23 @@ export function AddTransactionPage() {
   };
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">Thêm giao dịch</h1>
-      <p className="text-sm text-muted-foreground">
-        Khớp body backend:{" "}
-        <code className="rounded bg-muted px-1">CreateTransactionRequest</code>{" "}
-        — chi tiêu từ hũ; thu nhập vào tài khoản thủ công; chuyển khoản theo 3
-        kiểu như service backend.
-      </p>
+    <section className="mx-auto max-w-2xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-[#0f172a]">Thêm giao dịch</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Ghi nhận thu nhập, chi tiêu từ hũ hoặc chuyển khoản giữa hũ và tài khoản.
+        </p>
+      </div>
 
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Tạo giao dịch thủ công</CardTitle>
+      <Card className="w-full border-[#d7def5] shadow-none">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-[#0f172a]">
+            Tạo giao dịch thủ công
+          </CardTitle>
+          <CardDescription>
+            Thu nhập ghi vào tài khoản thủ công; chi tiêu trừ từ hũ; chuyển khoản
+            theo các kiểu đã chọn.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -239,13 +255,14 @@ export function AddTransactionPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Thời gian (date)</Label>
-                <Input
+                <Label htmlFor="date">Thời gian giao dịch</Label>
+                <ScheduleDateTimePicker
                   id="date"
-                  type="datetime-local"
                   value={dateLocal}
-                  onChange={(event) => setDateLocal(event.target.value)}
-                  required
+                  onChange={setDateLocal}
+                  disablePast={false}
+                  allowClear={false}
+                  className="max-w-none"
                 />
               </div>
             </div>
@@ -455,7 +472,11 @@ export function AddTransactionPage() {
               <p className="text-sm text-red-500">{formError}</p>
             ) : null}
 
-            <Button type="submit" disabled={isPending || loadingDeps}>
+            <Button
+              type="submit"
+              className="bg-[#6366F1] text-white hover:bg-[#4F46E5]"
+              disabled={isPending || loadingDeps}
+            >
               {isPending
                 ? "Đang lưu…"
                 : loadingDeps

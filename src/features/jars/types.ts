@@ -1,14 +1,15 @@
-/** Một hũ trong response GET /Jar (camelCase từ BE). */
+/** Một hũ trong response GET /api/v1/jars (camelCase từ BE). */
 export interface JarApiRow {
   id: string;
   name: string;
   balance: number;
+  /** Hũ seed từ onboarding có thể null — FE gán mặc định. */
   color: string;
   icon: string;
   status: string;
 }
 
-/** Body GET /Jar đầy đủ. */
+/** Body GET /api/v1/jars đầy đủ. */
 export interface JarsOverviewApi {
   methodType: string;
   totalJarBalance: number;
