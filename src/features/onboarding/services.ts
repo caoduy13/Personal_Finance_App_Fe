@@ -1,33 +1,28 @@
-import { useAuthStore } from "@/features/auth/store";
 import { BUDGET_METHOD } from "@/constants/onboarding";
 import type { BudgetMethodId } from "@/constants/onboarding";
 import { apiClient } from "@/lib/axios";
-import { mockData } from "@/lib/mockData";
-import {
-  requestWithStrategy,
-  type RequestMode,
-  wait,
-} from "@/lib/requestStrategy";
 import { API_ENDPOINT } from "@/shared/constants";
 import type { OnboardingForm } from "./schema";
-import type { SuggestionRow } from "./types";
+import type { OnboardingCompleteResult, SuggestionRow } from "./types";
 
-const ONBOARDING_MODE = { complete: "real" as RequestMode };
-
-const sixJarsTemplate = [
-  { name: "Sinh hoạt", percentage: 55, icon: "🏠" },
-  { name: "Giáo dục", percentage: 10, icon: "📚" },
-  { name: "Tiết kiệm", percentage: 10, icon: "💰" },
-  { name: "Giải trí", percentage: 10, icon: "🎮" },
-  { name: "Đầu tư", percentage: 10, icon: "📈" },
-  { name: "Từ thiện", percentage: 5, icon: "❤️" },
+/**
+ * Tên hũ khớp `Personal_Finance_Management.Service.Onboarding.Service`
+ * (preview bước cuối; danh sách thật sau khi submit lấy từ GET /api/v1/jars).
+ */
+const PREVIEW_SIX_JAR_NAMES = [
+  "Food & Dining",
+  "Shopping",
+  "Transportation",
+  "Savings",
+  "Essentials",
+  "Entertainment",
 ] as const;
 
-const rule503020Template = [
-  { name: "Nhu cầu thiết yếu", percentage: 50, icon: "🏠" },
-  { name: "Mong muốn", percentage: 30, icon: "🎯" },
-  { name: "Tiết kiệm", percentage: 20, icon: "💰" },
-] as const;
+const PREVIEW_503020: readonly { name: string; percentage: number }[] = [
+  { name: "Needs", percentage: 50 },
+  { name: "Wants", percentage: 30 },
+  { name: "Savings/Investments", percentage: 20 },
+];
 
 function toRequestBody(form: OnboardingForm) {
   const income = Number(form.monthlyIncome);
@@ -41,98 +36,46 @@ function toRequestBody(form: OnboardingForm) {
   };
 }
 
-/** Gợi ý hũ — template local (không gọi BE). */
+/** Gợi ý trên form — tên & tỷ lệ khớp BE sẽ tạo (Custom: rỗng). */
 export function getSuggestionRows(
   method: BudgetMethodId | null,
   monthlyIncomeVnd: number,
 ): SuggestionRow[] {
   if (!method || method === BUDGET_METHOD.CUSTOM) return [];
 
-  const jars =
-    method === BUDGET_METHOD.SIX_JARS
-      ? sixJarsTemplate
-      : method === BUDGET_METHOD.RULE_503020
-        ? rule503020Template
-        : [];
-
   const base = Number.isFinite(monthlyIncomeVnd) ? monthlyIncomeVnd : 0;
-  return jars.map((j) => ({
-    name: j.name,
-    percentage: j.percentage,
-    icon: j.icon,
-    monthlyAmount: Math.round((base * j.percentage) / 100),
-  }));
-}
 
-function patchMockTables(form: OnboardingForm): void {
-  const u = useAuthStore.getState().user;
-  if (!u?.id) return;
-
-  const nowIso = new Date().toISOString();
-  const accounts = mockData.tables.accounts as unknown as Array<{
-    id: string;
-    email: string;
-    is_onboarding_completed?: boolean;
-    updated_at: string;
-  }>;
-  const acc =
-    accounts.find((a) => a.id === u.id) ??
-    accounts.find((a) => a.email === u.email);
-
-  if (acc) {
-    acc.is_onboarding_completed = true;
-    acc.updated_at = nowIso;
+  if (method === BUDGET_METHOD.SIX_JARS) {
+    const n = PREVIEW_SIX_JAR_NAMES.length;
+    const pct = Math.round(100 / n);
+    return PREVIEW_SIX_JAR_NAMES.map((name) => ({
+      name,
+      percentage: pct,
+      icon: "•",
+      monthlyAmount: Math.round((base * pct) / 100),
+    }));
   }
 
-  const profiles = mockData.tables.onboarding_profiles as unknown as Array<
-    Record<string, unknown> & { user_id?: string }
-  >;
-  const existing = profiles.find((p) => p.user_id === u.id);
-  const shared = {
-    monthly_income: form.monthlyIncome,
-    occupation_type: form.occupation || "other",
-    financial_goal_types: form.financialGoals.join(","),
-    budget_method_preference: form.budgetingMethod ?? BUDGET_METHOD.CUSTOM,
-    age_range: form.ageRange || "",
-    spending_challenges: form.spendingChallenges.join(","),
-    recommended_method: form.budgetingMethod ?? BUDGET_METHOD.CUSTOM,
-    completed_at: nowIso,
-    updated_at: nowIso,
-  };
-
-  if (existing) {
-    Object.assign(existing, shared);
-  } else {
-    profiles.push({
-      id: crypto.randomUUID(),
-      user_id: u.id,
-      ...shared,
-      created_at: nowIso,
-    });
+  if (method === BUDGET_METHOD.RULE_503020) {
+    return PREVIEW_503020.map((j) => ({
+      name: j.name,
+      percentage: j.percentage,
+      icon: "•",
+      monthlyAmount: Math.round((base * j.percentage) / 100),
+    }));
   }
+
+  return [];
 }
 
 export const onboardingService = {
-  /**
-   * Một lần duy nhất ở cuối wizard (bước 4) — `useOnboardingForm.submit` / `useMutation`.
-   * Các bước 1–3 không gọi BE (chỉ validate + gợi ý local).
-   */
-  async complete(form: OnboardingForm): Promise<void> {
+  /** POST `/api/v1/onboarding` — BE tạo hũ (trừ Custom), categories, tài khoản Cash. */
+  async complete(form: OnboardingForm): Promise<OnboardingCompleteResult> {
     const body = toRequestBody(form);
-
-    const realRequest = async () => {
-      await apiClient.post(API_ENDPOINT.ONBOARDING, body);
-    };
-
-    const mockRequest = async () => {
-      await wait(280);
-      patchMockTables(form);
-    };
-
-    await requestWithStrategy(
-      ONBOARDING_MODE.complete,
-      realRequest,
-      mockRequest,
-    );
+    const data = (await apiClient.post(
+      API_ENDPOINT.ONBOARDING,
+      body,
+    )) as OnboardingCompleteResult;
+    return data;
   },
 };

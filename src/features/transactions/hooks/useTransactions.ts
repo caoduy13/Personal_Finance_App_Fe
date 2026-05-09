@@ -21,6 +21,8 @@ export function useCreateTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }
@@ -34,6 +36,8 @@ export function useUpdateTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }
@@ -46,6 +50,8 @@ export function useDeleteTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }

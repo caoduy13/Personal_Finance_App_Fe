@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { z } from "zod";
 import { useAuthStore } from "@/features/auth/store";
+import { profileService } from "@/features/profile/services";
+import { currentUserQueryKey } from "@/features/profile/hooks/useCurrentUser";
 import { ROUTES } from "@/shared/constants/routes";
 import type { UserRole } from "@/shared/types";
 import { ONBOARDING_UI } from "@/constants/onboarding";
@@ -98,16 +100,37 @@ export function useOnboardingForm() {
         spendingChallenges: parsed.data.spendingChallenges,
         budgetingMethod: parsed.data.budgetingMethod,
       });
-      const { accessToken, role, user } = useAuthStore.getState();
-      if (accessToken && user) {
-        setAuth({
-          accessToken,
-          role: role ?? appRoleFromApiRole(user.role),
-          user: { ...user, isOnboardingCompleted: true },
-        });
+      const prev = useAuthStore.getState();
+      if (prev.accessToken && prev.user) {
+        try {
+          const me = await profileService.getMe();
+          setAuth({
+            accessToken: prev.accessToken,
+            role: prev.role ?? appRoleFromApiRole(prev.user.role),
+            user: {
+              id: me.id,
+              username: me.username,
+              firstName: me.firstName,
+              lastName: me.lastName,
+              email: me.email,
+              role: prev.user.role,
+              isOnboardingCompleted: me.isOnboardingCompleted,
+            },
+          });
+        } catch {
+          setAuth({
+            accessToken: prev.accessToken,
+            role: prev.role ?? appRoleFromApiRole(prev.user.role),
+            user: { ...prev.user, isOnboardingCompleted: true },
+          });
+        }
       }
+      void queryClient.invalidateQueries({ queryKey: currentUserQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["user"] });
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["jars"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      void queryClient.invalidateQueries({ queryKey: ["goals"] });
       navigate(ROUTES.DASHBOARD, { replace: true });
     } catch (err: unknown) {
       const maybe = err as {

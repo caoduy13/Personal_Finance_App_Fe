@@ -6,4 +6,4 @@ export type {
   OnboardingFormValues,
   OnboardingFormOutput,
 } from "./schema";
-export type { SuggestionRow } from "./types";
+export type { OnboardingCompleteResult, SuggestionRow } from "./types";

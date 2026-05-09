@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Link, NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import {
   Bell,
+  CalendarClock,
   CircleUserRound,
   Goal,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Menu,
   PiggyBank,
   ReceiptText,
+  ScanLine,
+  Sparkles,
+  Tags,
   WalletCards,
   X,
 } from "lucide-react";
@@ -27,26 +32,34 @@ import {
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
 import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
+import { useNotificationUnreadCount } from "@/features/notifications";
 import { AiChatFab } from "@/features/ai-chat";
 
 const userNavItems = [
   { label: "Dashboard", to: ROUTES.DASHBOARD, icon: LayoutDashboard },
   { label: "Giao dịch", to: ROUTES.TRANSACTIONS, icon: ReceiptText },
+  { label: "Nguồn tiền", to: ROUTES.ACCOUNTS, icon: Landmark },
+  { label: "Danh mục", to: ROUTES.CATEGORIES, icon: Tags },
   { label: "Ngân sách", to: ROUTES.BUDGET, icon: WalletCards },
   { label: "Mục tiêu", to: ROUTES.GOALS, icon: Goal },
   { label: "Hũ", to: ROUTES.JARS, icon: PiggyBank },
 ] as const;
 
+/** Thanh dưới: 5 mục + thông báo; Danh mục / Ngân sách / nhắc lịch / OCR / AI trong drawer. */
 const mobilePrimaryItems = [
   userNavItems[0],
   userNavItems[1],
-  userNavItems[3],
-  userNavItems[4],
   userNavItems[2],
+  userNavItems[5],
+  userNavItems[6],
   { label: "Thông báo", to: ROUTES.NOTIFICATIONS, icon: Bell },
 ] as const;
 const mobileMoreItems = [
   userNavItems[3],
+  userNavItems[4],
+  { label: "Nhắc lịch", to: ROUTES.REMINDERS, icon: CalendarClock },
+  { label: "OCR hóa đơn", to: ROUTES.IMPORTS_OCR, icon: ScanLine },
+  { label: "AI tư vấn", to: ROUTES.AI_CHAT, icon: Sparkles },
   { label: "Hồ sơ", to: ROUTES.PROFILE, icon: CircleUserRound },
 ] as const;
 
@@ -56,6 +69,8 @@ export function UserLayout() {
   const location = useLocation();
   const { user, isAdmin } = useAuth();
   const { mutate: logout, isPending } = useLogoutMutation();
+  const { data: unreadBadge } = useNotificationUnreadCount();
+  const unreadCount = unreadBadge ?? 0;
   const isProfileRoute = location.pathname === ROUTES.PROFILE;
 
   /* Chỉ user thường (không phải admin) bị bắt làm onboarding khi BE báo chưa xong. */
@@ -96,7 +111,7 @@ export function UserLayout() {
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    "inline-flex h-9 w-[120px] items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black",
+                    "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black",
                     isActive && "bg-slate-100 text-black",
                   )
                 }
@@ -119,10 +134,15 @@ export function UserLayout() {
           <div className="ml-auto hidden items-center gap-2 md:flex">
             <Link
               to={ROUTES.NOTIFICATIONS}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-[#6366F1]"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-[#6366F1]"
               aria-label="Thông báo"
             >
               <Bell className="h-5 w-5" />
+              {unreadCount > 0 ? (
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#6366F1] px-1 text-[10px] font-semibold leading-none text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
             </Link>
 
             <div
@@ -327,7 +347,7 @@ export function UserLayout() {
       <AiChatFab />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background md:hidden">
-        <div className="mx-auto grid h-16 max-w-xl grid-cols-5 px-1">
+        <div className="mx-auto grid h-16 max-w-xl grid-cols-6 px-0.5">
           {mobilePrimaryItems.map((item) => (
             <NavLink
               key={item.to}
@@ -337,16 +357,23 @@ export function UserLayout() {
               {({ isActive }) => (
                 <span
                   className={cn(
-                    "inline-flex w-full max-w-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-500 transition",
+                    "relative inline-flex w-full max-w-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-500 transition",
                     isActive && "bg-slate-200 text-black",
                   )}
                 >
-                  <item.icon
-                    className={cn(
-                      "h-5 w-5",
-                      isActive ? "text-[#6366F1]" : "text-slate-500",
-                    )}
-                  />
+                  <span className="relative">
+                    <item.icon
+                      className={cn(
+                        "h-5 w-5",
+                        isActive ? "text-[#6366F1]" : "text-slate-500",
+                      )}
+                    />
+                    {item.to === ROUTES.NOTIFICATIONS && unreadCount > 0 ? (
+                      <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6366F1] px-0.5 text-[9px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="max-w-full whitespace-nowrap text-[10px] leading-none">
                     {item.label}
                   </span>

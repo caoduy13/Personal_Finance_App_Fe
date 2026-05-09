@@ -8,10 +8,12 @@ if (!API_URL) {
   );
 }
 
-const DEV_PREFILL_LOGIN_EMAIL =
-  String(import.meta.env.VITE_DEV_PREFILL_LOGIN_EMAIL ?? "");
-const DEV_PREFILL_LOGIN_PASSWORD =
-  String(import.meta.env.VITE_DEV_PREFILL_LOGIN_PASSWORD ?? "");
+const DEV_PREFILL_LOGIN_EMAIL = String(
+  import.meta.env.VITE_DEV_PREFILL_LOGIN_EMAIL ?? "",
+);
+const DEV_PREFILL_LOGIN_PASSWORD = String(
+  import.meta.env.VITE_DEV_PREFILL_LOGIN_PASSWORD ?? "",
+);
 
 export const env = {
   API_URL,
