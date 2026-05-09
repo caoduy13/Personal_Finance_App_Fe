@@ -31,7 +31,7 @@ export const userCategoryService = {
   async listOptions(): Promise<UserCategoryOption[]> {
     const realRequest = async () => {
       const body = (await apiClient.get(
-        API_ENDPOINT.CATEGORIES,
+        API_ENDPOINT.CATEGORIES.LIST,
       )) as CategoriesApiBody;
       return mergeCategories(body);
     };

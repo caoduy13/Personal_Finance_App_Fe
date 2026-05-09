@@ -6,8 +6,7 @@ function createAuthResponse(
   opts?: { username?: string; firstName?: string; lastName?: string },
 ): AuthResponse {
   const isAdmin = email.toLowerCase().includes("admin");
-  const username =
-    opts?.username ?? (isAdmin ? "admin" : "user");
+  const username = opts?.username ?? (isAdmin ? "admin" : "user");
   const firstName = opts?.firstName ?? (isAdmin ? "Admin" : "User");
   const lastName = opts?.lastName ?? "Mock";
 
@@ -18,6 +17,7 @@ function createAuthResponse(
     lastName,
     email,
     role: isAdmin ? "Admin" : "User",
+    isOnboardingCompleted: isAdmin ? true : false,
     accessToken: `mock-finjar-token-${Date.now()}`,
   };
 }
