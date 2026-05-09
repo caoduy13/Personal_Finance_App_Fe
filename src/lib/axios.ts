@@ -8,10 +8,15 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  // JWT qua header Bearer — không cần cookie cross-origin; `true` bắt buộc BE trả
+  // Access-Control-Allow-Credentials (và không được dùng * cho origin).
+  withCredentials: false,
 });
 
 apiClient.interceptors.request.use((config) => {
+  // Luôn tắt cookie cross-origin; tránh CORS bắt Access-Control-Allow-Credentials.
+  config.withCredentials = false;
+
   const token = useAuthStore.getState().accessToken;
 
   if (token) {

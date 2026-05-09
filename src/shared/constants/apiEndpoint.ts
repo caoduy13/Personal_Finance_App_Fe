@@ -18,5 +18,6 @@ export const API_ENDPOINT = {
     CATEGORIES: "/admin/categories",
     BROADCASTS: "/admin/broadcasts",
     AUDIT_LOGS: "/admin/audit-logs",
+    CHANGE_ROLE: "/change-role",
   },
 } as const;
