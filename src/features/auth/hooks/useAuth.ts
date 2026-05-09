@@ -1,9 +1,21 @@
-import { useMutation } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 import { authService } from "../services";
 import { useAuthStore } from "../store";
 import { ROUTES } from "@/shared/constants/routes";
+
+function useAuthSuccessNavigation() {
+  const navigate = useNavigate();
+
+  return (response: AuthResponse) => {
+    if (response.user.role === "admin") {
+      navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+      return;
+    }
+    navigate(ROUTES.DASHBOARD, { replace: true });
+  };
+}
 
 export function useAuth() {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -24,48 +36,57 @@ export function useAuth() {
 }
 
 export function useLoginMutation() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const queryClient = useQueryClient();
   const { setAuth } = useAuthStore();
-
-  const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? ROUTES.DASHBOARD;
+  const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (payload) => authService.login(payload),
     onSuccess: (response) => {
+      void queryClient.invalidateQueries({ queryKey: ["user"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setAuth({
         accessToken: response.accessToken,
         role: response.user.role,
         user: response.user,
       });
-      navigate(response.user.role === "admin" ? ROUTES.ADMIN_DASHBOARD : from, {
-        replace: true,
-      });
+      goAfterAuth(response);
     },
   });
 }
 
 export function useRegisterMutation() {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { setAuth } = useAuthStore();
+  const goAfterAuth = useAuthSuccessNavigation();
 
   return useMutation<AuthResponse, Error, RegisterRequest>({
     mutationFn: (payload) => authService.register(payload),
-    onSuccess: () => {
-      navigate(ROUTES.LOGIN, { replace: true });
+    onSuccess: (response) => {
+      void queryClient.invalidateQueries({ queryKey: ["user"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      setAuth({
+        accessToken: response.accessToken,
+        role: response.user.role,
+        user: response.user,
+      });
+      goAfterAuth(response);
     },
   });
 }
 
 export function useLogoutMutation() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { clearAuth } = useAuthStore();
 
   return useMutation<void, Error, void>({
     mutationFn: () => authService.logout(),
-    onSuccess: () => {
+    onSettled: () => {
       clearAuth();
+      void queryClient.clear();
       navigate(ROUTES.LOGIN, { replace: true });
     },
   });
