@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
 import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
+import { AiChatFab } from "@/features/ai-chat";
 
 const userNavItems = [
   { label: "Dashboard", to: ROUTES.DASHBOARD, icon: LayoutDashboard },
@@ -132,7 +133,17 @@ export function UserLayout() {
                     isProfileRoute && "text-[#6366F1]",
                   )}
                 />
-                <span className="max-w-[140px] truncate">{user?.fullName ?? "Tài khoản"}</span>
+                <span className="max-w-[140px] truncate">
+                  {[
+                    user?.firstName,
+                    user?.lastName,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim() ||
+                    user?.username ||
+                    "Tài khoản"}
+                </span>
               </button>
 
               <div
@@ -298,6 +309,8 @@ export function UserLayout() {
           </AlertDialogContent>
         </AlertDialog>
       </aside>
+
+      <AiChatFab />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background md:hidden">
         <div className="mx-auto grid h-16 max-w-xl grid-cols-5 px-1">
