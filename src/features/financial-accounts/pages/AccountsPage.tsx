@@ -275,7 +275,10 @@ export function AccountsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {data.map((a) => (
-            <Card key={a.id} className="border-[#d7def5] shadow-none">
+            <Card
+              key={a.id}
+              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+            >
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
@@ -316,12 +319,12 @@ export function AccountsPage() {
                     </div>
                   ) : null}
                 </dl>
-                <div className="flex flex-wrap gap-2 border-t pt-3">
+                <div className="flex flex-wrap gap-2 border-t border-violet-100 pt-3">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer gap-1.5"
+                    className="cursor-pointer gap-1.5 border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
                     onClick={() => openEdit(a)}
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -332,7 +335,7 @@ export function AccountsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer gap-1.5"
+                      className="cursor-pointer gap-1.5 border-violet-200/80 hover:bg-violet-50"
                       onClick={onSyncCasso}
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
@@ -344,7 +347,7 @@ export function AccountsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer gap-1.5 text-red-600 hover:bg-red-50"
+                      className="cursor-pointer gap-1.5 border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
                       onClick={() => setDeleteId(a.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -358,8 +361,11 @@ export function AccountsPage() {
         </div>
       )}
 
-      <p className="text-center text-sm text-slate-500">
-        <Link to={ROUTES.TRANSACTIONS_ADD} className="text-[#6366F1] hover:underline">
+      <p className="rounded-xl border border-violet-100 bg-violet-50/40 py-3 text-center text-sm text-slate-600">
+        <Link
+          to={ROUTES.TRANSACTIONS_ADD}
+          className="font-medium text-[#6366F1] underline-offset-2 hover:underline"
+        >
           Thêm giao dịch
         </Link>{" "}
         — chọn tài khoản nguồn khi ghi nhận thu chi.

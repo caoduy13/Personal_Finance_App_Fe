@@ -23,6 +23,7 @@ export function useCreateJar() {
     mutationFn: (payload: CreateJarPayload) => jarService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }
@@ -35,6 +36,7 @@ export function useUpdateJar() {
       jarService.update(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }
@@ -46,6 +48,7 @@ export function useDeleteJar() {
     mutationFn: (id: string) => jarService.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });
 }

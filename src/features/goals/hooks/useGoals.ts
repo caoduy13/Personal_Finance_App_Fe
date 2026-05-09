@@ -24,6 +24,8 @@ export function useCreateGoal() {
     mutationFn: (payload: CreateGoalPayload) => goalService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["jars"] });
     },
   });
 }
@@ -36,6 +38,8 @@ export function useUpdateGoal() {
       goalService.update(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["jars"] });
     },
   });
 }
@@ -47,6 +51,8 @@ export function useDeleteGoal() {
     mutationFn: (id: string) => goalService.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["jars"] });
     },
   });
 }

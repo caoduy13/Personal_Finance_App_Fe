@@ -171,14 +171,19 @@ export function BudgetPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-muted-foreground">Đang tải ngân sách...</p>
+      <p className="text-sm text-violet-600/80">Đang tải ngân sách...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-2">
-        <p className="text-sm text-red-500">Không tải được hạn mức chi tiêu.</p>
-        <Button type="button" variant="outline" onClick={() => void refetch()}>
+      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+        <p className="text-sm text-red-600">Không tải được hạn mức chi tiêu.</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          onClick={() => void refetch()}
+        >
           Thử lại
         </Button>
       </div>
@@ -187,21 +192,30 @@ export function BudgetPage() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#0f172a]">Ngân sách</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
+              Hạn mức chi tiêu
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Ngân sách</h1>
+            <p className="mt-1 max-w-xl text-sm text-slate-600">
+              Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo.
+            </p>
+          </div>
+          <Button
+            type="button"
+            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            onClick={openCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm hạn mức
+          </Button>
         </div>
-        <Button
-          type="button"
-          className="cursor-pointer bg-[#6366F1] hover:bg-[#4f46e5]"
-          onClick={openCreate}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Thêm hạn mức
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -213,7 +227,7 @@ export function BudgetPage() {
           data.map((item) => (
             <Card
               key={item.id}
-              className="border-[#d7def5] shadow-none transition hover:border-[#b8c4f5]"
+              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-[#0f172a]">
@@ -235,9 +249,9 @@ export function BudgetPage() {
                   </span>
                   <span>Đã chi: {formatCurrency(item.currentSpent)}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 overflow-hidden rounded-full bg-violet-100/80">
                   <div
-                    className="h-full rounded-full bg-[#6366F1] transition-all"
+                    className="h-full rounded-full bg-linear-to-r from-violet-500 to-indigo-500 transition-all"
                     style={{
                       width: `${Math.min(100, Math.max(0, item.currentPercentage))}%`,
                     }}
@@ -252,7 +266,7 @@ export function BudgetPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer"
+                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
                     onClick={() => openEdit(item)}
                   >
                     <Pencil className="mr-1 h-3.5 w-3.5" />
@@ -262,7 +276,7 @@ export function BudgetPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer text-red-600 hover:bg-red-50"
+                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
                     onClick={() => setDeleteId(item.id)}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
@@ -364,7 +378,7 @@ export function BudgetPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -414,7 +428,7 @@ export function BudgetPage() {
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}
