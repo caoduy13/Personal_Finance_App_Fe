@@ -19,7 +19,10 @@ export function useBanUserMutation() {
 
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      adminUserService.ban(id, reason),
+      adminUserService.updateUserStatus(id, {
+        status: "Banned",
+        statusReason: reason,
+      }),
     onSuccess: (data) => {
       toast.success("Đã khóa tài khoản người dùng.");
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -35,7 +38,11 @@ export function useUnbanUserMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => adminUserService.unban(id),
+    mutationFn: (id: string) =>
+      adminUserService.updateUserStatus(id, {
+        status: "Active",
+        statusReason: null,
+      }),
     onSuccess: (data) => {
       toast.success("Đã mở khóa tài khoản người dùng.");
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });

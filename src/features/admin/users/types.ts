@@ -1,95 +1,49 @@
-export type AdminUserStatus = "Active" | "Banned";
-export type AdminUserRoleCode = "ADMIN" | "USER";
+/** Matches backend `AccountRole`: User = 1, Admin = 2 */
+export const AccountRole = {
+  User: 1,
+  Admin: 2,
+} as const;
 
-export interface AdminUserItem {
+export type AccountRole = (typeof AccountRole)[keyof typeof AccountRole];
+
+/** Khớp `AdminUserResponse` từ API (JSON camelCase). */
+export interface AdminUserDto {
   id: string;
-  username: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  fullName: string;
-  phoneNumber: string | null;
+  phone: string | null;
   avatarUrl: string | null;
-  status: AdminUserStatus;
-  /** Chỉ có khi dữ liệu mock; API admin list hiện không trả role. */
-  roleCode?: AdminUserRoleCode;
+  preferredCurrency: string;
   isOnboardingCompleted: boolean;
+  status: string;
+  statusReason: string | null;
+  createdAt: string;
   lastLoginAt: string | null;
-  bannedAt: string | null;
-  bannedReason: string | null;
-  /** API list mới không có; mock vẫn có. */
-  createdAt: string | null;
-  jarCount?: number;
-  transactionCount?: number;
 }
 
-/** Khớp query contract: `sortBy=lastLogin|username` */
-export type AdminUserSortField = "lastLogin" | "username";
-export type AdminUserSortDir = "asc" | "desc";
-
-export interface AdminUsersListParams {
-  search?: string;
-  role?: "all" | "user" | "admin";
-  status?: "all" | "active" | "banned";
-  sortBy?: AdminUserSortField;
-  sortDir?: AdminUserSortDir;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface AdminUsersListResult {
-  items: AdminUserItem[];
-  total: number;
+export interface AdminUsersPagination {
   page: number;
   pageSize: number;
+  totalCount: number;
   totalPages: number;
 }
 
-export interface AdminUserOnboardingSummary {
-  monthlyIncome: number | null;
-  occupationType: string | null;
-  ageRange: string | null;
-  budgetMethodPreference: string | null;
-  recommendedMethod: string | null;
-  financialGoalTypes: string[];
-  spendingChallenges: string[];
-  isCompleted: boolean;
+export interface AdminUsersPagedResponse {
+  data: AdminUserDto[];
+  pagination: AdminUsersPagination;
 }
 
-export interface AdminUserStats {
-  jarsCount: number;
-  transactionsCount: number;
-  totalBalance: number;
-  goalCount: number;
+export interface GetAdminUsersParams {
+  pageIndex: number;
+  pageSize: number;
+  status?: string;
+  keyword?: string;
 }
 
-export interface AdminUserDetail extends AdminUserItem {
-  preferredCurrency: string;
-  bannedByAdminId: string | null;
-  onboarding: AdminUserOnboardingSummary | null;
-  stats: AdminUserStats;
-}
-
-/** Payload GET detail — API V2 (camelCase) + bản mở rộng có thống kê. */
-export interface AdminUserDetailApiPayload {
-  id: string;
-  username?: string;
-  userName?: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  phone?: string | null;
-  avatarUrl?: string | null;
-  preferredCurrency?: string;
-  status: AdminUserStatus;
+export interface UpdateUserStatusBody {
+  userId: string;
+  status: string;
   statusReason?: string | null;
-  isOnboardingCompleted: boolean;
-  createdAt?: string | null;
-  onboardingSummary?: {
-    monthlyIncome: number | null;
-    budgetMethod: string | null;
-  } | null;
-  jarCount?: number;
-  totalBalance?: number;
-  transactionCount?: number;
-  goalCount?: number;
-  lastLoginAt?: string | null;
 }

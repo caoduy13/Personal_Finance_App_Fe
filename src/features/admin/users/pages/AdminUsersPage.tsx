@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCcw,
-  Search,
-  Shield,
-  User as UserIcon,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Ban, Eye, Search, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Label } from "@/shared/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -29,445 +29,558 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
-import { ROUTES } from "@/shared/constants/routes";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+  useAdminUserDetail,
+  useAdminUsers,
+  useChangeUserRoleMutation,
+  useUpdateUserStatusMutation,
+} from "../hooks/useAdminUsers";
 import { cn } from "@/lib/utils";
-import { useAdminUsers } from "../hooks/useAdminUsers";
-import type {
-  AdminUserRoleCode,
-  AdminUserSortDir,
-  AdminUserSortField,
-  AdminUserStatus,
-  AdminUsersListParams,
-} from "../types";
-import { formatDateTime, formatRelative } from "../lib/formatters";
-import { UserAvatar } from "../components/UserAvatar";
+import { AccountRole, type AdminUserDto } from "../types";
 
+/** Khớp cấu hình backend (cố định 10 bản ghi / trang). */
 const PAGE_SIZE = 10;
-const ROLE_VALUES = ["all", "user", "admin"] as const;
-const STATUS_VALUES = ["all", "active", "banned"] as const;
-const SORT_FIELDS: AdminUserSortField[] = ["lastLogin", "username"];
 
-type RoleFilter = (typeof ROLE_VALUES)[number];
-type StatusFilter = (typeof STATUS_VALUES)[number];
+/** Đồng bộ AdminLayout: logo / nav active */
+const adminTitle = "text-[#4F46E5]";
+const adminBtnPrimary =
+  "bg-[#6366F1] text-white shadow-sm hover:bg-[#4F46E5] focus-visible:ring-[#6366F1]";
+const adminBtnOutline =
+  "border-[#6366F1]/40 text-[#4F46E5] hover:bg-indigo-50 hover:text-[#4F46E5]";
+const adminFocusField =
+  "focus-visible:border-[#6366F1]/50 focus-visible:ring-[#6366F1]/30";
 
-const isRoleFilter = (value: string | null): value is RoleFilter =>
-  value !== null && (ROLE_VALUES as readonly string[]).includes(value);
-const isStatusFilter = (value: string | null): value is StatusFilter =>
-  value !== null && (STATUS_VALUES as readonly string[]).includes(value);
-const isSortField = (value: string | null): value is AdminUserSortField =>
-  value !== null && SORT_FIELDS.includes(value as AdminUserSortField);
-const isSortDir = (value: string | null): value is AdminUserSortDir =>
-  value === "asc" || value === "desc";
+function displayName(u: Pick<AdminUserDto, "firstName" | "lastName" | "userName">) {
+  const n = `${u.firstName} ${u.lastName}`.trim();
+  return n || u.userName;
+}
 
-const getPageNumbers = (currentPage: number, totalPages: number): number[] => {
-  if (totalPages <= 5) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
+function formatDate(iso: string | null) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("vi-VN", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  } catch {
+    return iso;
   }
-  let start = Math.max(1, currentPage - 2);
-  let end = start + 4;
-  if (end > totalPages) {
-    end = totalPages;
-    start = end - 4;
-  }
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-};
-
-const RoleBadge = ({ roleCode }: { roleCode: AdminUserRoleCode }) => {
-  if (roleCode === "ADMIN") {
-    return (
-      <Badge variant="destructive">
-        <Shield className="size-3" />
-        Admin
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="info">
-      <UserIcon className="size-3" />
-      User
-    </Badge>
-  );
-};
-
-const RoleBadgeCell = ({ roleCode }: { roleCode?: AdminUserRoleCode }) => {
-  if (!roleCode) {
-    return <span className="text-sm text-muted-foreground">—</span>;
-  }
-  return <RoleBadge roleCode={roleCode} />;
-};
-
-const StatusBadge = ({ status }: { status: AdminUserStatus }) => {
-  if (status === "Banned") {
-    return <Badge variant="destructive">Đã khóa</Badge>;
-  }
-  return <Badge variant="success">Hoạt động</Badge>;
-};
-
-const SortIcon = ({
-  active,
-  dir,
-}: {
-  active: boolean;
-  dir: AdminUserSortDir;
-}) => {
-  if (!active) return <ArrowUpDown className="size-3.5 text-muted-foreground" />;
-  return dir === "asc" ? (
-    <ArrowUp className="size-3.5 text-foreground" />
-  ) : (
-    <ArrowDown className="size-3.5 text-foreground" />
-  );
-};
+}
 
 export function AdminUsersPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [pageIndex, setPageIndex] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"" | "Active" | "Banned">("");
+  const [keywordInput, setKeywordInput] = useState("");
+  const [keyword, setKeyword] = useState("");
 
-  const rawSearch = searchParams.get("search") ?? "";
-  const role: RoleFilter = isRoleFilter(searchParams.get("role"))
-    ? (searchParams.get("role") as RoleFilter)
-    : "all";
-  const status: StatusFilter = isStatusFilter(searchParams.get("status"))
-    ? (searchParams.get("status") as StatusFilter)
-    : "all";
-  const sortBy: AdminUserSortField = isSortField(searchParams.get("sortBy"))
-    ? (searchParams.get("sortBy") as AdminUserSortField)
-    : "lastLogin";
-  const sortDir: AdminUserSortDir = isSortDir(searchParams.get("sortDir"))
-    ? (searchParams.get("sortDir") as AdminUserSortDir)
-    : "desc";
-  const pageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
-  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
-  const [searchInput, setSearchInput] = useState(rawSearch);
-  const debouncedSearch = useDebounce(searchInput, 300);
-
-  const updateSearchParams = (
-    updater: (next: URLSearchParams) => void,
-    options?: { resetPage?: boolean },
-  ) => {
-    const next = new URLSearchParams(searchParams);
-    updater(next);
-    if (options?.resetPage) {
-      next.delete("page");
-    }
-    setSearchParams(next, { replace: false });
-  };
+  const [quickBanUser, setQuickBanUser] = useState<AdminUserDto | null>(null);
+  const [quickBanReason, setQuickBanReason] = useState("");
+  const [quickUnbanUser, setQuickUnbanUser] = useState<AdminUserDto | null>(null);
+  const [roleRowUser, setRoleRowUser] = useState<AdminUserDto | null>(null);
+  const [roleRowPick, setRoleRowPick] = useState<AccountRole>(AccountRole.User);
 
   useEffect(() => {
-    if (debouncedSearch === rawSearch) return;
-    const next = new URLSearchParams(searchParams);
-    if (debouncedSearch) {
-      next.set("search", debouncedSearch);
-    } else {
-      next.delete("search");
+    const t = window.setTimeout(() => setKeyword(keywordInput), 400);
+    return () => window.clearTimeout(t);
+  }, [keywordInput]);
+
+  useEffect(() => {
+    // Sync: khi đổi bộ lọc, quay lại trang 1 (không phải subscription tới hệ thống bên ngoài).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional derived pagination reset
+    setPageIndex(1);
+  }, [keyword, statusFilter]);
+
+  const listParams = useMemo(
+    () => ({
+      pageIndex,
+      pageSize: PAGE_SIZE,
+      ...(statusFilter ? { status: statusFilter } : {}),
+      ...(keyword.trim() ? { keyword: keyword.trim() } : {}),
+    }),
+    [pageIndex, statusFilter, keyword],
+  );
+
+  const { data, isLoading, isError, isFetching } = useAdminUsers(listParams);
+  const updateStatus = useUpdateUserStatusMutation();
+  const changeRole = useChangeUserRoleMutation();
+
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailError,
+  } = useAdminUserDetail(detailUserId, { enabled: detailOpen && Boolean(detailUserId) });
+
+  const pagination = data?.pagination;
+  const rows = data?.data ?? [];
+  const totalPages = Math.max(1, pagination?.totalPages ?? 1);
+
+  useEffect(() => {
+    if (pagination && pageIndex > pagination.totalPages) {
+      // Sync: sau khi API báo ít trang hơn, clamp pageIndex (tránh lệch UI/query).
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional clamp to server totalPages
+      setPageIndex(Math.max(1, pagination.totalPages));
     }
-    next.delete("page");
-    setSearchParams(next, { replace: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
+  }, [pagination, pageIndex]);
 
-  const queryParams: AdminUsersListParams = {
-    search: debouncedSearch || undefined,
-    role,
-    status,
-    sortBy,
-    sortDir,
-    page,
-    pageSize: PAGE_SIZE,
-  };
+  function openDetail(id: string) {
+    setDetailUserId(id);
+    setDetailOpen(true);
+  }
 
-  const { data, isLoading, isError, isFetching, refetch } =
-    useAdminUsers(queryParams);
-
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageNumbers = getPageNumbers(page, totalPages);
-  const startIdx = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const endIdx = Math.min(page * PAGE_SIZE, total);
-
-  const onToggleSort = (field: AdminUserSortField) => {
-    updateSearchParams(
-      (next) => {
-        if (sortBy === field) {
-          next.set("sortDir", sortDir === "asc" ? "desc" : "asc");
-        } else {
-          next.set("sortBy", field);
-          next.set("sortDir", field === "lastLogin" ? "desc" : "asc");
-        }
-      },
-      { resetPage: true },
-    );
-  };
-
-  const onChangeRole = (value: RoleFilter) =>
-    updateSearchParams(
-      (next) => {
-        if (value === "all") next.delete("role");
-        else next.set("role", value);
-      },
-      { resetPage: true },
-    );
-
-  const onChangeStatus = (value: StatusFilter) =>
-    updateSearchParams(
-      (next) => {
-        if (value === "all") next.delete("status");
-        else next.set("status", value);
-      },
-      { resetPage: true },
-    );
-
-  const onGoToPage = (target: number) =>
-    updateSearchParams((next) => {
-      if (target <= 1) next.delete("page");
-      else next.set("page", String(target));
-    });
+  function closeDetail(open: boolean) {
+    setDetailOpen(open);
+    if (!open) {
+      setDetailUserId(null);
+    }
+  }
 
   return (
-    <section className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Quản lý người dùng
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Tìm kiếm, lọc và quản lý tài khoản người dùng trên hệ thống.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-        >
-          <RefreshCcw className={cn("size-4", isFetching && "animate-spin")} />
-          Làm mới
-        </Button>
-      </header>
+    <section className="space-y-4">
+      <div>
+        <h1 className={cn("text-2xl font-bold tracking-tight", adminTitle)}>
+          Quản lý người dùng
+        </h1>
+        <p className="text-sm text-slate-600">
+          Danh sách tài khoản vai trò User — lọc, phân trang, xem chi tiết và cập nhật trạng thái.
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="gap-4">
-          <CardTitle className="text-base">Bộ lọc</CardTitle>
-          <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Tìm theo tên, email, username..."
-                className="pl-9"
-                aria-label="Tìm kiếm người dùng"
-              />
+      <Card className="border-slate-200/90 shadow-sm ring-1 ring-[#6366F1]/10">
+        <CardHeader className="space-y-4 pb-4">
+          <CardTitle className={cn("text-lg font-semibold", adminTitle)}>
+            Bộ lọc
+          </CardTitle>
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
+            <div className="min-w-[200px] flex-1">
+              <Label htmlFor="user-keyword">Tìm kiếm</Label>
+              <div className="relative mt-1.5">
+                <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[#6366F1]/75" />
+                <Input
+                  id="user-keyword"
+                  placeholder="Email, tên đăng nhập, họ tên…"
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  className={cn("h-10 pl-9", adminFocusField)}
+                />
+              </div>
             </div>
-            <Select
-              value={role}
-              onValueChange={(v) => onChangeRole(v as RoleFilter)}
-            >
-              <SelectTrigger aria-label="Lọc theo vai trò (mock)">
-                <SelectValue placeholder="Vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả vai trò</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={status}
-              onValueChange={(v) => onChangeStatus(v as StatusFilter)}
-            >
-              <SelectTrigger aria-label="Lọc theo trạng thái">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="active">Hoạt động</SelectItem>
-                <SelectItem value="banned">Đã khóa</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-full min-w-[140px] md:w-44">
+              <Label htmlFor="user-status-filter">Trạng thái</Label>
+              <Select
+                value={statusFilter === "" ? "__all__" : statusFilter}
+                onValueChange={(v) =>
+                  setStatusFilter(
+                    v === "__all__" ? "" : (v as "Active" | "Banned"),
+                  )
+                }
+              >
+                <SelectTrigger id="user-status-filter" className="mt-1.5">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Banned">Banned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
-
         <CardContent className="space-y-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Người dùng</TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      onClick={() => onToggleSort("username")}
-                      className="inline-flex items-center gap-1.5 font-medium hover:text-foreground"
-                    >
-                      Username
-                      <SortIcon active={sortBy === "username"} dir={sortDir} />
-                    </button>
-                  </TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="text-right">Hũ</TableHead>
-                  <TableHead className="text-right">Giao dịch</TableHead>
-                  <TableHead>Vai trò</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      onClick={() => onToggleSort("lastLogin")}
-                      className="inline-flex items-center gap-1.5 font-medium hover:text-foreground"
-                    >
-                      Đăng nhập
-                      <SortIcon active={sortBy === "lastLogin"} dir={sortDir} />
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading
-                  ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                      <TableRow key={`skeleton-${i}`}>
-                        <TableCell colSpan={9}>
-                          <Skeleton className="h-9 w-full" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  : isError
-                    ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={9}
-                            className="py-10 text-center text-sm text-destructive"
-                          >
-                            Không tải được danh sách người dùng.
-                            <Button
-                              variant="link"
-                              className="ml-2 h-auto p-0"
-                              onClick={() => refetch()}
-                            >
-                              Thử lại
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    : data && data.items.length > 0
-                      ? data.items.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <UserAvatar
-                                  fullName={user.fullName}
-                                  avatarUrl={user.avatarUrl}
-                                  isAdmin={user.roleCode === "ADMIN"}
-                                />
-                                <div className="min-w-0">
-                                  <p className="truncate font-medium leading-tight">
-                                    {user.fullName}
-                                  </p>
-                                  <p className="truncate text-xs text-muted-foreground">
-                                    {user.email}
-                                  </p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              @{user.username}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {user.email}
-                            </TableCell>
-                            <TableCell className="text-sm tabular-nums text-muted-foreground">
-                              {user.jarCount ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-sm tabular-nums text-muted-foreground">
-                              {user.transactionCount ?? "—"}
-                            </TableCell>
-                            <TableCell>
-                              <RoleBadgeCell roleCode={user.roleCode} />
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge status={user.status} />
-                            </TableCell>
-                            <TableCell
-                              className="text-sm text-muted-foreground"
-                              title={formatDateTime(user.lastLoginAt)}
-                            >
-                              {user.lastLoginAt
-                                ? formatRelative(user.lastLoginAt)
-                                : "—"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button asChild variant="outline" size="sm">
-                                <Link to={ROUTES.ADMIN_USER_DETAIL(user.id)}>
-                                  Xem chi tiết
-                                </Link>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={9}
-                              className="py-10 text-center text-sm text-muted-foreground"
-                            >
-                              Không tìm thấy người dùng phù hợp.
-                            </TableCell>
-                          </TableRow>
-                        )}
-              </TableBody>
-            </Table>
-          </div>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Đang tải…</p>
+          ) : isError ? (
+            <p className="text-sm text-red-600">Không tải được danh sách.</p>
+          ) : (
+            <>
+              <div className="scrollbar-none overflow-x-auto rounded-md border border-indigo-100/90 bg-white">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead className="border-b border-indigo-100 bg-indigo-50/90 text-[11px] font-semibold uppercase tracking-wide text-[#4338ca]">
+                    <tr>
+                      <th className="px-3 py-2.5">Họ tên</th>
+                      <th className="px-3 py-2.5">Email</th>
+                      <th className="px-3 py-2.5">Username</th>
+                      <th className="px-3 py-2.5">Trạng thái</th>
+                      <th className="px-3 py-2.5">Tạo lúc</th>
+                      <th className="min-w-[220px] px-3 py-2.5 text-right">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-3 py-8 text-center text-muted-foreground"
+                        >
+                          Không có người dùng phù hợp.
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((item) => {
+                        const rowBusyStatus =
+                          updateStatus.isPending &&
+                          updateStatus.variables?.id === item.id;
+                        const rowBusyRole =
+                          changeRole.isPending &&
+                          changeRole.variables?.accountId === item.id;
 
-          <footer className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <p className="text-sm text-muted-foreground">
-              {total === 0
-                ? "Không có người dùng."
-                : `Hiển thị ${startIdx}–${endIdx} trong ${total} người dùng`}
-            </p>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onGoToPage(page - 1)}
-                  disabled={page <= 1}
-                  aria-label="Trang trước"
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                {pageNumbers.map((p) => (
-                  <Button
-                    key={p}
-                    variant={p === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onGoToPage(p)}
-                    aria-current={p === page ? "page" : undefined}
-                    className="min-w-9"
-                  >
-                    {p}
-                  </Button>
-                ))}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onGoToPage(page + 1)}
-                  disabled={page >= totalPages}
-                  aria-label="Trang sau"
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
+                        return (
+                          <tr
+                            key={item.id}
+                            className="border-b border-slate-100 last:border-0 transition-colors hover:bg-indigo-50/50"
+                          >
+                            <td className="px-3 py-2.5 font-medium">
+                              {displayName(item)}
+                            </td>
+                            <td className="max-w-[200px] truncate px-3 py-2.5 text-muted-foreground">
+                              {item.email}
+                            </td>
+                            <td className="px-3 py-2.5 text-muted-foreground">
+                              {item.userName}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span
+                                className={
+                                  item.status === "Active"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }
+                              >
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                              {formatDate(item.createdAt)}
+                            </td>
+                            <td className="px-3 py-2.5 text-right">
+                              <div className="flex flex-col items-stretch justify-end gap-1 sm:flex-row sm:flex-wrap sm:justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className={cn("gap-1", adminBtnPrimary)}
+                                  onClick={() => openDetail(item.id)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  Chi tiết
+                                </Button>
+                                {item.status === "Active" ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                    disabled={rowBusyStatus || rowBusyRole}
+                                    onClick={() => {
+                                      setQuickBanReason("");
+                                      setQuickBanUser(item);
+                                    }}
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                    Cấm
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1 text-emerald-700 hover:bg-emerald-50"
+                                    disabled={rowBusyStatus || rowBusyRole}
+                                    onClick={() => setQuickUnbanUser(item)}
+                                  >
+                                    Kích hoạt
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className={cn("gap-1", adminBtnOutline)}
+                                  disabled={rowBusyStatus || rowBusyRole}
+                                  onClick={() => {
+                                    setRoleRowPick(AccountRole.User);
+                                    setRoleRowUser(item);
+                                  }}
+                                >
+                                  <Shield className="h-4 w-4" />
+                                  Vai trò
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </footer>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-slate-600">
+                  {pagination ? (
+                    <>
+                      Trang{" "}
+                      <span className="font-semibold text-[#6366F1]">
+                        {pagination.page}
+                      </span>{" "}
+                      / {pagination.totalPages} ·{" "}
+                      <span className="font-semibold text-[#6366F1]">
+                        {pagination.totalCount}
+                      </span>{" "}
+                      tài khoản
+                    </>
+                  ) : null}
+                  {isFetching ? (
+                    <span className="text-[#6366F1]"> · Đang làm mới…</span>
+                  ) : null}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pageIndex <= 1}
+                    className={cn(
+                      adminBtnPrimary,
+                      pageIndex <= 1 && "opacity-40 shadow-none",
+                    )}
+                    onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
+                  >
+                    Trước
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pageIndex >= totalPages}
+                    className={cn(
+                      adminBtnPrimary,
+                      pageIndex >= totalPages && "opacity-40 shadow-none",
+                    )}
+                    onClick={() =>
+                      setPageIndex((p) => Math.min(totalPages, p + 1))
+                    }
+                  >
+                    Sau
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
+
+      <Dialog open={detailOpen} onOpenChange={closeDetail}>
+        <DialogContent className="scrollbar-none max-h-[90vh] max-w-lg overflow-y-auto border-t-[3px] border-t-[#6366F1] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className={adminTitle}>Chi tiết người dùng</DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Thông tin chi tiết từ API. Cấm, kích hoạt và đổi vai trò thực hiện trên danh sách.
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailLoading && detailUserId ? (
+            <p className="text-sm text-muted-foreground">Đang tải chi tiết…</p>
+          ) : detailError || !detail ? (
+            <p className="text-sm text-red-600">
+              Không tải được chi tiết người dùng.
+            </p>
+          ) : (
+            <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Họ tên</dt>
+                <dd className="font-medium">{displayName(detail)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Username</dt>
+                <dd>{detail.userName}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-muted-foreground">Email</dt>
+                <dd>{detail.email}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Điện thoại</dt>
+                <dd>{detail.phone ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Tiền tệ</dt>
+                <dd>{detail.preferredCurrency}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Trạng thái</dt>
+                <dd
+                  className={
+                    detail.status === "Active" ? "text-green-600" : "text-red-600"
+                  }
+                >
+                  {detail.status}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Onboarding</dt>
+                <dd>{detail.isOnboardingCompleted ? "Hoàn tất" : "Chưa"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Đăng nhập gần nhất</dt>
+                <dd>{formatDate(detail.lastLoginAt)}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-muted-foreground">Tạo lúc</dt>
+                <dd>{formatDate(detail.createdAt)}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-muted-foreground">Lý do trạng thái (hiện tại)</dt>
+                <dd className="text-muted-foreground">
+                  {detail.statusReason ?? "—"}
+                </dd>
+              </div>
+            </dl>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={Boolean(quickBanUser)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setQuickBanUser(null);
+            setQuickBanReason("");
+          }
+        }}
+      >
+        <AlertDialogContent className="border-t-[3px] border-t-[#6366F1]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className={cn("text-lg font-semibold", adminTitle)}>
+              Cấm tài khoản?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {quickBanUser
+                ? `Người dùng ${displayName(quickBanUser)} (${quickBanUser.email}) sẽ chuyển sang trạng thái Banned.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="quick-ban-reason">Lý do (tùy chọn)</Label>
+            <Input
+              id="quick-ban-reason"
+              value={quickBanReason}
+              onChange={(e) => setQuickBanReason(e.target.value)}
+              placeholder="Ghi chú cho admin"
+              className={adminFocusField}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (!quickBanUser) return;
+                updateStatus.mutate({
+                  id: quickBanUser.id,
+                  status: "Banned",
+                  statusReason: quickBanReason.trim() || null,
+                });
+                setQuickBanUser(null);
+                setQuickBanReason("");
+              }}
+            >
+              Cấm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(quickUnbanUser)}
+        onOpenChange={(open) => {
+          if (!open) setQuickUnbanUser(null);
+        }}
+      >
+        <AlertDialogContent className="border-t-[3px] border-t-[#6366F1]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className={cn("text-lg font-semibold", adminTitle)}>
+              Kích hoạt lại tài khoản?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {quickUnbanUser
+                ? `Đặt lại trạng thái Active cho ${displayName(quickUnbanUser)} (${quickUnbanUser.email}).`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className={cn(adminBtnPrimary)}
+              onClick={() => {
+                if (!quickUnbanUser) return;
+                updateStatus.mutate({
+                  id: quickUnbanUser.id,
+                  status: "Active",
+                  statusReason: null,
+                });
+                setQuickUnbanUser(null);
+              }}
+            >
+              Kích hoạt
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(roleRowUser)}
+        onOpenChange={(open) => {
+          if (!open) setRoleRowUser(null);
+        }}
+      >
+        <AlertDialogContent className="border-t-[3px] border-t-[#6366F1]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className={cn("text-lg font-semibold", adminTitle)}>
+              Đổi vai trò hệ thống
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {roleRowUser
+                ? `Tài khoản ${displayName(roleRowUser)} — chọn vai trò mới rồi xác nhận.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div>
+            <Label htmlFor="role-row-pick">Vai trò</Label>
+            <Select
+              value={String(roleRowPick)}
+              onValueChange={(v) =>
+                setRoleRowPick(Number(v) as AccountRole)
+              }
+            >
+              <SelectTrigger id="role-row-pick" className="mt-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(AccountRole.User)}>User</SelectItem>
+                <SelectItem value={String(AccountRole.Admin)}>Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className={cn(adminBtnPrimary)}
+              onClick={() => {
+                if (!roleRowUser) return;
+                changeRole.mutate({
+                  accountId: roleRowUser.id,
+                  role: roleRowPick,
+                });
+                setRoleRowUser(null);
+              }}
+            >
+              Xác nhận đổi vai trò
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

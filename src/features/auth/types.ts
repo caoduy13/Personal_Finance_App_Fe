@@ -34,7 +34,11 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  setAuth: (payload: { accessToken: string; role: UserRole; user: AuthUser }) => void;
+  setAuth: (payload: {
+    accessToken: string;
+    role: UserRole;
+    user: AuthUser;
+  }) => void;
   clearAuth: () => void;
   setUser: (user: Partial<AuthUser>) => void;
   updateUser: (fields: Partial<AuthUser>) => void;

@@ -8,10 +8,25 @@ import type {
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
 
-export const useAdminCategory = () => {
+export type AdminCategoryStatusFilter = "all" | "active" | "inactive";
+
+function statusFilterToIsActiveParam(
+  f: AdminCategoryStatusFilter,
+): boolean | undefined {
+  if (f === "active") return true;
+  if (f === "inactive") return false;
+  return undefined;
+}
+
+export const useAdminCategory = (
+  statusFilter: AdminCategoryStatusFilter = "all",
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
-    queryKey: ["categories"],
-    queryFn: adminCategoryService.getCategories,
+    queryKey: ["categories", "admin", statusFilter],
+    queryFn: () =>
+      adminCategoryService.getCategories(statusFilterToIsActiveParam(statusFilter)),
+    enabled: options?.enabled ?? true,
   });
 };
 

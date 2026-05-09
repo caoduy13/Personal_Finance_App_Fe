@@ -6,106 +6,50 @@ import type {
   UpdateCategoryRequest,
 } from "./type";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
-import { mockData } from "@/lib/mockData";
-import {
-  requestWithStrategy,
-  type RequestMode,
-  wait,
-} from "@/lib/requestStrategy";
 
-const CATEGORY_STRATEGY = {
-  categories: "mock" as RequestMode,
-  addCategory: "mock" as RequestMode,
-  updateCategory: "mock" as RequestMode,
-  deleteCategory: "mock" as RequestMode,
-} as const;
+/** Axios interceptor có thể trả về mảng thay vì `{ data }` khi không có `pagination`. */
+function normalizeCategoriesList(raw: unknown): CategoriesList {
+  if (Array.isArray(raw)) {
+    return { data: raw as Category[] };
+  }
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "data" in raw &&
+    Array.isArray((raw as CategoriesList).data)
+  ) {
+    return raw as CategoriesList;
+  }
+  return { data: [] };
+}
 
 export const adminCategoryService = {
-  getCategories: async (): Promise<CategoriesList> => {
-    const realRequest = () =>
-      apiClient.get<CategoriesList>(
-        API_ENDPOINT.ADMIN.CATEGORIES,
-      ) as unknown as Promise<CategoriesList>;
-
-    const mockRequest = async () => {
-      await wait(200);
-      return {
-        data: mockData.tables.categories
-          .map((item) => ({
-            id: item.id,
-            name: item.name,
-            icon: item.icon,
-            color: item.color,
-            order: item.display_order,
-            isActive: item.is_active,
-          }))
-          .sort((a, b) => a.order - b.order),
-      };
-    };
-
-    return requestWithStrategy(
-      CATEGORY_STRATEGY.categories,
-      realRequest,
-      mockRequest,
-    );
+  /** `undefined` = không gửi query (backend trả cả hai trạng thái). */
+  getCategories: async (isActive?: boolean): Promise<CategoriesList> => {
+    const raw = await apiClient.get(API_ENDPOINT.ADMIN.CATEGORIES, {
+      params: isActive === undefined ? {} : { isActive },
+    });
+    return normalizeCategoriesList(raw);
   },
 
   addCategory: async (category: CreateCategoryRequest): Promise<Category> => {
-    const realRequest = () => {
-      return apiClient.post<Category>(
-        API_ENDPOINT.ADMIN.CATEGORIES,
-        category,
-      ) as unknown as Promise<Category>;
-    };
-    const mockRequest = async () => {
-      await wait(200);
-      return {
-        ...category,
-        id: crypto.randomUUID(),
-        isActive: true,
-      };
-    };
-    return requestWithStrategy(
-      CATEGORY_STRATEGY.addCategory,
-      realRequest,
-      mockRequest,
-    );
+    return apiClient.post<Category>(
+      API_ENDPOINT.ADMIN.CATEGORIES,
+      category,
+    ) as unknown as Promise<Category>;
   },
 
   updateCategory: async (
     category: UpdateCategoryRequest,
   ): Promise<Category> => {
-    const realRequest = () => {
-      return apiClient.patch<Category>(
-        `${API_ENDPOINT.ADMIN.CATEGORIES}/${category.id}`,
-        category,
-      ) as unknown as Promise<Category>;
-    };
-    const mockRequest = async () => {
-      await wait(200);
-      return { ...category, id: crypto.randomUUID(), isActive: true };
-    };
-    return requestWithStrategy(
-      CATEGORY_STRATEGY.updateCategory,
-      realRequest,
-      mockRequest,
-    );
+    const { id, ...body } = category;
+    return apiClient.patch<Category>(
+      `${API_ENDPOINT.ADMIN.CATEGORIES}/${id}`,
+      body,
+    ) as unknown as Promise<Category>;
   },
 
   deleteCategory: async (id: string): Promise<void> => {
-    const realRequest = () => {
-      return apiClient.delete<void>(
-        `${API_ENDPOINT.ADMIN.CATEGORIES}/${id}`,
-      ) as unknown as Promise<void>;
-    };
-    const mockRequest = async () => {
-      await wait(200);
-      return undefined;
-    };
-    return requestWithStrategy(
-      CATEGORY_STRATEGY.deleteCategory,
-      realRequest,
-      mockRequest,
-    );
+    await apiClient.delete(`${API_ENDPOINT.ADMIN.CATEGORIES}/${id}`);
   },
 };

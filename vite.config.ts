@@ -30,6 +30,8 @@ export default defineConfig({
       "/Onboarding": proxyConfig,
       "/FinancialAccount": proxyConfig,
       "/health": proxyConfig,
+      "/admin": proxyConfig,
+      "/change-role": proxyConfig,
     },
   },
 });
