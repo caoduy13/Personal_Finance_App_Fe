@@ -17,7 +17,8 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateTransactionPayload) => transactionService.create(payload),
+    mutationFn: (payload: CreateTransactionPayload) =>
+      transactionService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
@@ -31,8 +32,13 @@ export function useUpdateTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateTransactionPayload }) =>
-      transactionService.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateTransactionPayload;
+    }) => transactionService.update(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });

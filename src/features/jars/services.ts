@@ -9,12 +9,15 @@ import type {
   UpdateJarPayload,
 } from "./types";
 
-function normalizeJarRow(row: Partial<JarApiRow> & { id?: unknown }): JarApiRow {
+function normalizeJarRow(
+  row: Partial<JarApiRow> & { id?: unknown },
+): JarApiRow {
   return {
     id: String(row.id ?? ""),
     name: String(row.name ?? ""),
     balance: Number(row.balance ?? 0),
-    color: row.color != null && row.color !== "" ? String(row.color) : "#888888",
+    color:
+      row.color != null && row.color !== "" ? String(row.color) : "#888888",
     icon: row.icon != null && row.icon !== "" ? String(row.icon) : "wallet",
     status: String(row.status ?? "Active"),
   };
