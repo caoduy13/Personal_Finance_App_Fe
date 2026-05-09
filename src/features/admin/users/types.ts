@@ -1,8 +1,10 @@
 /** Matches backend `AccountRole`: User = 1, Admin = 2 */
-export enum AccountRole {
-  User = 1,
-  Admin = 2,
-}
+export const AccountRole = {
+  User: 1,
+  Admin: 2,
+} as const;
+
+export type AccountRole = (typeof AccountRole)[keyof typeof AccountRole];
 
 /** Khớp `AdminUserResponse` từ API (JSON camelCase). */
 export interface AdminUserDto {

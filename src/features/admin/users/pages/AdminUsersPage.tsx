@@ -545,7 +545,6 @@ export function AdminUsersPage() {
           <div>
             <Label htmlFor="role-row-pick">Vai trò</Label>
             <Select
-              modal={false}
               value={String(roleRowPick)}
               onValueChange={(v) =>
                 setRoleRowPick(Number(v) as AccountRole)
