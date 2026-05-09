@@ -10,10 +10,23 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const location = useLocation();
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.LOGIN} replace state={{ from: location }} />;
+  }
+
+  const onboardingDone =
+    user?.isOnboardingCompleted === true ||
+    user?.is_onboarding_completed === true;
+  const isAdminUser = role === "admin" || (role as string) === "ADMIN";
+
+  if (
+    !isAdminUser &&
+    !onboardingDone &&
+    location.pathname !== ROUTES.ONBOARDING
+  ) {
+    return <Navigate to={ROUTES.ONBOARDING} replace />;
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {

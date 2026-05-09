@@ -5,7 +5,7 @@ export function App() {
   return (
     <QueryProvider>
       <RouterProvider />
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" closeButton />
     </QueryProvider>
   );
 }

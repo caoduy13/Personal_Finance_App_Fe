@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
+  ArrowRight,
   Bell,
-  CircleUserRound,
+  Cloud,
   Goal,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   PiggyBank,
   ReceiptText,
+  Settings,
   WalletCards,
   X,
 } from "lucide-react";
@@ -27,265 +30,240 @@ import {
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
 import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
+import { getUserPageMeta } from "@/shared/layout/userPageMeta";
 
 const userNavItems = [
-  { label: "Dashboard", to: ROUTES.DASHBOARD, icon: LayoutDashboard },
+  { label: "Tổng quan", to: ROUTES.DASHBOARD, icon: LayoutDashboard },
   { label: "Giao dịch", to: ROUTES.TRANSACTIONS, icon: ReceiptText },
+  { label: "Hũ tiền", to: ROUTES.JARS, icon: PiggyBank },
   { label: "Ngân sách", to: ROUTES.BUDGET, icon: WalletCards },
   { label: "Mục tiêu", to: ROUTES.GOALS, icon: Goal },
-  { label: "Hũ", to: ROUTES.JARS, icon: PiggyBank },
-] as const;
-
-const mobilePrimaryItems = [
-  userNavItems[0],
-  userNavItems[1],
-  userNavItems[3],
-  userNavItems[4],
-  userNavItems[2],
-  { label: "Thông báo", to: ROUTES.NOTIFICATIONS, icon: Bell },
-] as const;
-const mobileMoreItems = [
-  userNavItems[3],
-  { label: "Hồ sơ", to: ROUTES.PROFILE, icon: CircleUserRound },
+  { label: "Cài đặt", to: ROUTES.PROFILE, icon: Settings },
 ] as const;
 
 export function UserLayout() {
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
-  const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
   const { mutate: logout, isPending } = useLogoutMutation();
-  const isProfileRoute = location.pathname === ROUTES.PROFILE;
+  const meta = getUserPageMeta(location.pathname);
+
+  const isActivePath = (to: string) =>
+    location.pathname === to ||
+    (to !== ROUTES.DASHBOARD && location.pathname.startsWith(`${to}/`));
+
+  const sidebarNav = (
+    <nav className="flex flex-1 flex-col gap-1 pt-2">
+      {userNavItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={() =>
+            cn(
+              "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all",
+              isActivePath(item.to)
+                ? "bg-[#E8EFFF] text-[#3B5BDB] shadow-sm shadow-blue-500/10"
+                : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900",
+            )
+          }
+          onClick={() => setOpenMobileDrawer(false)}
+        >
+          <item.icon
+            className={cn(
+              "size-[22px] shrink-0",
+              isActivePath(item.to) ? "text-[#4A6CF5]" : "text-slate-400",
+            )}
+          />
+          {item.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-20 md:pb-0">
-      <header className="sticky top-0 z-30 border-b bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center px-4 md:px-6">
-          <div className="-ml-1 md:hidden">
+    <div className="min-h-screen bg-[#F3F5F9] pb-20 md:pb-8">
+      <div className="mx-auto flex min-h-screen max-w-[1440px] gap-4 p-3 md:gap-6 md:p-6 lg:p-8">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] bg-white px-4 py-6 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.1)] ring-1 ring-slate-100/80 lg:flex">
+          <Link
+            to={ROUTES.DASHBOARD}
+            className="flex items-center gap-2 px-2 text-slate-800"
+          >
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5B7CFF] to-[#3B5BDB] text-white shadow-md shadow-blue-500/30">
+              <Cloud className="size-5" />
+            </span>
+            <span className="text-lg font-bold tracking-tight lowercase">
+              finjar
+            </span>
+          </Link>
+          {sidebarNav}
+          <div className="mt-auto rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/50 p-4 ring-1 ring-slate-100">
+            <p className="text-xs font-semibold text-slate-700">Nâng cấp bản Pro</p>
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">
+              Báo cáo nâng cao và đồng bộ không giới hạn.
+            </p>
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 cursor-pointer p-0"
-              onClick={() => setOpenMobileDrawer(true)}
-              aria-label="Mở menu điều hướng"
+              className="mt-3 w-full rounded-xl bg-[#FCD34D] font-semibold text-slate-900 shadow-sm hover:bg-[#FBBF24]"
             >
-              <Menu className="h-5 w-5" />
+              Khám phá <ArrowRight className="ml-1 size-4" />
             </Button>
           </div>
+        </aside>
 
-          <p className="ml-2 text-sm font-semibold md:ml-0">
-            Personal Finance App
-          </p>
-
-          <nav className="ml-8 hidden items-center gap-1 md:flex">
-            {userNavItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    "inline-flex h-9 w-[120px] items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black",
-                    isActive && "bg-slate-100 text-black",
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon
-                      className={cn(
-                        "h-4 w-4",
-                        isActive ? "text-[#6366F1]" : "text-slate-500",
-                      )}
-                    />
-                    <span>{item.label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="ml-auto hidden items-center gap-2 md:flex">
-            <Link
-              to={ROUTES.NOTIFICATIONS}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-[#6366F1]"
-              aria-label="Thông báo"
-            >
-              <Bell className="h-5 w-5" />
-            </Link>
-
-            <div
-              className="relative"
-              onMouseEnter={() => setOpenProfileMenu(true)}
-              onMouseLeave={() => setOpenProfileMenu(false)}
-            >
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100",
-                  isProfileRoute && "bg-slate-100 text-black",
-                )}
-              >
-                <CircleUserRound
-                  className={cn(
-                    "h-5 w-5 text-slate-600",
-                    isProfileRoute && "text-[#6366F1]",
-                  )}
-                />
-                <span className="max-w-[140px] truncate">{user?.fullName ?? "Tài khoản"}</span>
-              </button>
-
-              <div
-                className={cn(
-                  "absolute right-0 top-full z-30 w-40 pt-2 transition-all duration-150",
-                  openProfileMenu
-                    ? "visible translate-y-0 opacity-100"
-                    : "pointer-events-none invisible -translate-y-1 opacity-0",
-                )}
-              >
-                <div className="rounded-xl border bg-white p-1.5 shadow-lg">
-                  <NavLink
-                    to={ROUTES.PROFILE}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100",
-                        isActive && "bg-slate-100 text-black",
-                      )
-                    }
-                    onClick={() => setOpenProfileMenu(false)}
-                  >
-                    Hồ sơ
-                  </NavLink>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                        disabled={isPending}
-                      >
-                        {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng ứng dụng.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel asChild>
-                          <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
-                            Ở lại
-                          </Button>
-                        </AlertDialogCancel>
-                        <AlertDialogAction asChild>
-                          <Button
-                            className="w-full cursor-pointer bg-red-600 text-white hover:bg-red-700 sm:flex-1"
-                            onClick={() => {
-                              setOpenProfileMenu(false);
-                              logout();
-                            }}
-                          >
-                            Đăng xuất
-                          </Button>
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+        <div className="min-w-0 flex-1 pt-14 lg:pt-0">
+          <div className="min-h-[calc(100vh-1.5rem)] rounded-[1.75rem] bg-white px-4 py-5 shadow-[0_12px_48px_-14px_rgba(15,23,42,0.15)] ring-1 ring-slate-100/90 md:px-8 md:py-7">
+            <header className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-[1.75rem]">
+                  {meta.title}
+                </h1>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-500">
+                  {meta.subtitle}
+                </p>
               </div>
-            </div>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  className="flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 ring-1 ring-slate-100 transition hover:bg-slate-100"
+                  aria-label="Tin nhắn"
+                >
+                  <Mail className="size-[18px]" />
+                </button>
+                <Link
+                  to={ROUTES.NOTIFICATIONS}
+                  className="relative flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 ring-1 ring-slate-100 transition hover:bg-slate-100"
+                  aria-label="Thông báo"
+                >
+                  <Bell className="size-[18px]" />
+                  <span className="absolute right-2 top-2 size-2 rounded-full bg-rose-500 ring-2 ring-white" />
+                </Link>
+                <div className="ml-1 flex items-center gap-2 rounded-full bg-slate-50 py-1 pl-1 pr-3 ring-1 ring-slate-100">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#5B7CFF] to-[#3B5BDB] text-sm font-bold text-white">
+                    {(user?.fullName ?? "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden text-left sm:block">
+                    <p className="max-w-[120px] truncate text-sm font-semibold text-slate-800">
+                      {user?.fullName ?? "Tài khoản"}
+                    </p>
+                    <p className="text-[11px] font-medium capitalize text-slate-500">
+                      {user?.role === "admin" ? "Admin" : "Người dùng"}
+                    </p>
+                  </div>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                      aria-label="Đăng xuất"
+                    >
+                      <LogOut className="size-[18px]" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Đăng xuất?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng ứng dụng.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel asChild>
+                        <Button variant="outline">Ở lại</Button>
+                      </AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <Button
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={() => logout()}
+                        >
+                          Đăng xuất
+                        </Button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </header>
+
+            <Outlet />
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="mx-auto w-full max-w-7xl p-4 md:p-6">
-        <Outlet />
-      </main>
+      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md lg:hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-xl"
+          onClick={() => setOpenMobileDrawer(true)}
+          aria-label="Mở menu"
+        >
+          <Menu className="size-5" />
+        </Button>
+        <Link to={ROUTES.DASHBOARD} className="flex items-center gap-2 font-bold lowercase text-slate-800">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#5B7CFF] to-[#3B5BDB] text-white">
+            <Cloud className="size-4" />
+          </span>
+          finjar
+        </Link>
+        <div className="w-10" />
+      </div>
 
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/35 transition-opacity md:hidden",
+          "fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm transition-opacity lg:hidden",
           openMobileDrawer ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={() => setOpenMobileDrawer(false)}
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r bg-white p-4 transition-transform md:hidden",
+          "fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,300px)] flex-col rounded-r-3xl bg-white p-5 shadow-2xl transition-transform lg:hidden",
           openMobileDrawer ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="-mt-1 mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold">Điều hướng</p>
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm font-bold text-slate-800">Menu</span>
           <Button
             type="button"
             variant="ghost"
-            size="sm"
-            className="h-9 w-9 cursor-pointer p-0"
+            size="icon"
+            className="rounded-xl"
             onClick={() => setOpenMobileDrawer(false)}
-            aria-label="Đóng menu điều hướng"
+            aria-label="Đóng"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </Button>
         </div>
-
-        <nav className="space-y-1">
-          {mobileMoreItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-black",
-                  isActive && "bg-slate-100 text-black",
-                )
-              }
-              onClick={() => setOpenMobileDrawer(false)}
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon
-                    className={cn(
-                      "h-4 w-4",
-                      isActive ? "text-[#6366F1]" : "text-slate-500",
-                    )}
-                  />
-                  <span>{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
+        {sidebarNav}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="ghost"
-              className="mt-auto w-full cursor-pointer border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              variant="outline"
+              className="mt-auto rounded-xl border-red-200 text-red-600 hover:bg-red-50"
               disabled={isPending}
             >
-              <LogOut className="h-4 w-4" />
-              {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
+              <LogOut className="size-4" />
+              Đăng xuất
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Xác nhận đăng xuất?</AlertDialogTitle>
+              <AlertDialogTitle>Đăng xuất?</AlertDialogTitle>
               <AlertDialogDescription>
-                Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng ứng dụng.
+                Bạn sẽ cần đăng nhập lại.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel asChild>
-                <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
-                  Ở lại
-                </Button>
+                <Button variant="outline">Ở lại</Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
                 <Button
-                  className="w-full cursor-pointer bg-red-600 text-white hover:bg-red-700 sm:flex-1"
+                  className="bg-red-600 hover:bg-red-700"
                   onClick={() => {
                     setOpenMobileDrawer(false);
                     logout();
@@ -299,34 +277,41 @@ export function UserLayout() {
         </AlertDialog>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background md:hidden">
-        <div className="mx-auto grid h-16 max-w-xl grid-cols-5 px-1">
-          {mobilePrimaryItems.map((item) => (
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/80 bg-white/95 backdrop-blur-md lg:hidden">
+        <div className="mx-auto grid h-16 max-w-lg grid-cols-5 gap-0 px-1">
+          {[
+            userNavItems[0],
+            userNavItems[1],
+            userNavItems[2],
+            userNavItems[4],
+            userNavItems[5],
+          ].map((item) => {
+            const active = isActivePath(item.to);
+            return (
             <NavLink
               key={item.to}
               to={item.to}
-              className="flex cursor-pointer items-center justify-center px-1 py-1"
+              className="flex cursor-pointer flex-col items-center justify-center gap-0.5 py-2"
             >
-              {({ isActive }) => (
-                <span
-                  className={cn(
-                    "inline-flex w-full max-w-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-500 transition",
-                    isActive && "bg-slate-200 text-black",
-                  )}
-                >
-                  <item.icon
-                    className={cn(
-                      "h-5 w-5",
-                      isActive ? "text-[#6366F1]" : "text-slate-500",
-                    )}
-                  />
-                  <span className="max-w-full whitespace-nowrap text-[10px] leading-none">
-                    {item.label}
-                  </span>
-                </span>
-              )}
+              <span
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-2xl transition-colors",
+                  active ? "bg-[#E8EFFF] text-[#3B5BDB]" : "text-slate-400",
+                )}
+              >
+                <item.icon className="size-5" />
+              </span>
+              <span
+                className={cn(
+                  "max-w-[72px] truncate text-center text-[10px] font-semibold leading-tight",
+                  active ? "text-[#3B5BDB]" : "text-slate-500",
+                )}
+              >
+                {item.label}
+              </span>
             </NavLink>
-          ))}
+            );
+          })}
         </div>
       </nav>
     </div>

@@ -1,14 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
-import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
-import { JarsPage } from "@/features/jars";
-import { BudgetPage } from "@/features/budget";
+import { OnboardingPage } from "@/features/onboarding";
 import {
   AdminDashboardPage,
   AdminUsersPage,
+  AdminUserDetailPage,
   AdminBroadcastsPage,
   AdminAuditLogsPage,
 } from "@/features/admin";
+import { UserDashboardPage } from "@/features/dashboard";
+import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
+import { JarsPage } from "@/features/jars";
+import { BudgetPage } from "@/features/budget";
 import { ROUTES } from "@/shared/constants/routes";
 import { GuestRoute } from "@/shared/components/common/GuestRoute";
 import { ProtectedRoute } from "@/shared/components/common/ProtectedRoute";
@@ -39,13 +42,21 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: ROUTES.ONBOARDING,
+    element: (
+      <ProtectedRoute>
+        <OnboardingPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     element: (
       <ProtectedRoute>
         <UserLayout />
       </ProtectedRoute>
     ),
     children: [
-      { path: ROUTES.DASHBOARD, element: <TransactionsPage /> },
+      { path: ROUTES.DASHBOARD, element: <UserDashboardPage /> },
       { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },
@@ -65,6 +76,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: "users", element: <AdminUsersPage /> },
+      { path: "users/:id", element: <AdminUserDetailPage /> },
       { path: "notifications", element: <AdminBroadcastsPage /> },
       { path: "audit-logs", element: <AdminAuditLogsPage /> },
       { path: "categories", element: <AdminCategoriesPage /> },

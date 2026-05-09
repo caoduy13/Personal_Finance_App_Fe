@@ -39,7 +39,7 @@ export function RetentionCohortChart({ items }: { items: DashboardRetentionPoint
         </div>
         <div className="h-[300px] rounded-lg bg-slate-50 p-2 [&_.recharts-wrapper:focus]:outline-none [&_.recharts-surface:focus]:outline-none [&_.recharts-dot:focus]:outline-none [&_.recharts-curve:focus]:outline-none [&_path:focus]:outline-none [&_path:focus-visible]:outline-none">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={items} margin={{ top: 8, right: 14, left: 0, bottom: 0 }} accessibilityLayer={false}>
+            <LineChart data={items} margin={{ top: 8, right: 14, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis dataKey="periodLabel" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} />
