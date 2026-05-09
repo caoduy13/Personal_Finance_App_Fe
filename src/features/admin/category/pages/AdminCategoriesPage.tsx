@@ -1,19 +1,23 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { useAdminCategory } from "../hooks/useAdminCategory";
-
-function StatusBadge({ isActive }: { isActive: boolean }) {
-  return (
-    <span
-      className={
-        isActive
-          ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600"
-          : "inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"
-      }
-    >
-      {isActive ? "Active" : "Inactive"}
-    </span>
-  );
-}
+import { Button } from "@/shared/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import {
+  useAdminCategory,
+  useDeleteCategoryMutation,
+} from "../hooks/useAdminCategory";
+import type { Category } from "../type";
+import { CategoryFormModal } from "../components/CategoryFormModal";
+import { CategoryActiveToggle } from "../components/CategoryActiveToggle";
 
 function IconToken({ icon }: { icon: string }) {
   return (
@@ -25,6 +29,24 @@ function IconToken({ icon }: { icon: string }) {
 
 export default function AdminCategoriesPage() {
   const { data, isLoading, isError } = useAdminCategory();
+  const deleteMutation = useDeleteCategoryMutation();
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+
+  const openCreate = () => {
+    setFormMode("create");
+    setEditingCategory(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (category: Category) => {
+    setFormMode("edit");
+    setEditingCategory(category);
+    setFormOpen(true);
+  };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Đang tải danh mục...</p>;
   if (isError || !data) return <p className="text-sm text-red-500">Không thể tải danh mục mặc định.</p>;
@@ -35,7 +57,7 @@ export default function AdminCategoriesPage() {
   return (
     <section className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Admin Categories</h1>
+        <h1 className="text-2xl font-semibold">Danh mục quản trị</h1>
         <p className="text-sm text-muted-foreground">
           Quản lý danh mục mặc định cho người dùng mới.
         </p>
@@ -65,14 +87,23 @@ export default function AdminCategoriesPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Default Categories</CardTitle>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+          <CardTitle>Danh mục mặc định</CardTitle>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="cursor-pointer border-violet-200 text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+            onClick={openCreate}
+          >
+            Thêm danh mục
+          </Button>
         </CardHeader>
         <CardContent className="space-y-2">
           {categories.map((item) => (
             <div
               key={item.id}
-              className="grid gap-3 rounded-md border bg-white p-3 text-sm md:grid-cols-[56px_1fr_120px_120px_100px]"
+              className="flex flex-col gap-3 rounded-md border bg-white p-3 text-sm md:grid md:grid-cols-[56px_minmax(0,1fr)_120px_72px_88px_minmax(0,auto)] md:items-center md:gap-3"
             >
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span className="text-xs">#{item.order}</span>
@@ -83,21 +114,75 @@ export default function AdminCategoriesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className="inline-block h-4 w-4 rounded-full border border-slate-200"
+                  className="inline-block h-4 w-4 shrink-0 rounded-full border border-slate-200"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-xs text-muted-foreground">{item.color}</span>
+                <span className="truncate text-xs text-muted-foreground">{item.color}</span>
               </div>
               <div className="flex items-center">
                 <IconToken icon={item.icon} />
               </div>
-              <div className="flex items-center md:justify-end">
-                <StatusBadge isActive={item.isActive} />
+              <div className="flex items-center md:justify-center">
+                <CategoryActiveToggle category={item} />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
+                  Sửa
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:bg-red-50"
+                  onClick={() => setDeleteTarget(item)}
+                >
+                  Xóa
+                </Button>
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
+
+      <CategoryFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        mode={formMode}
+        initialCategory={editingCategory}
+        categories={categories}
+      />
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa danh mục?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Danh mục &quot;{deleteTarget?.name}&quot; sẽ bị xóa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 focus-visible:ring-red-600"
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!deleteTarget) return;
+                deleteMutation.mutate(deleteTarget.id, {
+                  onSuccess: () => setDeleteTarget(null),
+                });
+              }}
+            >
+              {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
