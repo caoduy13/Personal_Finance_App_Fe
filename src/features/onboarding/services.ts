@@ -2,7 +2,6 @@ import { useAuthStore } from "@/features/auth/store";
 import { BUDGET_METHOD } from "@/constants/onboarding";
 import type { BudgetMethodId } from "@/constants/onboarding";
 import { apiClient } from "@/lib/axios";
-import { env } from "@/lib/env";
 import { mockData } from "@/lib/mockData";
 import {
   requestWithStrategy,
@@ -16,8 +15,7 @@ import type {
   SuggestionRow,
 } from "./types";
 
-const onboardingRequestMode = (): RequestMode =>
-  env.USE_REAL_AUTH ? "real" : "mock";
+const onboardingRequestMode = (): RequestMode => "real";
 
 const sixJarsSuggestions = [
   { name: "Sinh hoạt", percentage: 55, icon: "🏠" },

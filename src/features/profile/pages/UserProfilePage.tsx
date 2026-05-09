@@ -11,7 +11,7 @@ import { useCurrentUser } from "../hooks/useCurrentUser";
 function FieldRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5 border-b border-slate-100 py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <span className="text-sm font-medium text-violet-500">{label}</span>
+      <span className="text-sm font-medium text-[#4A6CF5]">{label}</span>
       <span className="text-sm text-slate-900 sm:text-right">{value}</span>
     </div>
   );
@@ -55,7 +55,7 @@ export function UserProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border bg-white p-6">
+      <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-[0_8px_32px_-12px_rgba(15,23,42,0.08)]">
         <div className="h-6 w-40 animate-pulse rounded bg-slate-200" />
         <div className="mt-4 space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -68,7 +68,7 @@ export function UserProfilePage() {
 
   if (isError || !data) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+      <div className="rounded-[1.5rem] border border-red-200 bg-red-50/90 p-6 text-sm text-red-800 shadow-[0_8px_32px_-12px_rgba(15,23,42,0.08)]">
         <p className="font-medium">Không tải được hồ sơ</p>
         <p className="mt-1 text-red-700">
           {error instanceof Error
@@ -89,14 +89,14 @@ export function UserProfilePage() {
   return (
     <>
       <div className="mx-auto w-full max-w-4xl space-y-6">
-        <Card className="border-slate-200">
+        <Card className="rounded-[1.35rem] border-slate-100 shadow-[0_8px_32px_-12px_rgba(15,23,42,0.08)]">
           <CardHeader className="space-y-0 pb-4">
             <div className="mx-auto flex w-full max-w-3xl flex-col">
               <div className="mx-auto flex w-2/3 items-start justify-between">
                 <div className="flex items-center gap-5">
                   <button
                     type="button"
-                    className="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-full border-2 border-violet-200 bg-violet-50/60"
+                    className="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-full border-2 border-blue-200 bg-blue-50/60"
                     onClick={() => setIsAvatarModalOpen(true)}
                     aria-label="Đổi ảnh đại diện"
                   >
@@ -109,7 +109,7 @@ export function UserProfilePage() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <User className="h-10 w-10 text-violet-400" />
+                        <User className="h-10 w-10 text-[#4A6CF5]" />
                       </div>
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/35">
@@ -118,10 +118,10 @@ export function UserProfilePage() {
                   </button>
 
                   <div className="min-w-0 flex-1 text-left">
-                    <CardTitle className="text-2xl font-semibold text-violet-700">
+                    <CardTitle className="text-2xl font-semibold text-slate-900">
                       {data.username}
                     </CardTitle>
-                    <p className="mt-1 text-sm text-violet-500">
+                    <p className="mt-1 text-sm text-slate-500">
                       {displayName}
                     </p>
                     <p className="text-sm text-slate-600">{data.email}</p>
@@ -140,7 +140,7 @@ export function UserProfilePage() {
               <div className="mt-4 flex w-full justify-center">
                 <button
                   type="button"
-                  className="inline-flex h-9 w-2/3 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-3 text-sm font-medium text-black transition-colors hover:bg-violet-100 focus:outline-none focus-visible:outline-none"
+                  className="inline-flex h-9 w-2/3 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-100 focus:outline-none focus-visible:outline-none"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                   Chỉnh sửa

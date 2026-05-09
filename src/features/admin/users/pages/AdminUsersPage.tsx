@@ -47,13 +47,13 @@ import type {
   AdminUserStatus,
   AdminUsersListParams,
 } from "../types";
-import { formatDate } from "../lib/formatters";
+import { formatDateTime, formatRelative } from "../lib/formatters";
 import { UserAvatar } from "../components/UserAvatar";
 
 const PAGE_SIZE = 10;
 const ROLE_VALUES = ["all", "user", "admin"] as const;
 const STATUS_VALUES = ["all", "active", "banned"] as const;
-const SORT_FIELDS: AdminUserSortField[] = ["fullName", "email", "createdAt"];
+const SORT_FIELDS: AdminUserSortField[] = ["lastLogin", "username"];
 
 type RoleFilter = (typeof ROLE_VALUES)[number];
 type StatusFilter = (typeof STATUS_VALUES)[number];
@@ -97,6 +97,13 @@ const RoleBadge = ({ roleCode }: { roleCode: AdminUserRoleCode }) => {
   );
 };
 
+const RoleBadgeCell = ({ roleCode }: { roleCode?: AdminUserRoleCode }) => {
+  if (!roleCode) {
+    return <span className="text-sm text-muted-foreground">—</span>;
+  }
+  return <RoleBadge roleCode={roleCode} />;
+};
+
 const StatusBadge = ({ status }: { status: AdminUserStatus }) => {
   if (status === "Banned") {
     return <Badge variant="destructive">Đã khóa</Badge>;
@@ -131,7 +138,7 @@ export function AdminUsersPage() {
     : "all";
   const sortBy: AdminUserSortField = isSortField(searchParams.get("sortBy"))
     ? (searchParams.get("sortBy") as AdminUserSortField)
-    : "createdAt";
+    : "lastLogin";
   const sortDir: AdminUserSortDir = isSortDir(searchParams.get("sortDir"))
     ? (searchParams.get("sortDir") as AdminUserSortDir)
     : "desc";
@@ -180,7 +187,7 @@ export function AdminUsersPage() {
     useAdminUsers(queryParams);
 
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = data?.totalPages ?? Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageNumbers = getPageNumbers(page, totalPages);
   const startIdx = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endIdx = Math.min(page * PAGE_SIZE, total);
@@ -192,7 +199,7 @@ export function AdminUsersPage() {
           next.set("sortDir", sortDir === "asc" ? "desc" : "asc");
         } else {
           next.set("sortBy", field);
-          next.set("sortDir", field === "createdAt" ? "desc" : "asc");
+          next.set("sortDir", field === "lastLogin" ? "desc" : "asc");
         }
       },
       { resetPage: true },
@@ -263,7 +270,7 @@ export function AdminUsersPage() {
               value={role}
               onValueChange={(v) => onChangeRole(v as RoleFilter)}
             >
-              <SelectTrigger aria-label="Lọc theo vai trò">
+              <SelectTrigger aria-label="Lọc theo vai trò (mock)">
                 <SelectValue placeholder="Vai trò" />
               </SelectTrigger>
               <SelectContent>
@@ -293,37 +300,30 @@ export function AdminUsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[260px]">
-                    <button
-                      type="button"
-                      onClick={() => onToggleSort("fullName")}
-                      className="inline-flex items-center gap-1.5 font-medium hover:text-foreground"
-                    >
-                      Người dùng
-                      <SortIcon active={sortBy === "fullName"} dir={sortDir} />
-                    </button>
-                  </TableHead>
-                  <TableHead>Username</TableHead>
+                  <TableHead className="min-w-[200px]">Người dùng</TableHead>
                   <TableHead>
                     <button
                       type="button"
-                      onClick={() => onToggleSort("email")}
+                      onClick={() => onToggleSort("username")}
                       className="inline-flex items-center gap-1.5 font-medium hover:text-foreground"
                     >
-                      Email
-                      <SortIcon active={sortBy === "email"} dir={sortDir} />
+                      Username
+                      <SortIcon active={sortBy === "username"} dir={sortDir} />
                     </button>
                   </TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Hũ</TableHead>
+                  <TableHead className="text-right">Giao dịch</TableHead>
                   <TableHead>Vai trò</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>
                     <button
                       type="button"
-                      onClick={() => onToggleSort("createdAt")}
+                      onClick={() => onToggleSort("lastLogin")}
                       className="inline-flex items-center gap-1.5 font-medium hover:text-foreground"
                     >
-                      Ngày tạo
-                      <SortIcon active={sortBy === "createdAt"} dir={sortDir} />
+                      Đăng nhập
+                      <SortIcon active={sortBy === "lastLogin"} dir={sortDir} />
                     </button>
                   </TableHead>
                   <TableHead className="text-right">Hành động</TableHead>
@@ -333,7 +333,7 @@ export function AdminUsersPage() {
                 {isLoading
                   ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
                       <TableRow key={`skeleton-${i}`}>
-                        <TableCell colSpan={7}>
+                        <TableCell colSpan={9}>
                           <Skeleton className="h-9 w-full" />
                         </TableCell>
                       </TableRow>
@@ -342,7 +342,7 @@ export function AdminUsersPage() {
                     ? (
                         <TableRow>
                           <TableCell
-                            colSpan={7}
+                            colSpan={9}
                             className="py-10 text-center text-sm text-destructive"
                           >
                             Không tải được danh sách người dùng.
@@ -382,14 +382,25 @@ export function AdminUsersPage() {
                             <TableCell className="text-sm text-muted-foreground">
                               {user.email}
                             </TableCell>
+                            <TableCell className="text-sm tabular-nums text-muted-foreground">
+                              {user.jarCount ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-sm tabular-nums text-muted-foreground">
+                              {user.transactionCount ?? "—"}
+                            </TableCell>
                             <TableCell>
-                              <RoleBadge roleCode={user.roleCode} />
+                              <RoleBadgeCell roleCode={user.roleCode} />
                             </TableCell>
                             <TableCell>
                               <StatusBadge status={user.status} />
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(user.createdAt)}
+                            <TableCell
+                              className="text-sm text-muted-foreground"
+                              title={formatDateTime(user.lastLoginAt)}
+                            >
+                              {user.lastLoginAt
+                                ? formatRelative(user.lastLoginAt)
+                                : "—"}
                             </TableCell>
                             <TableCell className="text-right">
                               <Button asChild variant="outline" size="sm">
@@ -403,7 +414,7 @@ export function AdminUsersPage() {
                       : (
                           <TableRow>
                             <TableCell
-                              colSpan={7}
+                              colSpan={9}
                               className="py-10 text-center text-sm text-muted-foreground"
                             >
                               Không tìm thấy người dùng phù hợp.

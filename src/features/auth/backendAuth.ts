@@ -99,11 +99,9 @@ export async function buildAuthResponse(
 
   const role = normalizeRoleFromJwt(accessToken);
 
-  const meResponse = await apiBare.get<BackendMeResponse>("/User/me", {
+  const me = (await apiBare.get<BackendMeResponse>("/User/me", {
     headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  const me = meResponse.data;
+  })) as unknown as BackendMeResponse;
 
   return {
     accessToken,

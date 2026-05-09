@@ -8,6 +8,7 @@ import {
   AdminNotificationsPage,
   AdminAuditLogsPage,
 } from "@/features/admin";
+import { UserDashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
@@ -55,7 +56,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { path: ROUTES.DASHBOARD, element: <TransactionsPage /> },
+      { path: ROUTES.DASHBOARD, element: <UserDashboardPage /> },
       { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },

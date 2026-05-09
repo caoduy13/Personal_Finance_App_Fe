@@ -9,15 +9,20 @@ export interface AdminUserItem {
   phoneNumber: string | null;
   avatarUrl: string | null;
   status: AdminUserStatus;
-  roleCode: AdminUserRoleCode;
+  /** Chỉ có khi dữ liệu mock; API admin list hiện không trả role. */
+  roleCode?: AdminUserRoleCode;
   isOnboardingCompleted: boolean;
   lastLoginAt: string | null;
   bannedAt: string | null;
   bannedReason: string | null;
-  createdAt: string;
+  /** API list mới không có; mock vẫn có. */
+  createdAt: string | null;
+  jarCount?: number;
+  transactionCount?: number;
 }
 
-export type AdminUserSortField = "fullName" | "email" | "createdAt";
+/** Khớp query contract: `sortBy=lastLogin|username` */
+export type AdminUserSortField = "lastLogin" | "username";
 export type AdminUserSortDir = "asc" | "desc";
 
 export interface AdminUsersListParams {
@@ -35,6 +40,7 @@ export interface AdminUsersListResult {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 export interface AdminUserOnboardingSummary {
@@ -52,6 +58,7 @@ export interface AdminUserStats {
   jarsCount: number;
   transactionsCount: number;
   totalBalance: number;
+  goalCount: number;
 }
 
 export interface AdminUserDetail extends AdminUserItem {
@@ -59,4 +66,30 @@ export interface AdminUserDetail extends AdminUserItem {
   bannedByAdminId: string | null;
   onboarding: AdminUserOnboardingSummary | null;
   stats: AdminUserStats;
+}
+
+/** Payload GET detail — API V2 (camelCase) + bản mở rộng có thống kê. */
+export interface AdminUserDetailApiPayload {
+  id: string;
+  username?: string;
+  userName?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  preferredCurrency?: string;
+  status: AdminUserStatus;
+  statusReason?: string | null;
+  isOnboardingCompleted: boolean;
+  createdAt?: string | null;
+  onboardingSummary?: {
+    monthlyIncome: number | null;
+    budgetMethod: string | null;
+  } | null;
+  jarCount?: number;
+  totalBalance?: number;
+  transactionCount?: number;
+  goalCount?: number;
+  lastLoginAt?: string | null;
 }

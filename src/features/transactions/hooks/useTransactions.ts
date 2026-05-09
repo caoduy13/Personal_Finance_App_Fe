@@ -5,7 +5,7 @@ import type { CreateTransactionPayload } from "../types";
 export function useTransactions() {
   return useQuery({
     queryKey: ["transactions", "list"],
-    queryFn: transactionService.list,
+    queryFn: () => transactionService.list(),
   });
 }
 
@@ -16,7 +16,9 @@ export function useCreateTransaction() {
     mutationFn: (payload: CreateTransactionPayload) => transactionService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["financialAccounts"] });
     },
   });
 }

@@ -26,8 +26,8 @@ export const API_ENDPOINT = {
     DB_LOCAL: "/health/db/local",
   },
   ADMIN: {
-    DASHBOARD: "/admin/dashboard",
-    USERS: "/admin/users",
-    CATEGORIES: "/admin/categories",
+    DASHBOARD: "/api/v1/admin/dashboard",
+    USERS: "/api/v1/admin/users",
+    CATEGORIES: "/api/v1/admin/categories",
   },
 } as const;

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   CircleAlert,
+  Goal,
   Lock,
   Mail,
   Phone,
@@ -161,7 +162,7 @@ const ProfileSection = ({ user }: { user: AdminUserDetail }) => (
           </h2>
           <p className="text-sm text-muted-foreground">@{user.username}</p>
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <RoleBadge roleCode={user.roleCode} />
+            {user.roleCode ? <RoleBadge roleCode={user.roleCode} /> : null}
             {user.status === "Banned" ? (
               <Badge variant="destructive">Đã khóa</Badge>
             ) : (
@@ -312,7 +313,7 @@ const OnboardingSection = ({ user }: { user: AdminUserDetail }) => {
 };
 
 const StatsSection = ({ user }: { user: AdminUserDetail }) => (
-  <div className="grid gap-4 md:grid-cols-3">
+  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <StatCard
       label="Số hũ đang dùng"
       value={user.stats.jarsCount.toString()}
@@ -322,6 +323,11 @@ const StatsSection = ({ user }: { user: AdminUserDetail }) => (
       label="Số giao dịch"
       value={user.stats.transactionsCount.toString()}
       icon={<Receipt className="size-5" />}
+    />
+    <StatCard
+      label="Mục tiêu đang hoạt động"
+      value={user.stats.goalCount.toString()}
+      icon={<Goal className="size-5" />}
     />
     <StatCard
       label="Tổng số dư"

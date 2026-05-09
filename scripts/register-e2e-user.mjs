@@ -32,8 +32,14 @@ if (!res.ok) {
 
 const email = `${u}@test.finjar.local`;
 console.log(`
-# Thêm vào .env.local:
-VITE_USE_REAL_AUTH=true
+# Thêm vào .env.local (demo hybrid — chỉ auth thật):
+VITE_DEV_API_PROXY=true
+VITE_DEMO_HYBRID_AUTH_ONLY=true
+VITE_FORCE_MOCK=false
+
+# Hoặc full BE (khi route đã thống nhất):
+# VITE_USE_REAL_AUTH=true
+
 VITE_DEV_PREFILL_LOGIN_EMAIL=${email}
 VITE_DEV_PREFILL_LOGIN_PASSWORD=FeE2e!a1b2c3
 `);

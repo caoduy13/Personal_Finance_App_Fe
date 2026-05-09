@@ -1,5 +1,4 @@
 import { apiClient } from "@/lib/axios";
-import { env } from "@/lib/env";
 import { mockData } from "@/lib/mockData";
 import {
   requestWithStrategy,
@@ -10,8 +9,7 @@ import { API_ENDPOINT } from "@/shared/constants";
 import { normalizeCategoriesResponse } from "./lib/normalizeCategoriesResponse";
 import type { Category } from "./types";
 
-const categoriesRequestMode = (): RequestMode =>
-  env.USE_REAL_AUTH ? "real" : "mock";
+const categoriesRequestMode = (): RequestMode => "real";
 
 type MockCategoryRow = (typeof mockData.tables.categories)[number];
 

@@ -2,7 +2,7 @@ import axios from "axios";
 import { env } from "@/lib/env";
 import { useAuthStore } from "@/features/auth/store";
 
-/** Request thuần, không interceptor — bootstrap auth GET /User/me sau login/register. */
+/** Raw axios — dùng khi cần body đầy đủ (vd. pagination + data). */
 export const apiBare = axios.create({
   baseURL: env.API_URL,
   timeout: 45000,
@@ -12,14 +12,33 @@ export const apiBare = axios.create({
   withCredentials: false,
 });
 
+apiBare.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiBare.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearAuth();
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.assign("/login");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const apiClient = axios.create({
   baseURL: env.API_URL,
-  // Render free tier có cold start ~30s, nâng timeout lên đủ rộng cho lần đầu
   timeout: 45000,
   headers: {
     "Content-Type": "application/json",
   },
-  // JWT đính qua header Bearer; KHÔNG dùng cookie → tránh CORS preflight phức tạp
   withCredentials: false,
 });
 
@@ -33,15 +52,15 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+/** Trả về JSON body gốc (`response.data`), không tách lớp `{ data: T }` để tránh mất pagination. */
 apiClient.interceptors.response.use(
-  (response) => {
-    return response.data?.data !== undefined
-      ? response.data.data
-      : response.data;
-  },
+  (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().clearAuth();
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.assign("/login");
+      }
     }
 
     return Promise.reject(error);

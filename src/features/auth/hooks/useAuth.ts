@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
 import { authService } from "../services";
 import { useAuthStore } from "../store";
@@ -7,19 +7,13 @@ import { ROUTES } from "@/shared/constants/routes";
 
 function useAuthSuccessNavigation() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? ROUTES.DASHBOARD;
 
   return (response: AuthResponse) => {
-    navigate(
-      response.user.role === "admin" ? ROUTES.ADMIN_DASHBOARD : from,
-      {
-        replace: true,
-      },
-    );
+    if (response.user.role === "admin") {
+      navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+      return;
+    }
+    navigate(ROUTES.DASHBOARD, { replace: true });
   };
 }
 
@@ -51,6 +45,7 @@ export function useLoginMutation() {
     onSuccess: (response) => {
       void queryClient.invalidateQueries({ queryKey: ["user"] });
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setAuth({
         accessToken: response.accessToken,
         role: response.user.role,
@@ -71,6 +66,7 @@ export function useRegisterMutation() {
     onSuccess: (response) => {
       void queryClient.invalidateQueries({ queryKey: ["user"] });
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setAuth({
         accessToken: response.accessToken,
         role: response.user.role,
@@ -88,10 +84,9 @@ export function useLogoutMutation() {
 
   return useMutation<void, Error, void>({
     mutationFn: () => authService.logout(),
-    onSuccess: () => {
+    onSettled: () => {
       clearAuth();
-      void queryClient.removeQueries({ queryKey: ["user"] });
-      void queryClient.removeQueries({ queryKey: ["categories"] });
+      void queryClient.clear();
       navigate(ROUTES.LOGIN, { replace: true });
     },
   });

@@ -1,6 +1,5 @@
 import { useAuthStore } from "@/features/auth/store";
 import { apiClient } from "@/lib/axios";
-import { env } from "@/lib/env";
 import { mockData } from "@/lib/mockData";
 import {
   requestWithStrategy,
@@ -14,38 +13,42 @@ import type {
   UserSetupPreview,
 } from "./types";
 
-const userRequestMode = (): RequestMode =>
-  env.USE_REAL_AUTH ? "real" : "mock";
+const userRequestMode = (): RequestMode => "real";
 
-interface BackendMePayload {
-  id: string;
-  userName?: string | null;
-  username?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  email: string;
-  phone?: string | null;
-  avatarUrl?: string | null;
-  preferredCurrency?: string | null;
-  isOnboardingCompleted?: boolean;
-}
-
-function mapBackendMe(raw: BackendMePayload): UserProfile {
-  const firstName = raw.firstName?.trim() ?? "";
-  const lastName = raw.lastName?.trim() ?? "";
-  const fullName = `${firstName} ${lastName}`.trim() || raw.email;
+function mapBackendMe(raw: unknown): UserProfile {
+  if (raw == null || typeof raw !== "object") {
+    throw new Error("INVALID_PROFILE");
+  }
+  const r = raw as Record<string, unknown>;
+  let firstName = String(r.firstName ?? "").trim();
+  let lastName = String(r.lastName ?? "").trim();
+  if (!firstName && !lastName && typeof r.fullName === "string") {
+    const parts = r.fullName.trim().split(/\s+/).filter(Boolean);
+    firstName = parts[0] ?? "";
+    lastName = parts.length > 1 ? parts.slice(1).join(" ") : "";
+  }
+  const email = String(r.email ?? "");
+  const fullName =
+    `${firstName} ${lastName}`.trim() ||
+    (typeof r.fullName === "string" ? r.fullName.trim() : "") ||
+    email;
 
   return {
-    id: raw.id,
-    email: raw.email,
-    userName: raw.userName ?? raw.username ?? null,
+    id: String(r.id ?? ""),
+    email,
+    userName:
+      r.userName != null
+        ? String(r.userName)
+        : r.username != null
+          ? String(r.username)
+          : null,
     firstName,
     lastName,
     fullName,
-    phone: raw.phone ?? null,
-    avatarUrl: raw.avatarUrl ?? null,
-    preferredCurrency: raw.preferredCurrency ?? "VND",
-    isOnboardingCompleted: raw.isOnboardingCompleted ?? false,
+    phone: r.phone != null ? String(r.phone) : null,
+    avatarUrl: r.avatarUrl != null ? String(r.avatarUrl) : null,
+    preferredCurrency: String(r.preferredCurrency ?? "VND"),
+    isOnboardingCompleted: Boolean(r.isOnboardingCompleted),
   };
 }
 
@@ -100,12 +103,10 @@ function onboardingProfileForUser(userId: string) {
 
 export const userService = {
   async getProfile(): Promise<UserProfile> {
-    const realRequest = async () =>
-      mapBackendMe(
-        (await apiClient.get<BackendMePayload>(
-          API_ENDPOINT.USER.ME,
-        )) as unknown as BackendMePayload,
-      );
+    const realRequest = async () => {
+      const raw = await apiClient.get<unknown>(API_ENDPOINT.USER.ME);
+      return mapBackendMe(raw);
+    };
 
     const mockRequest = async () => {
       await wait(120);
@@ -123,13 +124,10 @@ export const userService = {
       ...(patch.avatarUrl !== undefined ? { avatarUrl: patch.avatarUrl } : {}),
     };
 
-    const realRequest = async () =>
-      mapBackendMe(
-        (await apiClient.patch<BackendMePayload>(
-          API_ENDPOINT.USER.ME,
-          body,
-        )) as unknown as BackendMePayload,
-      );
+    const realRequest = async () => {
+      const raw = await apiClient.patch<unknown>(API_ENDPOINT.USER.ME, body);
+      return mapBackendMe(raw);
+    };
 
     const mockRequest = async () => {
       await wait(160);
