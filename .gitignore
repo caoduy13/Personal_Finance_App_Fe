@@ -12,10 +12,8 @@ dist
 dist-ssr
 *.local
 
-# Env (secrets / local overrides)
-.env
-.env.*
-!.env.example
+swagger-v1.json
+e2e-*.json
 
 # Editor directories and files
 .vscode/*
