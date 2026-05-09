@@ -7,7 +7,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useCreateBroadcast } from "../hooks/useAdminBroadcasts";
-import { ScheduleDateTimePicker } from "./ScheduleDateTimePicker";
+import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
 
 const adminBtnPrimary =
   "bg-[#6366F1] text-white shadow-sm hover:bg-[#4F46E5] focus-visible:ring-[#6366F1]";
