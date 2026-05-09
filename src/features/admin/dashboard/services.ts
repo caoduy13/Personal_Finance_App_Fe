@@ -10,6 +10,7 @@ import type {
   DashboardSummary,
   DashboardTransaction,
 } from "./types";
+import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 
 const DASHBOARD_STRATEGY = {
   adminSummary: "mock" as RequestMode,
@@ -46,7 +47,7 @@ export const adminDashboardService = {
   async getAdminSummary(): Promise<DashboardSummary> {
     const realRequest = () =>
       apiClient.get<DashboardSummary>(
-        "/admin/dashboard/summary",
+        API_ENDPOINT.ADMIN.DASHBOARD,
       ) as unknown as Promise<DashboardSummary>;
 
     const mockRequest = async () => {
