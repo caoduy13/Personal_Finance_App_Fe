@@ -20,7 +20,8 @@ export function RegisterForm() {
     reValidateMode: "onBlur",
     defaultValues: {
       username: "",
-      fullName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -32,7 +33,8 @@ export function RegisterForm() {
       username: data.username,
       email: data.email,
       password: data.password,
-      fullName: data.fullName,
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
     });
   };
 
@@ -57,23 +59,45 @@ export function RegisterForm() {
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label
-          htmlFor="fullName"
-          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-        >
-          Họ và tên
-        </Label>
-        <Input
-          id="fullName"
-          type="text"
-          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
-          placeholder="Nguyen Van A"
-          {...register("fullName")}
-        />
-        {errors.fullName ? (
-          <p className="text-sm text-red-400">{errors.fullName.message}</p>
-        ) : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label
+            htmlFor="lastName"
+            className="mb-1.5 inline-block text-sm font-medium text-slate-700"
+          >
+            Họ
+          </Label>
+          <Input
+            id="lastName"
+            type="text"
+            autoComplete="family-name"
+            className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
+            placeholder="Nguyễn"
+            {...register("lastName")}
+          />
+          {errors.lastName ? (
+            <p className="text-sm text-red-400">{errors.lastName.message}</p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label
+            htmlFor="firstName"
+            className="mb-1.5 inline-block text-sm font-medium text-slate-700"
+          >
+            Tên
+          </Label>
+          <Input
+            id="firstName"
+            type="text"
+            autoComplete="given-name"
+            className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
+            placeholder="Văn A"
+            {...register("firstName")}
+          />
+          {errors.firstName ? (
+            <p className="text-sm text-red-400">{errors.firstName.message}</p>
+          ) : null}
+        </div>
       </div>
 
       <div className="space-y-2">

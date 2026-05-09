@@ -304,9 +304,14 @@ export const mockData = {
     register: (
       username: string,
       email: string,
-      fullName: string,
+      firstName: string,
+      lastName: string,
     ): AuthResponse => ({
-      user: createAuthUser(email, fullName, username),
+      user: createAuthUser(
+        email,
+        `${lastName} ${firstName}`.trim(),
+        username,
+      ),
       accessToken: `mock-finjar-token-${Date.now()}`,
     }),
   },
