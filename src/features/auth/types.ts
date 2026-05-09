@@ -9,8 +9,7 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
 }
 
 export interface AuthUser {
@@ -18,6 +17,9 @@ export interface AuthUser {
   email: string;
   fullName: string;
   role: UserRole;
+  isOnboardingCompleted?: boolean;
+  /** Snake_case passthrough from BE; normalizer should map to isOnboardingCompleted. */
+  is_onboarding_completed?: boolean;
 }
 
 export interface AuthResponse {
@@ -34,4 +36,6 @@ export interface AuthState {
 export interface AuthActions {
   setAuth: (payload: { accessToken: string; role: UserRole; user: AuthUser }) => void;
   clearAuth: () => void;
+  setUser: (user: Partial<AuthUser>) => void;
+  updateUser: (fields: Partial<AuthUser>) => void;
 }

@@ -1,4 +1,4 @@
-/** GET /api/v1/user/me — theo docs/apis.md */
+/** GET `/User/me` (deployed Swagger) — camelCase trong response. */
 export interface CurrentUser {
   id: string;
   username: string;

@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { env } from "@/lib/env";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -19,8 +20,14 @@ export function LoginForm() {
     mode: "onBlur",
     reValidateMode: "onBlur",
     defaultValues: {
-      email: "anh@finjar.app",
-      password: "123456",
+      email:
+        env.DEV_PREFILL_LOGIN_EMAIL.length > 0
+          ? env.DEV_PREFILL_LOGIN_EMAIL
+          : "anh@finjar.app",
+      password:
+        env.DEV_PREFILL_LOGIN_PASSWORD.length > 0
+          ? env.DEV_PREFILL_LOGIN_PASSWORD
+          : "123456",
     },
   });
 

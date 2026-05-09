@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { useCreateJar, useJars } from "../hooks/useJars";
@@ -14,7 +19,12 @@ const formatCurrency = (amount: number) =>
 
 export function JarsPage() {
   const { data, isLoading, isError } = useJars();
-  const { mutateAsync: createJar, isPending, isError: isCreateError, error: createError } = useCreateJar();
+  const {
+    mutateAsync: createJar,
+    isPending,
+    isError: isCreateError,
+    error: createError,
+  } = useCreateJar();
 
   const [name, setName] = useState("");
   const [color, setColor] = useState("#6366F1");
@@ -33,8 +43,16 @@ export function JarsPage() {
     setIcon("wallet");
   };
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading jars...</p>;
-  if (isError || !data) return <p className="text-sm text-red-500">Failed to load jars.</p>;
+  if (isLoading) {
+    return (
+      <p className="text-sm font-medium text-slate-500">Đang tải hũ tiền…</p>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <p className="text-sm font-medium text-rose-600">Không tải được hũ.</p>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -67,7 +85,11 @@ export function JarsPage() {
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
                   />
-                  <Input value={color} onChange={(e) => setColor(e.target.value)} className="font-mono text-sm" />
+                  <Input
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="font-mono text-sm"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -105,11 +127,16 @@ export function JarsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <p className="text-sm text-muted-foreground">Balance: {formatCurrency(jar.balance)}</p>
               <p className="text-sm text-muted-foreground">
-                Allocation: {jar.percentage != null ? `${jar.percentage}%` : "—"}
+                Balance: {formatCurrency(jar.balance)}
               </p>
-              <p className="text-sm text-muted-foreground">Status: {jar.status}</p>
+              <p className="text-sm text-muted-foreground">
+                Allocation:{" "}
+                {jar.percentage != null ? `${jar.percentage}%` : "—"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Status: {jar.status}
+              </p>
             </CardContent>
           </Card>
         ))}
