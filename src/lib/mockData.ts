@@ -24,58 +24,482 @@ function createAuthResponse(
 
 const now = new Date().toISOString();
 
+const daysAgo = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+};
+
+export interface MockAccount {
+  id: string;
+  role_id: number;
+  username: string;
+  email: string;
+  password_hash: string;
+  full_name: string;
+  phone_number: string | null;
+  avatar_url: string | null;
+  status: "Active" | "Banned";
+  preferred_currency: string;
+  is_onboarding_completed: boolean;
+  last_login_at: string | null;
+  banned_at: string | null;
+  banned_reason: string | null;
+  banned_by_admin_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MockAuditLog {
+  id: string;
+  actor_account_id: string;
+  action_type: string;
+  entity_type: string;
+  entity_id: string;
+  description: string;
+  ip_address: string;
+  created_at: string;
+}
+
+export interface MockTransaction {
+  id: string;
+  user_id: string;
+  financial_account_id: string;
+  jar_id: string;
+  category_id: string | null;
+  type: "Expense" | "Income";
+  amount: number;
+  note: string | null;
+  transaction_date: string;
+  source_type: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MockSpendingLimit {
+  id: string;
+  user_id: string;
+  jar_id: string;
+  category_id: string | null;
+  limit_amount: number;
+  period: "Monthly" | "Daily";
+  alert_at_percentage: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const ADMIN_ID = "8f55ef7a-2d66-4a77-b00f-aec4c5db52f0";
+const PRIMARY_USER_ID = "83f1db2d-65ff-4c2a-8553-3404d3bbac4f";
+
+const accounts: MockAccount[] = [
+  {
+    id: ADMIN_ID,
+    role_id: 1,
+    username: "admin",
+    email: "admin@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "System Admin",
+    phone_number: "+84 909 000 001",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: now,
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(420),
+    updated_at: now,
+  },
+  {
+    id: PRIMARY_USER_ID,
+    role_id: 2,
+    username: "anh",
+    email: "anh@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Nguyen Van Anh",
+    phone_number: "+84 912 345 678",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: now,
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(120),
+    updated_at: now,
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9001",
+    role_id: 2,
+    username: "binh.tran",
+    email: "binh.tran@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Tran Thanh Binh",
+    phone_number: "+84 901 222 111",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(1),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(95),
+    updated_at: daysAgo(1),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9002",
+    role_id: 2,
+    username: "chi.le",
+    email: "chi.le@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Le Bao Chi",
+    phone_number: "+84 933 444 555",
+    avatar_url: null,
+    status: "Banned",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(40),
+    banned_at: daysAgo(10),
+    banned_reason: "Phát hiện hành vi gian lận giao dịch lặp lại",
+    banned_by_admin_id: ADMIN_ID,
+    created_at: daysAgo(80),
+    updated_at: daysAgo(10),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9003",
+    role_id: 2,
+    username: "duy.pham",
+    email: "duy.pham@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Pham Tien Duy",
+    phone_number: "+84 988 776 655",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: false,
+    last_login_at: daysAgo(3),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(10),
+    updated_at: daysAgo(3),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9004",
+    role_id: 2,
+    username: "ha.nguyen",
+    email: "ha.nguyen@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Nguyen Thu Ha",
+    phone_number: "+84 977 123 321",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(0),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(60),
+    updated_at: now,
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9005",
+    role_id: 2,
+    username: "khanh.do",
+    email: "khanh.do@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Do Quoc Khanh",
+    phone_number: "+84 966 888 999",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(7),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(200),
+    updated_at: daysAgo(7),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9006",
+    role_id: 2,
+    username: "lan.vu",
+    email: "lan.vu@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Vu Thi Lan",
+    phone_number: "+84 944 222 333",
+    avatar_url: null,
+    status: "Banned",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(30),
+    banned_at: daysAgo(5),
+    banned_reason: "Spam lời mời chia sẻ thông qua tính năng nhóm",
+    banned_by_admin_id: ADMIN_ID,
+    created_at: daysAgo(150),
+    updated_at: daysAgo(5),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9007",
+    role_id: 2,
+    username: "minh.hoang",
+    email: "minh.hoang@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Hoang Cong Minh",
+    phone_number: "+84 922 555 444",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(2),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(45),
+    updated_at: daysAgo(2),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9008",
+    role_id: 2,
+    username: "nam.bui",
+    email: "nam.bui@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Bui Hoai Nam",
+    phone_number: "+84 935 111 000",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: false,
+    last_login_at: daysAgo(20),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(25),
+    updated_at: daysAgo(20),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9009",
+    role_id: 2,
+    username: "oanh.dang",
+    email: "oanh.dang@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Dang Kim Oanh",
+    phone_number: "+84 911 999 888",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(0),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(310),
+    updated_at: now,
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9010",
+    role_id: 2,
+    username: "phuc.ly",
+    email: "phuc.ly@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Ly Hong Phuc",
+    phone_number: "+84 939 333 222",
+    avatar_url: null,
+    status: "Banned",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(60),
+    banned_at: daysAgo(30),
+    banned_reason: "Sử dụng tài khoản test của hệ thống cho mục đích cá nhân",
+    banned_by_admin_id: ADMIN_ID,
+    created_at: daysAgo(180),
+    updated_at: daysAgo(30),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9011",
+    role_id: 2,
+    username: "quynh.cao",
+    email: "quynh.cao@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Cao Nhu Quynh",
+    phone_number: "+84 977 654 321",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(5),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(75),
+    updated_at: daysAgo(5),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9012",
+    role_id: 2,
+    username: "son.duong",
+    email: "son.duong@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Duong Thai Son",
+    phone_number: "+84 919 717 818",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(1),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(35),
+    updated_at: daysAgo(1),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9013",
+    role_id: 2,
+    username: "trang.mai",
+    email: "trang.mai@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Mai Thuy Trang",
+    phone_number: "+84 945 858 696",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: false,
+    last_login_at: daysAgo(15),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(20),
+    updated_at: daysAgo(15),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9014",
+    role_id: 2,
+    username: "uyen.lam",
+    email: "uyen.lam@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Lam Bao Uyen",
+    phone_number: "+84 932 121 343",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(0),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(50),
+    updated_at: now,
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9015",
+    role_id: 2,
+    username: "viet.tran",
+    email: "viet.tran@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Tran Anh Viet",
+    phone_number: "+84 988 444 222",
+    avatar_url: null,
+    status: "Banned",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(90),
+    banned_at: daysAgo(60),
+    banned_reason: "Vi phạm điều khoản sử dụng nhiều lần dù đã được nhắc nhở",
+    banned_by_admin_id: ADMIN_ID,
+    created_at: daysAgo(220),
+    updated_at: daysAgo(60),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9016",
+    role_id: 2,
+    username: "xuan.le",
+    email: "xuan.le@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Le Hong Xuan",
+    phone_number: "+84 901 555 333",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(8),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(110),
+    updated_at: daysAgo(8),
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9017",
+    role_id: 1,
+    username: "yen.admin",
+    email: "yen.admin@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Nguyen Hai Yen",
+    phone_number: "+84 909 000 002",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: true,
+    last_login_at: daysAgo(0),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(360),
+    updated_at: now,
+  },
+  {
+    id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9018",
+    role_id: 2,
+    username: "zung.do",
+    email: "zung.do@finjar.app",
+    password_hash: "$2a$12$mockhash",
+    full_name: "Do Manh Zung",
+    phone_number: "+84 919 002 003",
+    avatar_url: null,
+    status: "Active",
+    preferred_currency: "VND",
+    is_onboarding_completed: false,
+    last_login_at: daysAgo(0),
+    banned_at: null,
+    banned_reason: null,
+    banned_by_admin_id: null,
+    created_at: daysAgo(2),
+    updated_at: now,
+  },
+];
+
+const auditLogs: MockAuditLog[] = [
+  {
+    id: "1fef3d8b-bf2f-4288-af84-f8f65da6435a",
+    actor_account_id: ADMIN_ID,
+    action_type: "LOCK_USER",
+    entity_type: "accounts",
+    entity_id: "c1f7c2b8-1aa2-4b80-9be2-1c0a4e5b9002",
+    description: "Phát hiện hành vi gian lận giao dịch lặp lại",
+    ip_address: "127.0.0.1",
+    created_at: daysAgo(10),
+  },
+];
+
 export const mockData = {
   tables: {
     roles: [
-      {
-        id: 1,
-        code: "ADMIN",
-        name: "Admin",
-        description: "System administrator",
-        created_at: now,
-      },
-      {
-        id: 2,
-        code: "USER",
-        name: "User",
-        description: "Default user role",
-        created_at: now,
-      },
+      { id: 1, code: "ADMIN", name: "Admin", description: "System administrator", created_at: now },
+      { id: 2, code: "USER", name: "User", description: "Default user role", created_at: now },
     ],
-    accounts: [
-      {
-        id: "8f55ef7a-2d66-4a77-b00f-aec4c5db52f0",
-        role_id: 1,
-        username: "admin",
-        email: "admin@finjar.app",
-        password_hash: "$2a$12$mockhash",
-        full_name: "System Admin",
-        status: "Active",
-        preferred_currency: "VND",
-        is_onboarding_completed: true,
-        last_login_at: now,
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
-        role_id: 2,
-        username: "anh",
-        email: "anh@finjar.app",
-        password_hash: "$2a$12$mockhash",
-        full_name: "Nguyen Van Anh",
-        status: "Active",
-        preferred_currency: "VND",
-        is_onboarding_completed: true,
-        last_login_at: now,
-        created_at: now,
-        updated_at: now,
-      },
-    ],
+    accounts,
     onboarding_profiles: [
       {
         id: "6887a7ef-fa6f-4511-991f-d32e8ccb6dc2",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         monthly_income: 22000000,
         occupation_type: "Office",
         financial_goal_types: "EmergencyFund,Travel",
@@ -91,7 +515,7 @@ export const mockData = {
     jar_setups: [
       {
         id: "b8d31477-4761-424c-b8f5-27ddad1061f3",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         method_type: "SixJars",
         created_at: now,
         updated_at: now,
@@ -100,7 +524,7 @@ export const mockData = {
     financial_accounts: [
       {
         id: "9b3f1f45-57f2-4952-b458-4cb2fdc80c8e",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         name: "Vietcombank Main",
         account_type: "Bank",
         connection_mode: "Manual",
@@ -143,7 +567,7 @@ export const mockData = {
     jars: [
       {
         id: "e7836a67-4fd3-43bd-9cd5-6edaa452f3a5",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         jar_setup_id: "b8d31477-4761-424c-b8f5-27ddad1061f3",
         name: "Necessities",
         percentage: 55,
@@ -158,7 +582,7 @@ export const mockData = {
       },
       {
         id: "591f271d-df41-4bf7-bfca-453ac3ea8fdb",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         jar_setup_id: "b8d31477-4761-424c-b8f5-27ddad1061f3",
         name: "Savings",
         percentage: 10,
@@ -175,7 +599,7 @@ export const mockData = {
     transactions: [
       {
         id: "13ddf1a6-a654-442c-9eb6-83d4e8a45ed3",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         financial_account_id: "9b3f1f45-57f2-4952-b458-4cb2fdc80c8e",
         jar_id: "e7836a67-4fd3-43bd-9cd5-6edaa452f3a5",
         category_id: "4be3c2a0-99e0-4be9-a2f3-ca4ea16f4d73",
@@ -190,7 +614,7 @@ export const mockData = {
       },
       {
         id: "a948b44f-8ff4-4f03-a901-f14fd00fdb89",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         financial_account_id: "9b3f1f45-57f2-4952-b458-4cb2fdc80c8e",
         jar_id: "591f271d-df41-4bf7-bfca-453ac3ea8fdb",
         category_id: null,
@@ -203,11 +627,11 @@ export const mockData = {
         created_at: now,
         updated_at: now,
       },
-    ],
+    ] satisfies MockTransaction[],
     spending_limits: [
       {
         id: "fbb5d248-c7fd-49aa-9871-e98bf8445f9d",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         jar_id: "e7836a67-4fd3-43bd-9cd5-6edaa452f3a5",
         category_id: null,
         limit_amount: 9000000,
@@ -217,11 +641,11 @@ export const mockData = {
         created_at: now,
         updated_at: now,
       },
-    ],
+    ] satisfies MockSpendingLimit[],
     goals: [
       {
         id: "08c0ff0c-c68c-4ab8-9320-094da3d91768",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         title: "Emergency Fund",
         target_amount: 60000000,
         saved_amount: 18000000,
@@ -236,7 +660,7 @@ export const mockData = {
     reminders: [
       {
         id: "f457c24f-e57d-43d0-89b0-435eaa6f4687",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         title: "Internet bill",
         amount: 300000,
         frequency: "Monthly",
@@ -252,7 +676,7 @@ export const mockData = {
     notifications: [
       {
         id: "1828e4f9-0688-42be-a1eb-75831b8ece6d",
-        user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
+        user_id: PRIMARY_USER_ID,
         type: "SpendingAlert",
         title: "You reached 80% of budget",
         body: "Necessities jar is close to monthly limit.",
@@ -263,7 +687,7 @@ export const mockData = {
     broadcasts: [
       {
         id: "72229139-8a1c-43c9-864c-09b4ddfc2d22",
-        created_by_admin_id: "8f55ef7a-2d66-4a77-b00f-aec4c5db52f0",
+        created_by_admin_id: ADMIN_ID,
         title: "Maintenance notice",
         body: "System maintenance scheduled on Sunday 01:00 AM.",
         target_audience: "All",
@@ -275,22 +699,11 @@ export const mockData = {
         updated_at: now,
       },
     ],
-    audit_logs: [
-      {
-        id: "1fef3d8b-bf2f-4288-af84-f8f65da6435a",
-        actor_account_id: "8f55ef7a-2d66-4a77-b00f-aec4c5db52f0",
-        action_type: "LOCK_USER",
-        entity_type: "accounts",
-        entity_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
-        description: "Temporarily locked suspicious account",
-        ip_address: "127.0.0.1",
-        created_at: now,
-      },
-    ],
+    audit_logs: auditLogs,
     ai_settings: [
       {
         id: "3d3d68d9-e5f0-496a-9707-2c1dfac3bda7",
-        updated_by_admin_id: "8f55ef7a-2d66-4a77-b00f-aec4c5db52f0",
+        updated_by_admin_id: ADMIN_ID,
         model_name: "gpt-4o-mini",
         system_prompt: "Be a helpful financial assistant.",
         temperature: 0.7,
@@ -318,9 +731,9 @@ export const mockData = {
       lastName: "Nguyễn",
       email: "anh@finjar.app",
       phone: "0901234567",
-      avatarUrl: "../../public/avatar.jpg",
+      avatarUrl: "/avatar.jpg",
       preferredCurrency: "VND",
       isOnboardingCompleted: true,
     }),
   },
-} as const;
+};
