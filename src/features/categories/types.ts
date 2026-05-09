@@ -8,3 +8,9 @@ export interface Category {
   displayOrder: number;
   isActive: boolean;
 }
+
+export interface UserCategoryOption {
+  id: string;
+  name: string;
+  kind: "default" | "custom";
+}

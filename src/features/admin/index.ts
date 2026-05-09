@@ -1,4 +1,4 @@
 export { AdminUsersPage, AdminUserDetailPage } from "./users";
-export { AdminNotificationsPage } from "./notifications";
+export { AdminBroadcastsPage } from "./broadcasts";
 export { AdminAuditLogsPage } from "./audit-logs";
 export { AdminDashboardPage } from "./dashboard";

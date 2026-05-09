@@ -5,7 +5,7 @@ import {
   AdminDashboardPage,
   AdminUsersPage,
   AdminUserDetailPage,
-  AdminNotificationsPage,
+  AdminBroadcastsPage,
   AdminAuditLogsPage,
 } from "@/features/admin";
 import { UserDashboardPage } from "@/features/dashboard";
@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
       { index: true, element: <AdminDashboardPage /> },
       { path: "users", element: <AdminUsersPage /> },
       { path: "users/:id", element: <AdminUserDetailPage /> },
-      { path: "notifications", element: <AdminNotificationsPage /> },
+      { path: "notifications", element: <AdminBroadcastsPage /> },
       { path: "audit-logs", element: <AdminAuditLogsPage /> },
       { path: "categories", element: <AdminCategoriesPage /> },
     ],

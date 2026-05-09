@@ -25,9 +25,15 @@ export const API_ENDPOINT = {
     DB_RENDER: "/health/db/render",
     DB_LOCAL: "/health/db/local",
   },
+  FINANCIAL_ACCOUNT: "/FinancialAccount",
+  JAR: "/Jar",
+  TRANSACTIONS: "/Transactions",
+  GOALS: "/goals",
   ADMIN: {
     DASHBOARD: "/api/v1/admin/dashboard",
     USERS: "/api/v1/admin/users",
     CATEGORIES: "/api/v1/admin/categories",
+    BROADCASTS: "/api/v1/admin/broadcasts",
+    AUDIT_LOGS: "/api/v1/admin/audit-logs",
   },
 } as const;

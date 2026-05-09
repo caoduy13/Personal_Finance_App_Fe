@@ -82,7 +82,7 @@ export function UserDashboardPage() {
         weeklyPct: weeklyCap ? (spent / weeklyCap) * 100 : 0,
       };
     }
-    const rows = tx ?? [];
+    const rows = tx?.items ?? [];
     let income = 0;
     let expense = 0;
     for (const t of rows) {
@@ -112,7 +112,7 @@ export function UserDashboardPage() {
         transactionDate: t.date,
       }));
     }
-    return (tx ?? []).slice(0, 5);
+    return (tx?.items ?? []).slice(0, 5);
   }, [dash, tx]);
 
   const categoryRows = useMemo(() => {
