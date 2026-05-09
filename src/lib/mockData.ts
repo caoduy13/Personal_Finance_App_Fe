@@ -722,6 +722,7 @@ export const mockData = {
       lastName: string,
     ): AuthResponse =>
       createAuthResponse(email, { username, firstName, lastName }),
+  },
   profile: {
     getMe: (): CurrentUser => ({
       id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
