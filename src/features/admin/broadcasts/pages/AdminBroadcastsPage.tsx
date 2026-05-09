@@ -128,7 +128,7 @@ export function AdminBroadcastsPage() {
             <p className="text-sm text-red-600">Không tải được danh sách broadcast.</p>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-md border border-indigo-100/90 bg-white">
+              <div className="scrollbar-none overflow-x-auto rounded-md border border-indigo-100/90 bg-white">
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="border-b border-indigo-100 bg-indigo-50/90 text-[11px] font-semibold uppercase tracking-wide text-[#4338ca]">
                     <tr>

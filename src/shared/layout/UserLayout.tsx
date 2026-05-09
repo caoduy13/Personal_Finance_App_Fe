@@ -134,10 +134,7 @@ export function UserLayout() {
                   )}
                 />
                 <span className="max-w-[140px] truncate">
-                  {[
-                    user?.firstName,
-                    user?.lastName,
-                  ]
+                  {[user?.firstName, user?.lastName]
                     .filter(Boolean)
                     .join(" ")
                     .trim() ||
@@ -186,7 +183,10 @@ export function UserLayout() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel asChild>
-                          <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                          <Button
+                            variant="outline"
+                            className="w-full cursor-pointer sm:flex-1"
+                          >
                             Ở lại
                           </Button>
                         </AlertDialogCancel>
@@ -290,7 +290,10 @@ export function UserLayout() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel asChild>
-                <Button variant="outline" className="w-full cursor-pointer sm:flex-1">
+                <Button
+                  variant="outline"
+                  className="w-full cursor-pointer sm:flex-1"
+                >
                   Ở lại
                 </Button>
               </AlertDialogCancel>

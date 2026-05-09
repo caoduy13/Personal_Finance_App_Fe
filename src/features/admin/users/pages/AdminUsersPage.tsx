@@ -195,7 +195,7 @@ export function AdminUsersPage() {
             <p className="text-sm text-red-600">Không tải được danh sách.</p>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-md border border-indigo-100/90 bg-white">
+              <div className="scrollbar-none overflow-x-auto rounded-md border border-indigo-100/90 bg-white">
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="border-b border-indigo-100 bg-indigo-50/90 text-[11px] font-semibold uppercase tracking-wide text-[#4338ca]">
                     <tr>
@@ -372,7 +372,7 @@ export function AdminUsersPage() {
       </Card>
 
       <Dialog open={detailOpen} onOpenChange={closeDetail}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-t-[3px] border-t-[#6366F1] sm:max-w-lg">
+        <DialogContent className="scrollbar-none max-h-[90vh] max-w-lg overflow-y-auto border-t-[3px] border-t-[#6366F1] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className={adminTitle}>Chi tiết người dùng</DialogTitle>
             <DialogDescription className="text-slate-600">

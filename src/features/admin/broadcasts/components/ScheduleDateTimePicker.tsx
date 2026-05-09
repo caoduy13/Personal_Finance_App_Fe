@@ -30,6 +30,8 @@ type ScheduleDateTimePickerProps = {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  /** Mặc định true (lịch broadcast). Đặt false khi cần chọn ngày quá khứ (vd. lọc audit). */
+  disablePast?: boolean;
 };
 
 function TimeColumn({
@@ -56,7 +58,7 @@ function TimeColumn({
       <p className="px-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
-      <div className="flex max-h-[13.5rem] w-11 flex-col gap-0.5 overflow-y-auto rounded-lg border border-indigo-100/90 bg-slate-50/90 py-1 pr-0.5 [scrollbar-width:thin]">
+      <div className="scrollbar-none flex max-h-[13.5rem] w-11 flex-col gap-0.5 overflow-y-auto rounded-lg border border-indigo-100/90 bg-slate-50/90 py-1 pr-0.5">
         {values.map((v) => (
           <button
             key={v}
@@ -83,6 +85,7 @@ export function ScheduleDateTimePicker({
   value,
   onChange,
   className,
+  disablePast = true,
 }: ScheduleDateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
   const parsed = React.useMemo(() => fromDatetimeLocalValue(value), [value]);
@@ -144,13 +147,17 @@ export function ScheduleDateTimePicker({
                 if (!d) return;
                 applyDateTime({ date: d });
               }}
-              disabled={{
-                before: (() => {
-                  const t = new Date();
-                  t.setHours(0, 0, 0, 0);
-                  return t;
-                })(),
-              }}
+              {...(disablePast
+                ? {
+                    disabled: {
+                      before: (() => {
+                        const t = new Date();
+                        t.setHours(0, 0, 0, 0);
+                        return t;
+                      })(),
+                    },
+                  }
+                : {})}
               initialFocus
             />
             <div className="mt-1 flex items-center justify-between gap-2 border-t border-indigo-100/80 px-1 pt-2">

@@ -30,7 +30,10 @@ const messenger = {
 const HeaderIconButton = forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & { label: string }
->(function HeaderIconButton({ children, label, className, type, ...props }, ref) {
+>(function HeaderIconButton(
+  { children, label, className, type, ...props },
+  ref,
+) {
   return (
     <button
       ref={ref}
@@ -131,7 +134,7 @@ export function AiChatFab() {
 
           {/* Thread */}
           <div
-            className="min-h-[220px] flex-1 overflow-y-auto px-3 py-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20"
+            className="scrollbar-none min-h-[220px] flex-1 overflow-y-auto px-3 py-3"
             style={{ backgroundColor: messenger.bg }}
           >
             <div className="flex gap-2">
