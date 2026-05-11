@@ -152,7 +152,7 @@ export function CategoriesPage() {
               Danh mục
             </h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Danh mục hệ thống (chỉ xem) và danh mục của bạn (tạo / sửa / xóa).
+              Danh mục hệ thống (chỉ xem) và danh mục của bạn.
             </p>
           </div>
           <Button
@@ -242,7 +242,7 @@ export function CategoriesPage() {
           <form onSubmit={handleCreate}>
             <DialogHeader>
               <DialogTitle>Tạo danh mục</DialogTitle>
-              <DialogDescription>Tên bắt buộc; icon và màu tùy chọn.</DialogDescription>
+              <DialogDescription></DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">

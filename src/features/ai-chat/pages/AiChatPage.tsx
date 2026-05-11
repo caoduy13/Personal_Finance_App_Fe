@@ -6,7 +6,7 @@ export function AiChatPage() {
       <div>
         <h1 className="text-2xl font-semibold text-[#0f172a]">Trợ lý AI</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Trò chuyện tư vấn tài chính (API <code className="text-xs">POST /ai/chat</code>
+          Trò chuyện tư vấn tài chính (API <code className="text-xs">POST /api/v1/ai/chat</code>
           ).
         </p>
       </div>

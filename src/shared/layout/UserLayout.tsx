@@ -80,6 +80,7 @@ export function UserLayout() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const { data: unreadBadge } = useNotificationUnreadCount();
   const unreadCount = unreadBadge ?? 0;
+  const hasUnreadNotifications = unreadCount > 0;
   const isProfileRoute = location.pathname === ROUTES.PROFILE;
 
   /* Chỉ user thường (không phải admin) bị bắt làm onboarding khi BE báo chưa xong. */
@@ -191,14 +192,20 @@ export function UserLayout() {
   const notiLink = (
     <Link
       to={ROUTES.NOTIFICATIONS}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-[#6366F1]"
+      className={cn(
+        "relative inline-flex h-9 w-9 items-center justify-center rounded-md transition",
+        hasUnreadNotifications
+          ? "bg-red-50 text-red-600 ring-1 ring-red-200 hover:bg-red-100 hover:text-red-700"
+          : "text-slate-600 hover:bg-slate-100 hover:text-[#6366F1]",
+      )}
       aria-label="Thông báo"
     >
       <Bell className="h-5 w-5" />
-      {unreadCount > 0 ? (
-        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#6366F1] px-1 text-[10px] font-semibold leading-none text-white">
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </span>
+      {hasUnreadNotifications ? (
+        <span
+          className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-red-500"
+          aria-hidden
+        />
       ) : null}
     </Link>
   );
@@ -400,10 +407,12 @@ export function UserLayout() {
                         isActive ? "text-[#6366F1]" : "text-slate-500",
                       )}
                     />
-                    {item.to === ROUTES.NOTIFICATIONS && unreadCount > 0 ? (
-                      <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6366F1] px-0.5 text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
+                    {item.to === ROUTES.NOTIFICATIONS &&
+                    hasUnreadNotifications ? (
+                      <span
+                        className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-red-500"
+                        aria-hidden
+                      />
                     ) : null}
                   </span>
                   <span className="max-w-full whitespace-nowrap text-[10px] leading-none">

@@ -2,14 +2,14 @@ import { apiClient } from "@/lib/axios";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 
 export interface AiChatMessage {
-  sender: string;
+  sender: "User" | "AI";
   content: string;
 }
 
 export interface AiChatResponse {
   answer: string;
   suggestions?: string[];
-  source?: string;
+  source?: "AI" | "RuleBased" | string;
 }
 
 export const aiChatService = {

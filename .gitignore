@@ -25,3 +25,5 @@ e2e-*.json
 *.njsproj
 *.sln
 *.sw?
+
+.env

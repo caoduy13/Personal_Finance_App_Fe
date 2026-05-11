@@ -64,7 +64,7 @@ export function TransactionsPage() {
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Giao dịch</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Thu, chi và chuyển khoản — đồng bộ từ máy chủ.
+              Thu, chi và chuyển khoản.
             </p>
           </div>
           <Button
@@ -101,9 +101,9 @@ export function TransactionsPage() {
                     {item.note?.trim()
                       ? item.note
                       : item.categoryName ||
-                        item.financialAccountName ||
-                        item.jarName ||
-                        item.type}
+                      item.financialAccountName ||
+                      item.jarName ||
+                      item.type}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(item.transactionDate).toLocaleString("vi-VN")}

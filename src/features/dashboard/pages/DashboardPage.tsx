@@ -67,7 +67,7 @@ export function DashboardPage() {
               Tổng quan
             </h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Số dư, hũ, danh mục và mục tiêu — đồng bộ từ máy chủ.
+              Số dư, hũ, danh mục và mục tiêu.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

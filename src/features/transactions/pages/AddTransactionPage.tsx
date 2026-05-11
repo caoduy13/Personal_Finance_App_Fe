@@ -201,8 +201,7 @@ export function AddTransactionPage() {
             Tạo giao dịch thủ công
           </CardTitle>
           <CardDescription>
-            Thu nhập ghi vào tài khoản thủ công; chi tiêu trừ từ hũ; chuyển khoản
-            theo các kiểu đã chọn.
+            Điền thông tin giao dịch và lưu lại. Giao dịch sẽ được ghi nhận ngay
           </CardDescription>
         </CardHeader>
         <CardContent>

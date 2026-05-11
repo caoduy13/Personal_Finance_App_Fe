@@ -1,22 +1,39 @@
-import { useEffect, useRef, useState } from "react";
-import { Bot, CircleUserRound } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Bot, CircleUserRound, SendHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { aiChatService, type AiChatMessage } from "../services";
 
-type Bubble = { id: string; role: "user" | "assistant"; text: string };
+type Bubble = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  source?: string;
+};
+
+const welcomeMessage =
+  "Chào bạn! Hỏi mình về ngân sách, phân loại chi tiêu hoặc mẹo tiết kiệm.";
+
+const toRecentMessages = (turns: Bubble[]): AiChatMessage[] =>
+  turns
+    .filter((bubble) => bubble.id !== "welcome")
+    .map((bubble) => ({
+      sender: bubble.role === "user" ? "User" : "AI",
+      content: bubble.text,
+    }));
 
 export function AiChatContent({ className }: { className?: string }) {
   const [turns, setTurns] = useState<Bubble[]>([
     {
       id: "welcome",
       role: "assistant",
-      text:
-        "Chào bạn! Hỏi mình về ngân sách, phân loại chi tiêu hoặc mẹo tiết kiệm.",
+      text: welcomeMessage,
     },
   ]);
   const [input, setInput] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const nextBubbleIdRef = useRef(0);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,25 +42,24 @@ export function AiChatContent({ className }: { className?: string }) {
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [turns, pending]);
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (message?: string) => {
+    const text = (message ?? input).trim();
     if (!text || pending) return;
+
     setError(null);
+    setSuggestions([]);
+
     const userBubble: Bubble = {
-      id: `u-${Date.now()}`,
+      id: `u-${(nextBubbleIdRef.current += 1)}`,
       role: "user",
       text,
     };
+
     setTurns((prev) => [...prev, userBubble]);
     setInput("");
     setPending(true);
 
-    const recent: AiChatMessage[] = turns
-      .filter((b) => b.id !== "welcome")
-      .map((b) => ({
-        sender: b.role === "user" ? "user" : "assistant",
-        content: b.text,
-      }));
+    const recent = toRecentMessages(turns);
 
     try {
       const res = await aiChatService.send(
@@ -51,24 +67,25 @@ export function AiChatContent({ className }: { className?: string }) {
         recent.length > 0 ? recent : undefined,
       );
       const answer = res.answer?.trim() || "Không có phản hồi.";
-      const extra =
-        res.suggestions?.length && res.suggestions.length > 0
-          ? `\n\nGợi ý: ${res.suggestions.join(" · ")}`
-          : "";
+      const nextSuggestions =
+        res.suggestions?.filter((item) => item.trim().length > 0) ?? [];
+
       setTurns((prev) => [
         ...prev,
         {
-          id: `a-${Date.now()}`,
+          id: `a-${(nextBubbleIdRef.current += 1)}`,
           role: "assistant",
-          text: answer + extra,
+          text: answer,
+          source: res.source,
         },
       ]);
+      setSuggestions(nextSuggestions);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gửi tin nhắn thất bại.");
       setTurns((prev) => [
         ...prev,
         {
-          id: `a-${Date.now()}`,
+          id: `a-${(nextBubbleIdRef.current += 1)}`,
           role: "assistant",
           text: "Đã có lỗi khi gọi API. Kiểm tra mạng hoặc cấu hình AI trên server.",
         },
@@ -76,6 +93,11 @@ export function AiChatContent({ className }: { className?: string }) {
     } finally {
       setPending(false);
     }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void send();
   };
 
   return (
@@ -90,8 +112,8 @@ export function AiChatContent({ className }: { className?: string }) {
         className="scrollbar-none max-h-[min(520px,65vh)] min-h-[280px] flex-1 overflow-y-auto px-3 py-3"
       >
         <div className="flex flex-col gap-3">
-          {turns.map((b) => {
-            const isUser = b.role === "user";
+          {turns.map((bubble) => {
+            const isUser = bubble.role === "user";
             const avatar = (
               <div
                 className={cn(
@@ -115,6 +137,7 @@ export function AiChatContent({ className }: { className?: string }) {
                 )}
               </div>
             );
+
             const body = (
               <div
                 className={cn(
@@ -138,13 +161,19 @@ export function AiChatContent({ className }: { className?: string }) {
                       : "rounded-tl-sm border border-violet-100 bg-white text-slate-800",
                   )}
                 >
-                  {b.text}
+                  {bubble.text}
                 </div>
+                {!isUser && bubble.source ? (
+                  <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                    Source: {bubble.source}
+                  </span>
+                ) : null}
               </div>
             );
+
             return (
               <div
-                key={b.id}
+                key={bubble.id}
                 className={cn(
                   "flex w-full gap-2",
                   isUser ? "justify-end" : "justify-start",
@@ -164,6 +193,7 @@ export function AiChatContent({ className }: { className?: string }) {
               </div>
             );
           })}
+
           {pending ? (
             <p className="text-xs text-slate-500">Đang trả lời...</p>
           ) : null}
@@ -174,9 +204,24 @@ export function AiChatContent({ className }: { className?: string }) {
       </div>
 
       <div className="shrink-0 border-t border-violet-100 bg-white/90 px-2 pb-3 pt-2 backdrop-blur-sm">
-        <div className="flex items-end gap-2">
-          <input
-            type="text"
+        {suggestions.length > 0 ? (
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => void send(suggestion)}
+                disabled={pending}
+                className="shrink-0 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-[#4F46E5] transition hover:border-[#6366F1]/50 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        <form onSubmit={handleSubmit} className="flex items-end gap-2">
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -185,20 +230,21 @@ export function AiChatContent({ className }: { className?: string }) {
                 void send();
               }
             }}
+            rows={1}
             placeholder="Nhập câu hỏi..."
             disabled={pending}
-            className="min-h-10 flex-1 rounded-full border border-violet-200 bg-white px-4 py-2 text-[15px] text-slate-800 shadow-inner placeholder:text-slate-400 focus:border-[#6366F1]/50 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 disabled:opacity-60"
+            className="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-violet-200 bg-white px-4 py-2 text-[15px] leading-6 text-slate-800 shadow-inner placeholder:text-slate-400 focus:border-[#6366F1]/50 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 disabled:opacity-60"
             aria-label="Nhập tin nhắn"
           />
           <button
-            type="button"
-            onClick={() => void send()}
+            type="submit"
             disabled={pending || !input.trim()}
-            className="mb-0.5 shrink-0 rounded-full bg-[#6366F1] px-4 py-2 text-sm font-medium text-white shadow-md shadow-violet-500/20 transition hover:bg-[#4F46E5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mb-0.5 inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[#6366F1] px-4 text-sm font-medium text-white shadow-md shadow-violet-500/20 transition hover:bg-[#4F46E5] disabled:cursor-not-allowed disabled:opacity-50"
           >
+            <SendHorizontal className="h-4 w-4" aria-hidden />
             Gửi
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
