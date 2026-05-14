@@ -88,5 +88,5 @@ export const ONBOARDING_UI = {
   ageRange: 'Độ tuổi',
   financialGoals: 'Mục tiêu tài chính',
   challenges: 'Thói quen / thách thức chi tiêu',
-  methodTitle: 'Chọn phương pháp lập ngân sách',
+  methodTitle: 'Chọn phương pháp phân bổ thu nhập',
 }

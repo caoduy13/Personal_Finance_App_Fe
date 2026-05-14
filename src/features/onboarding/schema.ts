@@ -21,7 +21,7 @@ export const onboardingFormSchema = z.object({
     .min(1, "Chọn ít nhất một thách thức chi tiêu"),
   budgetingMethod: budgetMethodEnum
     .nullable()
-    .refine((v) => v !== null, { message: "Chọn phương pháp ngân sách" }),
+    .refine((v) => v !== null, { message: "Chọn phương pháp phân bổ thu nhập" }),
 });
 
 export type OnboardingFormValues = z.input<typeof onboardingFormSchema>;

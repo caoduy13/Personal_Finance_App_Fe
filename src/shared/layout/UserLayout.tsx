@@ -39,7 +39,7 @@ const userNavItems = [
   { label: "Giao dịch", to: ROUTES.TRANSACTIONS, icon: ReceiptText },
   { label: "Nguồn tiền", to: ROUTES.ACCOUNTS, icon: Landmark },
   { label: "Danh mục", to: ROUTES.CATEGORIES, icon: Tags },
-  { label: "Ngân sách", to: ROUTES.BUDGET, icon: WalletCards },
+  { label: "Giới hạn", to: ROUTES.LIMITS, icon: WalletCards },
   { label: "Mục tiêu", to: ROUTES.GOALS, icon: Goal },
   { label: "Hũ", to: ROUTES.JARS, icon: PiggyBank },
 ] as const;
@@ -50,7 +50,7 @@ const userNavDesktopExtras = [
   { label: "OCR hóa đơn", to: ROUTES.IMPORTS_OCR, icon: ScanLine },
 ] as const;
 
-/** Thanh dưới: 5 mục + thông báo; Danh mục / Ngân sách / nhắc lịch / OCR / AI trong drawer. */
+/** Thanh dưới: 5 mục + thông báo; Danh mục / Giới hạn / nhắc lịch / OCR / AI trong drawer. */
 const mobilePrimaryItems = [
   userNavItems[0],
   userNavItems[1],

@@ -8,8 +8,7 @@ export const ROUTES = {
   TRANSACTIONS_ADD: "/transactions/add",
   ACCOUNTS: "/accounts",
   JARS: "/jars",
-  BUDGET: "/budget",
-  /** Cùng màn hình Ngân sách — khớp flow BE `/limits`. */
+  /** Giới hạn chi tiêu — khớp BE `GET/POST /api/v1/limits`. */
   LIMITS: "/limits",
   CATEGORIES: "/categories",
   REMINDERS: "/reminders",

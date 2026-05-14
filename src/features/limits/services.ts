@@ -1,16 +1,16 @@
 import { apiClient } from "@/lib/axios";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 import type {
-  BudgetLimit,
-  CreateBudgetLimitPayload,
-  UpdateBudgetLimitPayload,
+  CreateLimitPayload,
+  SpendingLimit,
+  UpdateLimitPayload,
 } from "./types";
 
 function strId(v: unknown): string {
   return String(v ?? "");
 }
 
-function normalizeLimitRow(raw: Record<string, unknown>): BudgetLimit {
+function normalizeLimitRow(raw: Record<string, unknown>): SpendingLimit {
   const tt = String(raw.targetType ?? "Jar");
   return {
     id: strId(raw.id),
@@ -26,18 +26,21 @@ function normalizeLimitRow(raw: Record<string, unknown>): BudgetLimit {
   };
 }
 
-export const budgetService = {
-  async list(): Promise<BudgetLimit[]> {
+export const limitsService = {
+  async list(): Promise<SpendingLimit[]> {
     const raw = await apiClient.get(API_ENDPOINT.LIMITS);
     const rows = Array.isArray(raw)
       ? raw
-      : raw && typeof raw === "object" && "data" in raw && Array.isArray((raw as { data: unknown }).data)
+      : raw &&
+          typeof raw === "object" &&
+          "data" in raw &&
+          Array.isArray((raw as { data: unknown }).data)
         ? (raw as { data: Record<string, unknown>[] }).data
         : [];
     return rows.map((r) => normalizeLimitRow(r as Record<string, unknown>));
   },
 
-  async create(payload: CreateBudgetLimitPayload): Promise<void> {
+  async create(payload: CreateLimitPayload): Promise<void> {
     await apiClient.post(API_ENDPOINT.LIMITS, {
       targetType: payload.targetType,
       targetId: payload.targetId,
@@ -47,7 +50,7 @@ export const budgetService = {
     });
   },
 
-  async update(id: string, payload: UpdateBudgetLimitPayload): Promise<void> {
+  async update(id: string, payload: UpdateLimitPayload): Promise<void> {
     await apiClient.patch(`${API_ENDPOINT.LIMITS}/${id}`, payload);
   },
 

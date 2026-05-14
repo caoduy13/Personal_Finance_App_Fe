@@ -1,10 +1,10 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
 import { DashboardPage } from "@/features/dashboard";
 import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
 import { AccountsPage } from "@/features/financial-accounts";
 import { JarsPage } from "@/features/jars";
-import { BudgetPage } from "@/features/budget";
+import { LimitsPage } from "@/features/limits";
 import { CategoriesPage } from "@/features/categories";
 import { RemindersPage } from "@/features/reminders";
 import { OcrImportPage } from "@/features/imports";
@@ -67,8 +67,8 @@ export const router = createBrowserRouter([
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
       { path: ROUTES.ACCOUNTS, element: <AccountsPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },
-      { path: ROUTES.BUDGET, element: <BudgetPage /> },
-      { path: ROUTES.LIMITS, element: <BudgetPage /> },
+      { path: ROUTES.LIMITS, element: <LimitsPage /> },
+      { path: "budget", element: <Navigate to={ROUTES.LIMITS} replace /> },
       { path: ROUTES.CATEGORIES, element: <CategoriesPage /> },
       { path: ROUTES.REMINDERS, element: <RemindersPage /> },
       { path: ROUTES.IMPORTS_OCR, element: <OcrImportPage /> },

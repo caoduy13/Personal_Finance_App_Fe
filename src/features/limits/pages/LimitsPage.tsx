@@ -39,12 +39,12 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import {
-  useCreateBudgetLimit,
-  useDeleteBudgetLimit,
-  useUpdateBudgetLimit,
-} from "../hooks/useBudgetMutations";
-import { useBudgetLimits } from "../hooks/useBudget";
-import type { BudgetLimit } from "../types";
+  useCreateLimit,
+  useDeleteLimit,
+  useUpdateLimit,
+} from "../hooks/useLimitsMutations";
+import { useLimits } from "../hooks/useLimits";
+import type { SpendingLimit } from "../types";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -53,16 +53,19 @@ const formatCurrency = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-export function BudgetPage() {
-  const { data, isLoading, isError, refetch } = useBudgetLimits();
+export function LimitsPage() {
+  const { data, isLoading, isError, refetch } = useLimits();
   const { data: jars = [] } = useJars();
   const { data: categories = [] } = useUserCategories();
-  const { mutateAsync: createLimit, isPending: creating } = useCreateBudgetLimit();
-  const { mutateAsync: updateLimit, isPending: updating } = useUpdateBudgetLimit();
-  const { mutateAsync: deleteLimit, isPending: deleting } = useDeleteBudgetLimit();
+  const { mutateAsync: createLimitMutation, isPending: creating } =
+    useCreateLimit();
+  const { mutateAsync: updateLimitMutation, isPending: updating } =
+    useUpdateLimit();
+  const { mutateAsync: deleteLimitMutation, isPending: deleting } =
+    useDeleteLimit();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [editItem, setEditItem] = useState<BudgetLimit | null>(null);
+  const [editItem, setEditItem] = useState<SpendingLimit | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [cTargetType, setCTargetType] = useState<"Jar" | "Category">("Jar");
@@ -90,7 +93,7 @@ export function BudgetPage() {
     setCreateOpen(true);
   };
 
-  const openEdit = (item: BudgetLimit) => {
+  const openEdit = (item: SpendingLimit) => {
     setEditItem(item);
     setELimit(String(item.limitAmount));
     setEAlert(String(item.alertAtPercentage));
@@ -101,11 +104,11 @@ export function BudgetPage() {
     const amount = Number(cLimit);
     const alertPct = Number(cAlert);
     if (!cTargetId) {
-      toast.error("Chọn đối tượng áp hạn mức.");
+      toast.error("Chọn đối tượng áp dụng giới hạn.");
       return;
     }
     if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error("Hạn mức phải lớn hơn 0.");
+      toast.error("Số tiền giới hạn phải lớn hơn 0.");
       return;
     }
     if (!Number.isFinite(alertPct) || alertPct <= 0 || alertPct > 100) {
@@ -113,17 +116,17 @@ export function BudgetPage() {
       return;
     }
     try {
-      await createLimit({
+      await createLimitMutation({
         targetType: cTargetType,
         targetId: cTargetId,
         limitAmount: amount,
         period: cPeriod,
         alertAtPercentage: alertPct,
       });
-      toast.success("Đã tạo hạn mức");
+      toast.success("Đã tạo giới hạn");
       setCreateOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không tạo được hạn mức.");
+      toast.error(err instanceof Error ? err.message : "Không tạo được giới hạn.");
     }
   };
 
@@ -133,7 +136,7 @@ export function BudgetPage() {
     const amount = eLimit.trim() === "" ? undefined : Number(eLimit);
     const alertPct = eAlert.trim() === "" ? undefined : Number(eAlert);
     if (amount !== undefined && (!Number.isFinite(amount) || amount <= 0)) {
-      toast.error("Hạn mức không hợp lệ.");
+      toast.error("Số tiền giới hạn không hợp lệ.");
       return;
     }
     if (
@@ -144,14 +147,14 @@ export function BudgetPage() {
       return;
     }
     try {
-      await updateLimit({
+      await updateLimitMutation({
         id: editItem.id,
         payload: {
           ...(amount !== undefined ? { limitAmount: amount } : {}),
           ...(alertPct !== undefined ? { alertAtPercentage: alertPct } : {}),
         },
       });
-      toast.success("Đã cập nhật hạn mức");
+      toast.success("Đã cập nhật giới hạn");
       setEditItem(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Không cập nhật được.");
@@ -161,8 +164,8 @@ export function BudgetPage() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteLimit(deleteId);
-      toast.success("Đã xóa hạn mức");
+      await deleteLimitMutation(deleteId);
+      toast.success("Đã xóa giới hạn");
       setDeleteId(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Không xóa được.");
@@ -171,13 +174,13 @@ export function BudgetPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải ngân sách...</p>
+      <p className="text-sm text-violet-600/80">Đang tải giới hạn...</p>
     );
   }
   if (isError || !data) {
     return (
       <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
-        <p className="text-sm text-red-600">Không tải được hạn mức chi tiêu.</p>
+        <p className="text-sm text-red-600">Không tải được danh sách giới hạn.</p>
         <Button
           type="button"
           variant="outline"
@@ -200,9 +203,9 @@ export function BudgetPage() {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Hạn mức chi tiêu
+              Giới hạn chi tiêu
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Ngân sách</h1>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Giới hạn</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
               Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo.
             </p>
@@ -213,7 +216,7 @@ export function BudgetPage() {
             onClick={openCreate}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Thêm hạn mức
+            Thêm giới hạn
           </Button>
         </div>
       </div>
@@ -221,7 +224,7 @@ export function BudgetPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {data.length === 0 ? (
           <p className="text-sm text-slate-500 md:col-span-2">
-            Chưa có hạn mức nào. Nhấn &quot;Thêm hạn mức&quot; để tạo.
+            Chưa có giới hạn nào. Nhấn &quot;Thêm giới hạn&quot; để tạo.
           </p>
         ) : (
           data.map((item) => (
@@ -242,7 +245,7 @@ export function BudgetPage() {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-600">
                   <span>
-                    Hạn mức:{" "}
+                    Giới hạn:{" "}
                     <span className="font-semibold text-[#6366F1]">
                       {formatCurrency(item.limitAmount)}
                     </span>
@@ -258,7 +261,7 @@ export function BudgetPage() {
                   />
                 </div>
                 <p className="text-xs text-slate-500">
-                  {item.currentPercentage.toFixed(1)}% hạn mức · Trạng thái:{" "}
+                  {item.currentPercentage.toFixed(1)}% giới hạn · Trạng thái:{" "}
                   {item.status}
                 </p>
                 <div className="flex gap-2 pt-1">
@@ -293,7 +296,7 @@ export function BudgetPage() {
         <DialogContent className="max-w-md">
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle>Thêm hạn mức</DialogTitle>
+              <DialogTitle>Tạo giới hạn</DialogTitle>
               <DialogDescription>
                 Chọn hũ hoặc danh mục, nhập số tiền tối đa trong kỳ.
               </DialogDescription>
@@ -333,7 +336,7 @@ export function BudgetPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="c-limit">Hạn mức (VND)</Label>
+                <Label htmlFor="c-limit">Số tiền giới hạn (VND)</Label>
                 <Input
                   id="c-limit"
                   inputMode="numeric"
@@ -381,7 +384,7 @@ export function BudgetPage() {
                 className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
                 disabled={creating}
               >
-                {creating ? "Đang lưu..." : "Tạo"}
+                {creating ? "Đang lưu..." : "Tạo giới hạn"}
               </Button>
             </DialogFooter>
           </form>
@@ -392,14 +395,14 @@ export function BudgetPage() {
         <DialogContent className="max-w-md">
           <form onSubmit={handleUpdate}>
             <DialogHeader>
-              <DialogTitle>Sửa hạn mức</DialogTitle>
+              <DialogTitle>Sửa giới hạn</DialogTitle>
               <DialogDescription>
                 {editItem?.targetName} — chỉ đổi được số tiền và ngưỡng cảnh báo.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="e-limit">Hạn mức (VND)</Label>
+                <Label htmlFor="e-limit">Số tiền giới hạn (VND)</Label>
                 <Input
                   id="e-limit"
                   inputMode="numeric"
@@ -441,9 +444,9 @@ export function BudgetPage() {
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa hạn mức?</AlertDialogTitle>
+            <AlertDialogTitle>Xóa giới hạn?</AlertDialogTitle>
             <AlertDialogDescription>
-              Thao tác này không hoàn tác. Bạn có chắc muốn xóa hạn mức này?
+              Thao tác này không hoàn tác. Bạn có chắc muốn xóa giới hạn này?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

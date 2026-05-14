@@ -254,7 +254,7 @@ export const mockData = {
         id: "1828e4f9-0688-42be-a1eb-75831b8ece6d",
         user_id: "83f1db2d-65ff-4c2a-8553-3404d3bbac4f",
         type: "SpendingAlert",
-        title: "You reached 80% of budget",
+        title: "You reached 80% of spending limit",
         body: "Necessities jar is close to monthly limit.",
         is_read: false,
         created_at: now,

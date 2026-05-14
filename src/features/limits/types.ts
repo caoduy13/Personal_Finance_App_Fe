@@ -1,4 +1,4 @@
-export interface BudgetLimit {
+export interface SpendingLimit {
   id: string;
   targetType: "Jar" | "Category";
   targetId: string;
@@ -11,7 +11,7 @@ export interface BudgetLimit {
   status: string;
 }
 
-export interface CreateBudgetLimitPayload {
+export interface CreateLimitPayload {
   targetType: "Jar" | "Category";
   targetId: string;
   limitAmount: number;
@@ -19,7 +19,7 @@ export interface CreateBudgetLimitPayload {
   alertAtPercentage: number;
 }
 
-export interface UpdateBudgetLimitPayload {
+export interface UpdateLimitPayload {
   limitAmount?: number;
   alertAtPercentage?: number;
 }

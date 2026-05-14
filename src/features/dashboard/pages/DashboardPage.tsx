@@ -105,9 +105,9 @@ export function DashboardPage() {
               asChild
               className="cursor-pointer border-violet-200 bg-white/80 text-[#4F46E5] hover:bg-violet-50"
             >
-              <Link to={ROUTES.BUDGET}>
+              <Link to={ROUTES.LIMITS}>
                 <WalletCards className="h-4 w-4" />
-                Ngân sách
+                Giới hạn
               </Link>
             </Button>
           </div>

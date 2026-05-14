@@ -11,7 +11,7 @@ export function AiChatContent({ className }: { className?: string }) {
       id: "welcome",
       role: "assistant",
       text:
-        "Chào bạn! Hỏi mình về ngân sách, phân loại chi tiêu hoặc mẹo tiết kiệm.",
+        "Chào bạn! Hỏi mình về giới hạn chi tiêu, phân loại chi tiêu hoặc mẹo tiết kiệm.",
     },
   ]);
   const [input, setInput] = useState("");
