@@ -70,16 +70,22 @@ export function AddTransactionPage() {
       return null;
     }
 
-    if (!dateLocal?.trim()) {
-      setFormError("Chọn thời gian giao dịch.");
-      return null;
+    let dateIso: string;
+    if (type !== "Transfer") {
+      if (!dateLocal?.trim()) {
+        setFormError("Chọn thời gian giao dịch.");
+        return null;
+      }
+      const parsedAt = new Date(dateLocal);
+      if (Number.isNaN(parsedAt.getTime())) {
+        setFormError("Thời gian giao dịch không hợp lệ.");
+        return null;
+      }
+      dateIso = parsedAt.toISOString();
+    } else {
+      /** Chuyển tiền: BE dùng thời điểm ghi nhận; không cho user chọn ngày trên form. */
+      dateIso = new Date().toISOString();
     }
-    const parsedAt = new Date(dateLocal);
-    if (Number.isNaN(parsedAt.getTime())) {
-      setFormError("Thời gian giao dịch không hợp lệ.");
-      return null;
-    }
-    const dateIso = parsedAt.toISOString();
     const cat = categoryId || null;
     const noteTrim = note.trim() || undefined;
 
@@ -241,7 +247,13 @@ export function AddTransactionPage() {
               </div>
             ) : null}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div
+              className={
+                type === "Transfer"
+                  ? "space-y-2"
+                  : "grid gap-4 sm:grid-cols-2"
+              }
+            >
               <div className="space-y-2">
                 <Label htmlFor="amount">Số tiền (transactionsAmount)</Label>
                 <Input
@@ -254,17 +266,19 @@ export function AddTransactionPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="date">Thời gian giao dịch</Label>
-                <ScheduleDateTimePicker
-                  id="date"
-                  value={dateLocal}
-                  onChange={setDateLocal}
-                  disablePast={false}
-                  allowClear={false}
-                  className="max-w-none"
-                />
-              </div>
+              {type !== "Transfer" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="date">Thời gian giao dịch</Label>
+                  <ScheduleDateTimePicker
+                    id="date"
+                    value={dateLocal}
+                    onChange={setDateLocal}
+                    disablePast={false}
+                    allowClear={false}
+                    className="max-w-none"
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">
