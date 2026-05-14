@@ -71,6 +71,7 @@ export const transactionService = {
   },
 
   async create(payload: CreateTransactionPayload): Promise<TransactionItem> {
+    const noteTrim = payload.note?.trim();
     const body = {
       financialAccountId: payload.financialAccountId ?? undefined,
       type: payload.type,
@@ -78,7 +79,7 @@ export const transactionService = {
       categoryId: payload.categoryId ?? undefined,
       fromJarId: payload.fromJarId ?? undefined,
       toJarId: payload.toJarId ?? undefined,
-      note: payload.note ?? null,
+      ...(noteTrim ? { note: noteTrim } : {}),
       date: payload.date ?? new Date().toISOString(),
     };
     const row = (await apiClient.post(BASE, body)) as {

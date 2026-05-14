@@ -57,10 +57,12 @@ export const userCategoryService = {
   },
 
   async create(payload: CreateUserCategoryPayload): Promise<UserCategoryOption> {
+    const icon = payload.icon?.trim();
+    const color = payload.color?.trim();
     const row = (await apiClient.post(API_ENDPOINT.CATEGORIES.LIST, {
       name: payload.name.trim(),
-      icon: payload.icon?.trim() || null,
-      color: payload.color?.trim() || null,
+      ...(icon ? { icon } : {}),
+      ...(color ? { color } : {}),
     })) as CategoryRow;
     return mapRow(row, "custom");
   },
