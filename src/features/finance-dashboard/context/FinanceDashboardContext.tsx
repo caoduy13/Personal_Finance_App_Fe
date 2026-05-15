@@ -42,7 +42,8 @@ function loadStored(): StoredState {
     };
     const prefs: Partial<UserPreferences> & { avatarVariant?: string } =
       parsed.preferences ?? {};
-    const { avatarVariant: _removed, ...restPrefs } = prefs;
+    const restPrefs = { ...prefs };
+    delete restPrefs.avatarVariant;
     return {
       preferences: {
         ...defaultPreferences,
@@ -138,6 +139,8 @@ export function FinanceDashboardProvider({ children }: { children: ReactNode }) 
   );
 }
 
+// Hook export alongside Provider — same pattern as shared UI modules.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFinanceDashboard() {
   const ctx = useContext(FinanceDashboardContext);
   if (!ctx) {
