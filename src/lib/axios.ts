@@ -3,7 +3,7 @@ import { env } from "@/lib/env";
 import { useAuthStore } from "@/features/auth/store";
 
 export const apiClient = axios.create({
-  baseURL: env.API_URL,
+  baseURL: env.API_URL_LOCAL,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
