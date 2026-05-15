@@ -1,0 +1,115 @@
+/* Avatar 2D animations */
+.avatar-2d-head {
+  transform-origin: 50px 48px;
+  animation: avatar-bob 3.5s ease-in-out infinite;
+}
+
+.avatar-2d:hover .avatar-2d-head {
+  animation: avatar-bob 1.2s ease-in-out infinite, avatar-tilt 0.4s ease forwards;
+}
+
+.avatar-2d-lid-left,
+.avatar-2d-lid-right {
+  transform-origin: center;
+  transform: scaleY(0);
+  animation: avatar-blink 4s ease-in-out infinite;
+}
+
+.avatar-2d-tear {
+  transform-origin: 64px 50px;
+  animation: avatar-tear 2.8s ease-in-out infinite;
+}
+
+.avatar-2d-beard {
+  transform-origin: 50px 60px;
+  animation: avatar-beard 3.5s ease-in-out infinite;
+}
+
+.avatar-2d-hoodie {
+  animation: avatar-hoodie 4s ease-in-out infinite;
+}
+
+@keyframes avatar-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes avatar-tilt {
+  to {
+    transform: rotate(-3deg) translateY(-1px);
+  }
+}
+
+@keyframes avatar-blink {
+  0%,
+  42%,
+  44%,
+  100% {
+    transform: scaleY(0);
+  }
+  43% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes avatar-tear {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.6);
+  }
+  75%,
+  90% {
+    opacity: 0.9;
+    transform: translateY(0) scale(1);
+  }
+  95%,
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.8);
+  }
+}
+
+@keyframes avatar-beard {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes avatar-hoodie {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.02);
+  }
+}
+
+/* Ảnh tải lên — hiệu ứng nhẹ */
+.avatar-upload {
+  animation: avatar-upload-float 3.5s ease-in-out infinite;
+}
+
+.avatar-upload img {
+  filter: saturate(1.05) contrast(1.02);
+}
+
+@keyframes avatar-upload-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}

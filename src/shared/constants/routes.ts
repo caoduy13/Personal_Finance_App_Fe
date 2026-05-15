@@ -19,6 +19,7 @@ export const ROUTES = {
   NOTIFICATIONS: "/notifications",
   PROFILE: "/profile",
   ONBOARDING: "/onboarding",
+  FINANCE_DASHBOARD: "/finance-dashboard",
   ADMIN_DASHBOARD: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_NOTIFICATIONS: "/admin/notifications",

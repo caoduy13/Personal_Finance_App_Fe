@@ -28,8 +28,13 @@ import { UserLayout } from "@/shared/layout/UserLayout";
 import { AdminLayout } from "@/shared/layout/AdminLayout";
 import AdminCategoriesPage from "@/features/admin/category/pages/AdminCategoriesPage";
 import { OnboardingPage } from "@/features/onboarding";
+import { FinanceDashboardPage } from "@/features/finance-dashboard";
 
 export const router = createBrowserRouter([
+  {
+    path: ROUTES.FINANCE_DASHBOARD,
+    element: <FinanceDashboardPage />,
+  },
   {
     path: ROUTES.LOGIN,
     element: (
