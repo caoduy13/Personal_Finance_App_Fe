@@ -30,6 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
 import { UserAppHeader } from "@/shared/components/layout/UserAppHeader";
+import { AiChatFab } from "@/features/ai-chat";
 import { useAuth, useLogoutMutation } from "@/features/auth/hooks/useAuth";
 import { useNotificationUnreadCount } from "@/features/notifications";
 const userNavItems = [
@@ -212,6 +213,8 @@ export function UserLayout() {
           </AlertDialogContent>
         </AlertDialog>
       </aside>
+
+      <AiChatFab />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-[#0a0a0a] bg-white md:hidden">
         <div className="mx-auto grid h-16 max-w-xl grid-cols-6 px-0.5">

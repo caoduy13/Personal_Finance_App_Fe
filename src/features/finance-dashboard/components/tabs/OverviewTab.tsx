@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { getCategoryDisplayName } from "@/shared/constants/userCopy";
 import { useFinanceDashboard } from "../../context/FinanceDashboardContext";
 import type { TranslationKey } from "../../i18n";
+import { CashFlowChart } from "../CashFlowChart";
 import { MonthTimeline } from "../MonthTimeline";
 import { ProfitLossChart } from "../ProfitLossChart";
 import { LegendDot } from "../shared";
@@ -79,6 +80,7 @@ export function OverviewTab() {
           </div>
         </div>
 
+        <CashFlowChart />
         <MonthTimeline />
       </section>
 

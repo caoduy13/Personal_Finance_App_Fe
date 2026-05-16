@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
-import { CASH_FLOW_MONTHS } from "../mockData";
 import { useFinanceDashboard } from "../context/FinanceDashboardContext";
 
 export function MonthTimeline() {
-  const { selectedMonth, setSelectedMonth, formatMonth } = useFinanceDashboard();
+  const { selectedMonth, setSelectedMonth, formatMonth, availableMonths } =
+    useFinanceDashboard();
 
   return (
     <div className="flex flex-wrap gap-2 pt-2">
-      {CASH_FLOW_MONTHS.map((month) => (
+      {availableMonths.map((month) => (
         <button
           key={month}
           type="button"

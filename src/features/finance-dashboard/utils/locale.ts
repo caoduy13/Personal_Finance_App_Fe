@@ -15,8 +15,19 @@ const MONTH_EN_TO_VI: Record<string, string> = {
   Dec: "Th12",
 };
 
-/** "Nov 20" → "Th11 20" khi lang = vi */
+/** "Nov 20" hoặc "2026-05" → nhãn hiển thị */
 export function formatMonthLabel(monthKey: string, lang: Language): string {
+  const isoMatch = /^(\d{4})-(\d{2})$/.exec(monthKey);
+  if (isoMatch) {
+    const year = isoMatch[1];
+    const monthNum = Number(isoMatch[2]);
+    if (lang === "vi") {
+      return `Th${monthNum} ${year.slice(2)}`;
+    }
+    const d = new Date(Number(year), monthNum - 1, 1);
+    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  }
+
   if (lang === "en") return monthKey;
   const [mon, year] = monthKey.split(" ");
   const viMon = MONTH_EN_TO_VI[mon];
