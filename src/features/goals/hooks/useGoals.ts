@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateFinanceQueries } from "@/shared/lib/invalidateFinanceQueries";
 import { goalService } from "../services";
 import type { CreateGoalPayload, UpdateGoalPayload } from "../types";
 
@@ -26,6 +27,7 @@ export function useCreateGoal() {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      invalidateFinanceQueries(queryClient);
     },
   });
 }

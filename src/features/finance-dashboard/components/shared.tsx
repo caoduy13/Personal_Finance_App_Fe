@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -6,6 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { ROUTES } from "@/shared/constants/routes";
 import { cn } from "@/lib/utils";
 
 export function LegendDot({
@@ -18,10 +25,10 @@ export function LegendDot({
   return (
     <span
       className={cn(
-        "inline-block h-2 w-2 shrink-0 rounded-full",
-        outline ? "border-2 bg-transparent" : color,
+        "inline-block h-2.5 w-2.5 shrink-0 rounded-full border-2 border-[#0a0a0a]",
+        outline ? "bg-transparent" : color,
       )}
-      style={outline ? { borderColor: color } : undefined}
+      style={outline ? { borderColor: "#0a0a0a", background: "transparent" } : undefined}
     />
   );
 }
@@ -44,13 +51,13 @@ export function DropdownPill({
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         className={cn(
-          "h-9 w-auto gap-1 rounded-full border-neutral-200 bg-white px-4 text-sm font-medium shadow-none dark:border-neutral-700 dark:bg-neutral-900",
+          "brutal-pill h-9 w-auto gap-1 px-4 text-sm font-semibold shadow-none focus:ring-2 focus:ring-[#a8e087]",
           className,
         )}
       >
         <SelectValue>{label(value)}</SelectValue>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="border-2 border-[#0a0a0a]">
         {options.map((opt) => (
           <SelectItem key={opt} value={opt}>
             {label(opt)}
@@ -76,8 +83,8 @@ export function SectionCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={cn(
-        "rounded-2xl border border-neutral-200 bg-white p-5 text-left dark:border-neutral-800 dark:bg-neutral-900",
-        onClick && "cursor-pointer",
+        "brutal-card p-5 text-left",
+        onClick && "cursor-pointer transition hover:translate-x-[-1px] hover:translate-y-[-1px]",
         className,
       )}
     >
@@ -86,14 +93,42 @@ export function SectionCard({
   );
 }
 
-export function ViewReportButton({ label = "View Report" }: { label?: string }) {
+const REPORT_LINKS = [
+  { label: "Giao dịch", to: ROUTES.TRANSACTIONS },
+  { label: "Ngân sách", to: ROUTES.BUDGET },
+  { label: "Danh mục chi", to: ROUTES.CATEGORIES },
+] as const;
+
+export function ViewReportButton({ label = "Xem báo cáo" }: { label?: string }) {
+  const navigate = useNavigate();
+
   return (
-    <button
-      type="button"
-      className="inline-flex h-9 items-center gap-1 rounded-full border border-neutral-200 bg-white px-4 text-sm font-medium dark:border-neutral-700 dark:bg-neutral-900"
-    >
-      {label}
-      <ChevronDown className="h-4 w-4 opacity-60" />
-    </button>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="brutal-pill inline-flex h-9 cursor-pointer items-center gap-1 px-4 text-sm font-semibold"
+        >
+          {label}
+          <ChevronDown className="h-4 w-4 opacity-70" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-52 border-2 border-[#0a0a0a] p-2">
+        <p className="mb-2 px-2 text-xs font-bold text-neutral-600">Mở báo cáo</p>
+        <ul className="space-y-1">
+          {REPORT_LINKS.map((item) => (
+            <li key={item.to}>
+              <button
+                type="button"
+                className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-[#a8e087]/40"
+                onClick={() => navigate(item.to)}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }

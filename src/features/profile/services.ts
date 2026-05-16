@@ -52,6 +52,9 @@ export const profileService = {
     if (payload.avatarUrl !== undefined) {
       body.avatarUrl = payload.avatarUrl;
     }
+    if (payload.preferredCurrency !== undefined) {
+      body.preferredCurrency = payload.preferredCurrency;
+    }
     await apiClient.patch(API_ENDPOINT.USER.ME, body);
     return profileService.getMe();
   },

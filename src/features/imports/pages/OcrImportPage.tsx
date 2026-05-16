@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -44,14 +46,12 @@ export function OcrImportPage() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#0f172a]">OCR hóa đơn</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Tải ảnh để BE chạy OCR (tùy cấu hình server). Kết quả hiển thị bên dưới.
-        </p>
-      </div>
+      <BrutalPageHeader
+        title="OCR hóa đơn"
+        description="Tải ảnh để BE chạy OCR (tùy cấu hình server). Kết quả hiển thị bên dưới."
+      />
 
-      <Card className="border-[#d7def5] shadow-none">
+      <Card className={cn("brutal-card border-0 shadow-none")}>
         <CardHeader>
           <CardTitle className="text-base">Tải ảnh</CardTitle>
           <CardDescription>
@@ -87,13 +87,13 @@ export function OcrImportPage() {
                 type="checkbox"
                 checked={runOcr}
                 onChange={(ev) => setRunOcr(ev.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 accent-[#a8e087]"
               />
               Chạy OCR
             </label>
             <Button
               type="submit"
-              className="cursor-pointer bg-[#6366F1]"
+              className="brutal-btn-primary cursor-pointer"
               disabled={pending}
             >
               <Upload className="mr-2 h-4 w-4" />
@@ -104,7 +104,7 @@ export function OcrImportPage() {
       </Card>
 
       {resultJson ? (
-        <Card className="border-[#d7def5] shadow-none">
+        <Card className={cn("brutal-card border-0 shadow-none")}>
           <CardHeader>
             <CardTitle className="text-base">Phản hồi API</CardTitle>
           </CardHeader>

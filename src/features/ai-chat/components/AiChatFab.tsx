@@ -19,7 +19,7 @@ export function AiChatFab() {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-[#6366F1] text-white shadow-lg shadow-violet-500/35 transition hover:bg-[#4F46E5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] focus-visible:ring-offset-2",
+          "brutal-btn-primary fixed z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full shadow-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a8e087] focus-visible:ring-offset-2",
           "bottom-24 right-4 md:bottom-6 md:right-6",
         )}
         aria-label="Mở trò chuyện AI"
@@ -32,7 +32,7 @@ export function AiChatFab() {
           showClose={false}
           overlayClassName="z-50 bg-slate-900/20 backdrop-blur-[2px]"
           className={cn(
-            "flex max-h-[min(720px,92vh)] w-[min(100vw-1.5rem,400px)] max-w-[min(100vw-1.5rem,400px)] flex-col gap-0 overflow-hidden rounded-2xl border border-violet-200/80 p-0 shadow-2xl shadow-violet-500/15",
+            "brutal-card flex max-h-[min(720px,92vh)] w-[min(100vw-1.5rem,400px)] max-w-[min(100vw-1.5rem,400px)] flex-col gap-0 overflow-hidden border-0 p-0 shadow-none",
             "!left-auto !right-4 !top-auto !bottom-24 !translate-x-0 !translate-y-0 md:!bottom-6 md:!right-6",
             "bg-white",
             "data-[state=open]:animate-in data-[state=closed]:animate-out sm:rounded-2xl",
@@ -42,14 +42,14 @@ export function AiChatFab() {
             Cửa sổ chat trợ lý AI FinJar.
           </DialogDescription>
 
-          <header className="flex shrink-0 items-center justify-between gap-2 border-b border-violet-100 bg-linear-to-r from-[#6366F1] to-indigo-500 px-3 py-2.5">
+          <header className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-200 bg-linear-to-r bg-[#0a0a0a] px-3 py-2.5">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <div className="relative shrink-0">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-white backdrop-blur-sm">
                   <Bot className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </div>
                 <span
-                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#6366F1] bg-emerald-400"
+                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-neutral-900 bg-emerald-400"
                   aria-hidden
                 />
               </div>

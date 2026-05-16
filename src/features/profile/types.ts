@@ -17,4 +17,5 @@ export interface UpdateProfilePayload {
   lastName?: string;
   phone?: string | null;
   avatarUrl?: string | null;
+  preferredCurrency?: string;
 }

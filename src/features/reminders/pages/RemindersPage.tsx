@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { useUserCategories } from "@/features/categories";
 import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
 import { Button } from "@/shared/components/ui/button";
@@ -46,14 +47,13 @@ import {
   useUpdateReminder,
 } from "../hooks/useReminderMutations";
 import { useReminders } from "../hooks/useReminders";
+import {
+  labelOf,
+  REMINDER_FREQUENCY_LABELS,
+  REMINDER_STATUS_LABELS,
+} from "@/shared/constants/userCopy";
+import { formatVnd } from "@/shared/lib/formatCurrency";
 import type { ReminderFrequency, ReminderItem, ReminderStatus } from "../types";
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
 
 const FREQ_OPTIONS: ReminderFrequency[] = [
   "Daily",
@@ -137,6 +137,12 @@ export function RemindersPage() {
       toast.error("Ngày bắt đầu không hợp lệ.");
       return;
     }
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (parsedStart < todayStart) {
+      toast.error("Ngày bắt đầu phải từ hôm nay trở đi.");
+      return;
+    }
     const dayNum = cDay.trim() === "" ? undefined : Number(cDay);
     if (dayNum !== undefined && (!Number.isInteger(dayNum) || dayNum < 1 || dayNum > 31)) {
       toast.error("Ngày trong tháng phải từ 1–31.");
@@ -216,17 +222,17 @@ export function RemindersPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải nhắc lịch...</p>
+      <p className="brutal-loading text-sm">Đang tải nhắc lịch...</p>
     );
   }
   if (isError || data === undefined) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được nhắc lịch.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -237,35 +243,25 @@ export function RemindersPage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Thanh toán định kỳ
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Nhắc lịch</h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Nhắc thanh toán định kỳ (điện, học phí…).
-            </p>
-          </div>
+      <BrutalPageHeader
+        eyebrow="Thanh toán định kỳ"
+        title="Nhắc lịch"
+        description="Nhắc thanh toán định kỳ (điện, học phí…)."
+        actions={
           <Button
             type="button"
-            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            className="brutal-btn-primary cursor-pointer"
             onClick={openCreate}
           >
             <Plus className="mr-2 h-4 w-4" />
             Tạo nhắc lịch
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         {list.length === 0 ? (
-          <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none md:col-span-2">
+          <Card className="brutal-card border-0 border-dashed shadow-none md:col-span-2">
             <CardContent className="py-10 text-center text-sm text-slate-600">
               Chưa có nhắc lịch nào. Nhấn &quot;Tạo nhắc lịch&quot; để thêm.
             </CardContent>
@@ -274,19 +270,20 @@ export function RemindersPage() {
           list.map((r) => (
             <Card
               key={r.id}
-              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+              className="brutal-card border-0 shadow-none transition hover:bg-neutral-50"
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-[#0f172a]">{r.title}</CardTitle>
                 <CardDescription className="text-slate-600">
-                  {r.frequency} · {r.status}
+                  {labelOf(REMINDER_FREQUENCY_LABELS, r.frequency)} ·{" "}
+                  {labelOf(REMINDER_STATUS_LABELS, r.status)}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-slate-600">
                 <p>
                   Số tiền:{" "}
-                  <span className="font-semibold text-[#6366F1]">
-                    {formatCurrency(r.amount)}
+                  <span className="font-semibold">
+                    {formatVnd(r.amount)}
                   </span>
                 </p>
                 <p>
@@ -302,7 +299,7 @@ export function RemindersPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
+                    className="brutal-btn-outline cursor-pointer"
                     onClick={() => openEdit(r)}
                   >
                     Sửa
@@ -311,7 +308,7 @@ export function RemindersPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
+                    className="brutal-btn-outline cursor-pointer text-red-600 hover:bg-red-50"
                     onClick={() => setCancelId(r.id)}
                   >
                     Hủy nhắc nhở
@@ -363,7 +360,7 @@ export function RemindersPage() {
                   <SelectContent>
                     {FREQ_OPTIONS.map((f) => (
                       <SelectItem key={f} value={f}>
-                        {f}
+                        {labelOf(REMINDER_FREQUENCY_LABELS, f)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -384,7 +381,7 @@ export function RemindersPage() {
                 <ScheduleDateTimePicker
                   value={cStart}
                   onChange={setCStart}
-                  disablePast={false}
+                  disablePast
                   allowClear={false}
                 />
               </div>
@@ -425,15 +422,14 @@ export function RemindersPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setCreateOpen(false)}
               >
                 Đóng
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -477,7 +473,7 @@ export function RemindersPage() {
                   <SelectContent>
                     {FREQ_OPTIONS.map((f) => (
                       <SelectItem key={f} value={f}>
-                        {f}
+                        {labelOf(REMINDER_FREQUENCY_LABELS, f)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -502,9 +498,15 @@ export function RemindersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Paused">Paused</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Active">
+                      {REMINDER_STATUS_LABELS.Active}
+                    </SelectItem>
+                    <SelectItem value="Paused">
+                      {REMINDER_STATUS_LABELS.Paused}
+                    </SelectItem>
+                    <SelectItem value="Completed">
+                      {REMINDER_STATUS_LABELS.Completed}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -527,15 +529,14 @@ export function RemindersPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setEditItem(null)}
               >
                 Đóng
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}

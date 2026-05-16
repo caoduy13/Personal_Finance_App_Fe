@@ -1,115 +1,112 @@
-/* Avatar 2D animations */
-.avatar-2d-head {
-  transform-origin: 50px 48px;
-  animation: avatar-bob 3.5s ease-in-out infinite;
+/* ── Neubrutalist finance dashboard ── */
+.brutal-dashboard {
+  --brutal-bg: #f4f4f5;
+  --brutal-ink: #0a0a0a;
+  --brutal-border: 2px solid #0a0a0a;
+  --brutal-shadow: 4px 4px 0 0 #0a0a0a;
+  --brutal-shadow-sm: 3px 3px 0 0 #0a0a0a;
+  --brutal-green: #a8e087;
+  --brutal-purple: #a5a6f6;
+  --brutal-radius: 16px;
+  background: var(--brutal-bg);
+  color: var(--brutal-ink);
 }
 
-.avatar-2d:hover .avatar-2d-head {
-  animation: avatar-bob 1.2s ease-in-out infinite, avatar-tilt 0.4s ease forwards;
+.brutal-card {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: #fff;
+  box-shadow: var(--brutal-shadow);
 }
 
-.avatar-2d-lid-left,
-.avatar-2d-lid-right {
-  transform-origin: center;
-  transform: scaleY(0);
-  animation: avatar-blink 4s ease-in-out infinite;
+.brutal-card-flat {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: #fff;
 }
 
-.avatar-2d-tear {
-  transform-origin: 64px 50px;
-  animation: avatar-tear 2.8s ease-in-out infinite;
+.brutal-metric-green {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: var(--brutal-green);
+  box-shadow: var(--brutal-shadow);
 }
 
-.avatar-2d-beard {
-  transform-origin: 50px 60px;
-  animation: avatar-beard 3.5s ease-in-out infinite;
+.brutal-metric-purple {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: var(--brutal-purple);
+  box-shadow: var(--brutal-shadow);
 }
 
-.avatar-2d-hoodie {
-  animation: avatar-hoodie 4s ease-in-out infinite;
+.brutal-metric-dark {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: var(--brutal-ink);
+  color: #fff;
+  box-shadow: var(--brutal-shadow);
 }
 
-@keyframes avatar-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
+.brutal-pill {
+  border: var(--brutal-border);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: var(--brutal-shadow-sm);
 }
 
-@keyframes avatar-tilt {
-  to {
-    transform: rotate(-3deg) translateY(-1px);
-  }
+.brutal-pill-active {
+  border: var(--brutal-border);
+  border-radius: 9999px;
+  background: var(--brutal-ink);
+  color: #fff;
 }
 
-@keyframes avatar-blink {
-  0%,
-  42%,
-  44%,
-  100% {
-    transform: scaleY(0);
-  }
-  43% {
-    transform: scaleY(1);
-  }
+.brutal-icon-btn {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: var(--brutal-border);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: var(--brutal-shadow-sm);
+  transition: transform 0.1s ease;
 }
 
-@keyframes avatar-tear {
-  0%,
-  70% {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.6);
-  }
-  75%,
-  90% {
-    opacity: 0.9;
-    transform: translateY(0) scale(1);
-  }
-  95%,
-  100% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.8);
-  }
+.brutal-icon-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 #0a0a0a;
 }
 
-@keyframes avatar-beard {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(1deg);
-  }
+.brutal-search {
+  border: var(--brutal-border);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: var(--brutal-shadow-sm);
 }
 
-@keyframes avatar-hoodie {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-  50% {
-    transform: scaleY(1.02);
-  }
+.brutal-row {
+  border: var(--brutal-border);
+  border-radius: 9999px;
+  background: #fff;
 }
 
-/* Ảnh tải lên — hiệu ứng nhẹ */
-.avatar-upload {
-  animation: avatar-upload-float 3.5s ease-in-out infinite;
+.brutal-pl-card {
+  border: var(--brutal-border);
+  border-radius: var(--brutal-radius);
+  background: var(--brutal-ink);
+  color: #fff;
+  box-shadow: var(--brutal-shadow);
 }
 
-.avatar-upload img {
-  filter: saturate(1.05) contrast(1.02);
-}
-
-@keyframes avatar-upload-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
+.brutal-tab-active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brutal-ink);
 }

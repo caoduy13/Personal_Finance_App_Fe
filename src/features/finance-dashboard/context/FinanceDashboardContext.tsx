@@ -7,10 +7,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { CASH_FLOW_MONTHS, getCashFlowForMonth } from "../mockData";
+import type { UserDashboardData } from "@/features/dashboard/types";
+import {
+  CASH_FLOW_MONTHS,
+  getCashFlowForMonth,
+  profitLossSummary,
+} from "../mockData";
 import { t, type TranslationKey } from "../i18n";
 import { formatMonthLabel } from "../utils/locale";
-import { formatMoney } from "../utils/formatMoney";
+import { formatVnd } from "@/shared/lib/formatCurrency";
 import type { Currency, Language, UserPreferences } from "../types";
 
 const STORAGE_KEY = "finance-dashboard-prefs";
@@ -23,9 +28,8 @@ type StoredState = {
 const defaultPreferences: UserPreferences = {
   emailNotifications: true,
   twoFactor: false,
-  currency: "USD",
-  language: "en",
-  avatarImageUrl: null,
+  currency: "VND",
+  language: "vi",
 };
 
 function loadStored(): StoredState {
@@ -48,7 +52,6 @@ function loadStored(): StoredState {
       preferences: {
         ...defaultPreferences,
         ...restPrefs,
-        avatarImageUrl: prefs.avatarImageUrl ?? null,
       },
       selectedMonth:
         parsed.selectedMonth &&
@@ -66,6 +69,22 @@ function loadStored(): StoredState {
   }
 }
 
+function cashFlowFromDashboard(data: UserDashboardData) {
+  const { balanceSummary: bs } = data;
+  return {
+    inflow: bs.totalIncome,
+    outflow: bs.totalExpense,
+    netChanges: bs.netChange,
+  };
+}
+
+type ProfitLossDisplay = {
+  inflowToday: number;
+  changePercent: number;
+  inflowTotal: number;
+  outflowTotal: number;
+};
+
 type FinanceDashboardContextValue = {
   preferences: UserPreferences;
   setPreferences: (prefs: UserPreferences) => void;
@@ -73,18 +92,27 @@ type FinanceDashboardContextValue = {
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
   cashFlow: ReturnType<typeof getCashFlowForMonth>;
-  format: (amountUsd: number) => string;
+  profitLoss: ProfitLossDisplay;
+  format: (amount: number) => string;
   formatMonth: (monthKey: string) => string;
   tr: (key: TranslationKey) => string;
   language: Language;
   currency: Currency;
-  avatarImageUrl: string | null;
+  dashboardData: UserDashboardData | null;
 };
 
 const FinanceDashboardContext =
   createContext<FinanceDashboardContextValue | null>(null);
 
-export function FinanceDashboardProvider({ children }: { children: ReactNode }) {
+type FinanceDashboardProviderProps = {
+  children: ReactNode;
+  dashboardData?: UserDashboardData | null;
+};
+
+export function FinanceDashboardProvider({
+  children,
+  dashboardData = null,
+}: FinanceDashboardProviderProps) {
   const [stored, setStored] = useState(loadStored);
 
   useEffect(() => {
@@ -109,20 +137,47 @@ export function FinanceDashboardProvider({ children }: { children: ReactNode }) 
   }, []);
 
   const value = useMemo<FinanceDashboardContextValue>(() => {
-    const { currency, language, avatarImageUrl } = preferences;
+    const { currency, language } = preferences;
+    const mockCashFlow = getCashFlowForMonth(selectedMonth);
+    const cashFlow = dashboardData
+      ? cashFlowFromDashboard(dashboardData)
+      : mockCashFlow;
+
+    const profitLoss: ProfitLossDisplay = dashboardData
+      ? {
+          inflowToday: dashboardData.recentTransactions
+            .filter((t) => t.type === "Income")
+            .reduce((sum, t) => sum + t.transactionsAmount, 0),
+          changePercent:
+            dashboardData.balanceSummary.totalIncome > 0
+              ? Math.min(
+                  99,
+                  Math.round(
+                    (dashboardData.balanceSummary.netChange /
+                      dashboardData.balanceSummary.totalIncome) *
+                      100,
+                  ),
+                )
+              : 0,
+          inflowTotal: dashboardData.balanceSummary.totalIncome,
+          outflowTotal: dashboardData.balanceSummary.totalExpense,
+        }
+      : profitLossSummary;
+
     return {
       preferences,
       setPreferences,
       updatePreferences,
       selectedMonth,
       setSelectedMonth,
-      cashFlow: getCashFlowForMonth(selectedMonth),
-      format: (amountUsd: number) => formatMoney(amountUsd, currency),
+      cashFlow,
+      profitLoss,
+      format: (amount: number) => formatVnd(amount),
       formatMonth: (monthKey: string) => formatMonthLabel(monthKey, language),
       tr: (key) => t(language, key),
       language,
       currency,
-      avatarImageUrl,
+      dashboardData,
     };
   }, [
     preferences,
@@ -130,6 +185,7 @@ export function FinanceDashboardProvider({ children }: { children: ReactNode }) 
     setPreferences,
     updatePreferences,
     setSelectedMonth,
+    dashboardData,
   ]);
 
   return (
@@ -139,7 +195,6 @@ export function FinanceDashboardProvider({ children }: { children: ReactNode }) 
   );
 }
 
-// Hook export alongside Provider — same pattern as shared UI modules.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useFinanceDashboard() {
   const ctx = useContext(FinanceDashboardContext);

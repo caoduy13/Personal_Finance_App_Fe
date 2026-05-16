@@ -103,7 +103,7 @@ export function AiChatContent({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "bg-linear-to-b from-violet-50/90 to-white text-slate-800",
+        "bg-linear-to-b from-neutral-100 to-white text-slate-800",
         className,
       )}
     >
@@ -119,14 +119,14 @@ export function AiChatContent({ className }: { className?: string }) {
                 className={cn(
                   "mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                   isUser
-                    ? "bg-[#6366F1]/15 ring-2 ring-[#6366F1]/35"
-                    : "bg-linear-to-br from-violet-200 to-indigo-400 ring-2 ring-violet-200/80",
+                    ? "bg-[#a8e087] ring-2 ring-neutral-900"
+                    : "bg-linear-to-br bg-neutral-200 ring-2 ring-neutral-900",
                 )}
                 aria-hidden
               >
                 {isUser ? (
                   <CircleUserRound
-                    className="h-[18px] w-[18px] text-[#6366F1]"
+                    className="h-[18px] w-[18px] text-neutral-900"
                     strokeWidth={2}
                   />
                 ) : (
@@ -148,7 +148,7 @@ export function AiChatContent({ className }: { className?: string }) {
                 <p
                   className={cn(
                     "mb-1 text-xs font-medium",
-                    isUser ? "text-[#6366F1]" : "text-slate-500",
+                    isUser ? "text-neutral-900" : "text-slate-500",
                   )}
                 >
                   {isUser ? "Bạn" : "Trợ lý FinJar"}
@@ -157,8 +157,8 @@ export function AiChatContent({ className }: { className?: string }) {
                   className={cn(
                     "w-fit max-w-full whitespace-pre-wrap rounded-2xl px-3 py-2 text-[15px] leading-snug shadow-sm",
                     isUser
-                      ? "rounded-tr-sm bg-[#6366F1] text-white"
-                      : "rounded-tl-sm border border-violet-100 bg-white text-slate-800",
+                      ? "rounded-tr-sm bg-[#a8e087] text-[#0a0a0a]"
+                      : "rounded-tl-sm border border-neutral-200 bg-white text-slate-800",
                   )}
                 >
                   {bubble.text}
@@ -203,7 +203,7 @@ export function AiChatContent({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-violet-100 bg-white/90 px-2 pb-3 pt-2 backdrop-blur-sm">
+      <div className="shrink-0 border-t border-neutral-200 bg-white/90 px-2 pb-3 pt-2 backdrop-blur-sm">
         {suggestions.length > 0 ? (
           <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
             {suggestions.map((suggestion) => (
@@ -212,7 +212,7 @@ export function AiChatContent({ className }: { className?: string }) {
                 type="button"
                 onClick={() => void send(suggestion)}
                 disabled={pending}
-                className="shrink-0 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-[#4F46E5] transition hover:border-[#6366F1]/50 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="brutal-pill shrink-0 px-3 py-1.5 text-xs font-medium transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {suggestion}
               </button>
@@ -233,13 +233,13 @@ export function AiChatContent({ className }: { className?: string }) {
             rows={1}
             placeholder="Nhập câu hỏi..."
             disabled={pending}
-            className="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-violet-200 bg-white px-4 py-2 text-[15px] leading-6 text-slate-800 shadow-inner placeholder:text-slate-400 focus:border-[#6366F1]/50 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 disabled:opacity-60"
+            className="brutal-search max-h-28 min-h-10 flex-1 resize-none rounded-2xl bg-white px-4 py-2 text-[15px] leading-6 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-[#a8e087] disabled:opacity-60"
             aria-label="Nhập tin nhắn"
           />
           <button
             type="submit"
             disabled={pending || !input.trim()}
-            className="mb-0.5 inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[#6366F1] px-4 text-sm font-medium text-white shadow-md shadow-violet-500/20 transition hover:bg-[#4F46E5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="brutal-btn-primary mb-0.5 inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             <SendHorizontal className="h-4 w-4" aria-hidden />
             Gửi

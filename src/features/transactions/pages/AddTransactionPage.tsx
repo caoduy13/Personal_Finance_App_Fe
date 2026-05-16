@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/shared/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import {
   Card,
   CardContent,
@@ -11,7 +12,12 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
+import { parseApiError } from "@/shared/lib/apiErrors";
 import { ROUTES } from "@/shared/constants";
+import {
+  getCategoryDisplayName,
+  TRANSACTION_TYPE_LABELS,
+} from "@/shared/constants/userCopy";
 import { useFinancialAccounts } from "@/features/financial-accounts";
 import { useUserCategories } from "@/features/categories";
 import { useJars } from "@/features/jars/hooks/useJars";
@@ -19,6 +25,12 @@ import { useCreateTransaction } from "../hooks/useTransactions";
 import type { TransactionType } from "../types";
 
 type TransferMode = "jarToJar" | "accountToJar" | "jarToAccount";
+
+function nowLocalString() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export function AddTransactionPage() {
   const navigate = useNavigate();
@@ -42,16 +54,28 @@ export function AddTransactionPage() {
   const [financialAccountId, setFinancialAccountId] = useState("");
   const [fromJarId, setFromJarId] = useState("");
   const [toJarId, setToJarId] = useState("");
-  /** Chuỗi local `yyyy-MM-ddTHH:mm` — khớp `ScheduleDateTimePicker`. */
-  const [dateLocal, setDateLocal] = useState(() => {
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  });
+  const [dateLocal, setDateLocal] = useState(nowLocalString);
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const loadingDeps = loadingAccounts || loadingCategories || loadingJars;
+  const isTransfer = type === "Transfer";
+  const needsJar = type === "Expense" || (isTransfer && transferMode !== "accountToJar");
+  const canSubmit =
+    !isPending &&
+    !loadingDeps &&
+    (!needsJar || jars.length > 0) &&
+    (type !== "Income" || manualAccounts.length > 0);
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   const validateAndBuild = (): {
     type: TransactionType;
@@ -61,31 +85,51 @@ export function AddTransactionPage() {
     financialAccountId?: string | null;
     fromJarId?: string | null;
     toJarId?: string | null;
-    date: string;
+    date?: string;
   } | null => {
     setFormError(null);
+    setFieldErrors({});
+
     const num = Number(amount);
     if (!Number.isFinite(num) || num <= 0) {
-      setFormError("Số tiền phải lớn hơn 0.");
+      const msg = "Vui lòng nhập số tiền lớn hơn 0.";
+      setFieldErrors({ amount: msg });
+      setFormError(msg);
       return null;
     }
 
-    if (!dateLocal?.trim()) {
-      setFormError("Chọn thời gian giao dịch.");
-      return null;
+    let dateIso: string | undefined;
+    if (!isTransfer) {
+      if (!dateLocal?.trim()) {
+        const msg = "Bạn chưa chọn thời gian giao dịch.";
+        setFieldErrors({ date: msg });
+        setFormError(msg);
+        return null;
+      }
+      const parsedAt = new Date(dateLocal);
+      if (Number.isNaN(parsedAt.getTime())) {
+        const msg = "Thời gian giao dịch không hợp lệ.";
+        setFieldErrors({ date: msg });
+        setFormError(msg);
+        return null;
+      }
+      if (parsedAt.getTime() > Date.now()) {
+        const msg = "Chỉ ghi nhận được đến thời điểm hiện tại.";
+        setFieldErrors({ date: msg });
+        setFormError(msg);
+        return null;
+      }
+      dateIso = parsedAt.toISOString();
     }
-    const parsedAt = new Date(dateLocal);
-    if (Number.isNaN(parsedAt.getTime())) {
-      setFormError("Thời gian giao dịch không hợp lệ.");
-      return null;
-    }
-    const dateIso = parsedAt.toISOString();
+
     const cat = categoryId || null;
     const noteTrim = note.trim() || undefined;
 
     if (type === "Expense") {
       if (!fromJarId) {
-        setFormError("Chi tiêu: chọn hũ nguồn (fromJarId).");
+        const msg = "Hãy chọn hũ bạn muốn chi tiền.";
+        setFieldErrors({ fromJarId: msg });
+        setFormError(msg);
         return null;
       }
       return {
@@ -102,7 +146,9 @@ export function AddTransactionPage() {
 
     if (type === "Income") {
       if (!financialAccountId) {
-        setFormError("Thu nhập: chọn tài khoản tiền (chỉ tài khoản thủ công).");
+        const msg = "Hãy chọn tài khoản nhận tiền.";
+        setFieldErrors({ financialAccountId: msg });
+        setFormError(msg);
         return null;
       }
       return {
@@ -120,11 +166,11 @@ export function AddTransactionPage() {
     if (type === "Transfer") {
       if (transferMode === "jarToJar") {
         if (!fromJarId || !toJarId) {
-          setFormError("Chuyển hũ → hũ: chọn cả hũ nguồn và hũ đích.");
+          setFormError("Hãy chọn cả hũ gửi và hũ nhận.");
           return null;
         }
         if (fromJarId === toJarId) {
-          setFormError("Hũ nguồn và đích phải khác nhau.");
+          setFormError("Hũ gửi và hũ nhận phải khác nhau.");
           return null;
         }
         return {
@@ -135,12 +181,11 @@ export function AddTransactionPage() {
           fromJarId,
           toJarId,
           financialAccountId: null,
-          date: dateIso,
         };
       }
       if (transferMode === "accountToJar") {
         if (!financialAccountId || !toJarId) {
-          setFormError("Chuyển tài khoản → hũ: chọn tài khoản và hũ đích.");
+          setFormError("Hãy chọn tài khoản và hũ muốn chuyển vào.");
           return null;
         }
         return {
@@ -151,11 +196,10 @@ export function AddTransactionPage() {
           financialAccountId,
           toJarId,
           fromJarId: null,
-          date: dateIso,
         };
       }
       if (!fromJarId || !financialAccountId) {
-        setFormError("Chuyển hũ → tài khoản: chọn hũ nguồn và tài khoản đích.");
+        setFormError("Hãy chọn hũ gửi và tài khoản nhận tiền.");
         return null;
       }
       return {
@@ -166,7 +210,6 @@ export function AddTransactionPage() {
         fromJarId,
         financialAccountId,
         toJarId: null,
-        date: dateIso,
       };
     }
 
@@ -182,26 +225,30 @@ export function AddTransactionPage() {
       await createTransaction(payload);
       navigate(ROUTES.TRANSACTIONS, { replace: true });
     } catch (e) {
-      setFormError((e as Error)?.message ?? "Không tạo được giao dịch.");
+      const parsed = parseApiError(e);
+      setFormError(parsed.message);
+      if (parsed.field) {
+        setFieldErrors({ [parsed.field]: parsed.message });
+      }
     }
   };
 
+  const fieldError = (field: string) => fieldErrors[field];
+
   return (
     <section className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#0f172a]">Thêm giao dịch</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Ghi nhận thu nhập, chi tiêu từ hũ hoặc chuyển khoản giữa hũ và tài khoản.
-        </p>
-      </div>
+      <BrutalPageHeader
+        title="Thêm giao dịch"
+        description="Ghi lại khoản thu, khoản chi hoặc chuyển tiền giữa hũ và tài khoản."
+      />
 
-      <Card className="w-full border-[#d7def5] shadow-none">
+      <Card className={cn("brutal-card w-full border-0 shadow-none")}>
         <CardHeader className="pb-2">
           <CardTitle className="text-base text-[#0f172a]">
             Tạo giao dịch thủ công
           </CardTitle>
           <CardDescription>
-            Điền thông tin giao dịch và lưu lại. Giao dịch sẽ được ghi nhận ngay
+            Điền thông tin bên dưới rồi bấm lưu.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -210,24 +257,24 @@ export function AddTransactionPage() {
               <Label htmlFor="type">Loại</Label>
               <select
                 id="type"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                className="brutal-select"
                 value={type}
                 onChange={(event) =>
                   setType(event.target.value as TransactionType)
                 }
               >
-                <option value="Expense">Chi tiêu (Expense)</option>
-                <option value="Income">Thu nhập (Income)</option>
-                <option value="Transfer">Chuyển (Transfer)</option>
+                <option value="Expense">{TRANSACTION_TYPE_LABELS.Expense}</option>
+                <option value="Income">{TRANSACTION_TYPE_LABELS.Income}</option>
+                <option value="Transfer">{TRANSACTION_TYPE_LABELS.Transfer}</option>
               </select>
             </div>
 
-            {type === "Transfer" ? (
+            {isTransfer ? (
               <div className="space-y-2">
                 <Label htmlFor="transferMode">Kiểu chuyển</Label>
                 <select
                   id="transferMode"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                  className="brutal-select"
                   value={transferMode}
                   onChange={(event) =>
                     setTransferMode(event.target.value as TransferMode)
@@ -242,95 +289,134 @@ export function AddTransactionPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="amount">Số tiền (transactionsAmount)</Label>
+                <Label htmlFor="amount">Số tiền</Label>
                 <Input
                   id="amount"
                   type="number"
                   min="0"
                   step="1"
                   value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
+                  onChange={(event) => {
+                    setAmount(event.target.value);
+                    clearFieldError("amount");
+                  }}
                   required
+                  aria-invalid={Boolean(fieldError("amount"))}
                 />
+                {fieldError("amount") ? (
+                  <p className="text-sm text-red-500">{fieldError("amount")}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="date">Thời gian giao dịch</Label>
-                <ScheduleDateTimePicker
-                  id="date"
-                  value={dateLocal}
-                  onChange={setDateLocal}
-                  disablePast={false}
-                  allowClear={false}
-                  className="max-w-none"
-                />
+                {isTransfer ? (
+                  <p
+                    id="date"
+                    className="flex h-10 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-slate-600"
+                  >
+                    Ghi nhận ngay lúc này
+                  </p>
+                ) : (
+                  <>
+                    <ScheduleDateTimePicker
+                      id="date"
+                      value={dateLocal}
+                      onChange={(v) => {
+                        setDateLocal(v);
+                        clearFieldError("date");
+                      }}
+                      disablePast={false}
+                      disableFuture
+                      allowClear={false}
+                      className="max-w-none"
+                    />
+                    {fieldError("date") ? (
+                      <p className="text-sm text-red-500">{fieldError("date")}</p>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Danh mục (categoryId — tuỳ chọn)</Label>
+              <Label htmlFor="category">Danh mục (không bắt buộc)</Label>
               <select
                 id="category"
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                className="brutal-select"
                 value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
+                onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  clearFieldError("categoryId");
+                }}
                 disabled={loadingDeps}
               >
-                <option value="">— Không chọn —</option>
+                <option value="">Không chọn danh mục</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.kind === "default" ? `[Mặc định] ` : ""}
-                    {c.name}
+                    {getCategoryDisplayName(c.name, c.kind)}
                   </option>
                 ))}
               </select>
+              {fieldError("categoryId") ? (
+                <p className="text-sm text-red-500">{fieldError("categoryId")}</p>
+              ) : null}
             </div>
 
             {type === "Expense" ? (
               <div className="space-y-2">
-                <Label htmlFor="fromJar">Hũ nguồn (fromJarId)</Label>
+                <Label htmlFor="fromJar">Hũ nguồn</Label>
                 <select
                   id="fromJar"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                  className="brutal-select"
                   value={fromJarId}
-                  onChange={(event) => setFromJarId(event.target.value)}
+                  onChange={(event) => {
+                    setFromJarId(event.target.value);
+                    clearFieldError("fromJarId");
+                  }}
                   required
                   disabled={loadingDeps}
                 >
-                  <option value="">— Chọn hũ —</option>
+                  <option value="">Chọn hũ</option>
                   {jars.map((j) => (
                     <option key={j.id} value={j.id}>
                       {j.name} ({j.status})
                     </option>
                   ))}
                 </select>
+                {fieldError("fromJarId") ? (
+                  <p className="text-sm text-red-500">{fieldError("fromJarId")}</p>
+                ) : null}
               </div>
             ) : null}
 
             {type === "Income" ? (
               <div className="space-y-2">
-                <Label htmlFor="account">
-                  Tài khoản tiền (financialAccountId)
-                </Label>
+                <Label htmlFor="account">Tài khoản tiền</Label>
                 <select
                   id="account"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                  className="brutal-select"
                   value={financialAccountId}
-                  onChange={(event) =>
-                    setFinancialAccountId(event.target.value)
-                  }
+                  onChange={(event) => {
+                    setFinancialAccountId(event.target.value);
+                    clearFieldError("financialAccountId");
+                  }}
                   required
                   disabled={loadingDeps}
                 >
-                  <option value="">— Chọn tài khoản (Manual) —</option>
+                  <option value="">Chọn tài khoản</option>
                   {manualAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} · {a.accountType}
                     </option>
                   ))}
                 </select>
+                {fieldError("financialAccountId") ? (
+                  <p className="text-sm text-red-500">
+                    {fieldError("financialAccountId")}
+                  </p>
+                ) : null}
                 <p className="text-xs text-muted-foreground">
-                  Backend từ chối tài khoản liên kết ngân hàng (LinkedApi) cho
-                  giao dịch tay.
+                  Chỉ chọn tài khoản bạn tự thêm, không dùng tài khoản liên kết ngân hàng.
                 </p>
               </div>
             ) : null}
@@ -338,15 +424,15 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "jarToJar" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="fromJarT">Hũ nguồn (fromJarId)</Label>
+                  <Label htmlFor="fromJarT">Hũ nguồn</Label>
                   <select
                     id="fromJarT"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={fromJarId}
                     onChange={(event) => setFromJarId(event.target.value)}
                     disabled={loadingDeps}
                   >
-                    <option value="">— Chọn —</option>
+                    <option value="">Chọn</option>
                     {jars.map((j) => (
                       <option key={j.id} value={j.id}>
                         {j.name}
@@ -355,15 +441,15 @@ export function AddTransactionPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="toJarT">Hũ đích (toJarId)</Label>
+                  <Label htmlFor="toJarT">Hũ đích</Label>
                   <select
                     id="toJarT"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={toJarId}
                     onChange={(event) => setToJarId(event.target.value)}
                     disabled={loadingDeps}
                   >
-                    <option value="">— Chọn —</option>
+                    <option value="">Chọn</option>
                     {jars.map((j) => (
                       <option key={j.id} value={j.id}>
                         {j.name}
@@ -377,34 +463,40 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "accountToJar" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="faAj">Tài khoản (financialAccountId)</Label>
+                  <Label htmlFor="faAj">Tài khoản</Label>
                   <select
                     id="faAj"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={financialAccountId}
-                    onChange={(event) =>
-                      setFinancialAccountId(event.target.value)
-                    }
+                    onChange={(event) => {
+                      setFinancialAccountId(event.target.value);
+                      clearFieldError("financialAccountId");
+                    }}
                     disabled={loadingDeps}
                   >
-                    <option value="">— Manual —</option>
+                    <option value="">Chọn tài khoản</option>
                     {manualAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name}
                       </option>
                     ))}
                   </select>
+                  {fieldError("financialAccountId") ? (
+                    <p className="text-sm text-red-500">
+                      {fieldError("financialAccountId")}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="toJarAj">Hũ đích (toJarId)</Label>
+                  <Label htmlFor="toJarAj">Hũ đích</Label>
                   <select
                     id="toJarAj"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={toJarId}
                     onChange={(event) => setToJarId(event.target.value)}
                     disabled={loadingDeps}
                   >
-                    <option value="">— Chọn hũ —</option>
+                    <option value="">Chọn hũ</option>
                     {jars.map((j) => (
                       <option key={j.id} value={j.id}>
                         {j.name}
@@ -418,36 +510,40 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "jarToAccount" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="fromJarJa">Hũ nguồn (fromJarId)</Label>
+                  <Label htmlFor="fromJarJa">Hũ nguồn</Label>
                   <select
                     id="fromJarJa"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={fromJarId}
-                    onChange={(event) => setFromJarId(event.target.value)}
+                    onChange={(event) => {
+                      setFromJarId(event.target.value);
+                      clearFieldError("fromJarId");
+                    }}
                     disabled={loadingDeps}
                   >
-                    <option value="">— Chọn hũ —</option>
+                    <option value="">Chọn hũ</option>
                     {jars.map((j) => (
                       <option key={j.id} value={j.id}>
                         {j.name}
                       </option>
                     ))}
                   </select>
+                  {fieldError("fromJarId") ? (
+                    <p className="text-sm text-red-500">{fieldError("fromJarId")}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="faJa">
-                    Tài khoản đích (financialAccountId)
-                  </Label>
+                  <Label htmlFor="faJa">Tài khoản đích</Label>
                   <select
                     id="faJa"
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    className="brutal-select"
                     value={financialAccountId}
                     onChange={(event) =>
                       setFinancialAccountId(event.target.value)
                     }
                     disabled={loadingDeps}
                   >
-                    <option value="">— Manual —</option>
+                    <option value="">Chọn tài khoản</option>
                     {manualAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name}
@@ -459,7 +555,7 @@ export function AddTransactionPage() {
             ) : null}
 
             <div className="space-y-2">
-              <Label htmlFor="note">Ghi chú (note)</Label>
+              <Label htmlFor="note">Ghi chú</Label>
               <Input
                 id="note"
                 value={note}
@@ -471,17 +567,36 @@ export function AddTransactionPage() {
               <p className="text-sm text-red-500">{formError}</p>
             ) : null}
 
-            <Button
+            {loadingDeps ? (
+              <p className="text-sm font-medium text-neutral-600">
+                Đang tải danh sách hũ, tài khoản và danh mục…
+              </p>
+            ) : null}
+            {!loadingDeps && needsJar && jars.length === 0 ? (
+              <p className="text-sm font-medium text-amber-800">
+                Chưa có hũ nào.{" "}
+                <Link to={ROUTES.JARS} className="font-bold underline">
+                  Tạo hũ
+                </Link>{" "}
+                trước khi ghi chi tiêu hoặc chuyển tiền.
+              </p>
+            ) : null}
+            {!loadingDeps && type === "Income" && manualAccounts.length === 0 ? (
+              <p className="text-sm font-medium text-amber-800">
+                Chưa có tài khoản thủ công.{" "}
+                <Link to={ROUTES.ACCOUNTS} className="font-bold underline">
+                  Thêm nguồn tiền
+                </Link>{" "}
+                trước khi ghi thu nhập.
+              </p>
+            ) : null}
+            <button
               type="submit"
-              className="bg-[#6366F1] text-white hover:bg-[#4F46E5]"
-              disabled={isPending || loadingDeps}
+              className="brutal-btn-primary inline-flex h-10 w-full cursor-pointer items-center justify-center px-4 text-sm disabled:cursor-not-allowed sm:w-auto"
+              disabled={!canSubmit}
             >
-              {isPending
-                ? "Đang lưu…"
-                : loadingDeps
-                  ? "Đang tải danh sách…"
-                  : "Lưu giao dịch"}
-            </Button>
+              {isPending ? "Đang lưu…" : "Lưu giao dịch"}
+            </button>
           </form>
         </CardContent>
       </Card>

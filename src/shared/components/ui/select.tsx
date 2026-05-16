@@ -16,8 +16,8 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition-colors",
-      "focus-visible:border-[#6366F1]/50 focus-visible:ring-2 focus-visible:ring-[#6366F1]/25",
+      "flex h-10 w-full items-center justify-between gap-2 rounded-xl border-2 border-[#0a0a0a] bg-white px-3 py-2 text-sm shadow-[2px_2px_0_0_#0a0a0a] outline-none transition-colors",
+      "focus-visible:ring-2 focus-visible:ring-[#a8e087] focus-visible:ring-offset-0",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
       className,
@@ -75,7 +75,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-[100] max-h-96 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-lg",
+        "relative z-[100] max-h-96 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border-2 border-[#0a0a0a] bg-white text-neutral-900 shadow-[4px_4px_0_0_#0a0a0a]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
@@ -120,15 +120,15 @@ const SelectItem = React.forwardRef<
     className={cn(
       "relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none transition-colors",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
-      "data-[highlighted]:bg-indigo-50 data-[highlighted]:text-[#4F46E5]",
-      "data-[state=checked]:bg-indigo-50/80 data-[state=checked]:font-medium data-[state=checked]:text-[#4F46E5]",
+      "data-[highlighted]:bg-[#a8e087]/50 data-[highlighted]:text-[#0a0a0a]",
+      "data-[state=checked]:bg-[#a8e087]/40 data-[state=checked]:font-semibold data-[state=checked]:text-[#0a0a0a]",
       className,
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-[#6366F1]" strokeWidth={2.5} />
+        <Check className="h-4 w-4 text-[#0a0a0a]" strokeWidth={2.5} />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
