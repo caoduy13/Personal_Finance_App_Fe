@@ -20,12 +20,12 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { CategoryAppearancePicker } from "@/shared/components/CategoryAppearancePicker";
 import {
-  CategoryAppearancePicker,
   CATEGORY_COLOR_OPTIONS,
   CATEGORY_ICON_OPTIONS,
   isValidHexColor,
-} from "@/shared/components/CategoryAppearancePicker";
+} from "@/shared/components/categoryAppearance";
 import { getCategoryDisplayName } from "@/shared/constants/userCopy";
 import { parseApiError } from "@/shared/lib/apiErrors";
 import {

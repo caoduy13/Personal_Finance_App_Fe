@@ -121,35 +121,36 @@ export function ScheduleDateTimePicker({
   const parsed = React.useMemo(() => fromDatetimeLocalValue(value), [value]);
 
   const selectedDate = parsed ? new Date(parsed) : undefined;
-  const now = new Date();
-  const hour = parsed?.getHours() ?? now.getHours();
-  const minute = parsed?.getMinutes() ?? now.getMinutes();
+  const nowHour = new Date().getHours();
+  const nowMinute = new Date().getMinutes();
+  const hour = parsed?.getHours() ?? nowHour;
+  const minute = parsed?.getMinutes() ?? nowMinute;
   const effectiveMinute = MINUTES.includes(minute) ? minute : 0;
 
   const isTodaySelected =
-    selectedDate != null && isSameCalendarDay(selectedDate, now);
+    selectedDate != null && isSameCalendarDay(selectedDate, startOfToday());
 
-  const allowedHours = React.useMemo(() => {
-    let hours = [...HOURS];
-    if (disablePast && isTodaySelected) {
-      hours = hours.filter((h) => h >= now.getHours());
-    }
-    if (disableFuture && isTodaySelected) {
-      hours = hours.filter((h) => h <= now.getHours());
-    }
-    return hours.length > 0 ? hours : [now.getHours()];
-  }, [disablePast, disableFuture, isTodaySelected, now]);
+  let allowedHours = [...HOURS];
+  if (disablePast && isTodaySelected) {
+    allowedHours = allowedHours.filter((h) => h >= nowHour);
+  }
+  if (disableFuture && isTodaySelected) {
+    allowedHours = allowedHours.filter((h) => h <= nowHour);
+  }
+  if (allowedHours.length === 0) {
+    allowedHours = [nowHour];
+  }
 
-  const allowedMinutes = React.useMemo(() => {
-    let minutes = [...MINUTES];
-    if (disablePast && isTodaySelected && hour === now.getHours()) {
-      minutes = minutes.filter((m) => m >= now.getMinutes());
-    }
-    if (disableFuture && isTodaySelected && hour === now.getHours()) {
-      minutes = minutes.filter((m) => m <= now.getMinutes());
-    }
-    return minutes.length > 0 ? minutes : [0];
-  }, [disablePast, disableFuture, isTodaySelected, hour, now]);
+  let allowedMinutes = [...MINUTES];
+  if (disablePast && isTodaySelected && hour === nowHour) {
+    allowedMinutes = allowedMinutes.filter((m) => m >= nowMinute);
+  }
+  if (disableFuture && isTodaySelected && hour === nowHour) {
+    allowedMinutes = allowedMinutes.filter((m) => m <= nowMinute);
+  }
+  if (allowedMinutes.length === 0) {
+    allowedMinutes = [0];
+  }
 
   const effectiveHour = allowedHours.includes(hour)
     ? hour
