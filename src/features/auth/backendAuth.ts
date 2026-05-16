@@ -1,6 +1,7 @@
 import type { AxiosError } from "axios";
 import axios from "axios";
 import { apiClient } from "@/lib/axios";
+import { toFriendlyError } from "@/lib/apiError";
 import type { AuthResponse } from "./types";
 import { API_ENDPOINT } from "@/shared/constants";
 
@@ -79,17 +80,5 @@ export function mapAxiosAuthError(error: unknown): Error {
   if (!axios.isAxiosError(error))
     return error instanceof Error ? error : new Error(String(error));
 
-  const ax = error as AxiosError<{
-    error?: string;
-    message?: string;
-    title?: string;
-  }>;
-  const data = ax.response?.data;
-  const msg =
-    (typeof data === "object" && data?.error && String(data.error)) ||
-    (typeof data === "object" && data?.message && String(data.message)) ||
-    (typeof data === "object" && data?.title && String(data.title)) ||
-    ax.message ||
-    "Không đăng nhập được.";
-  return new Error(msg);
+  return toFriendlyError(error as AxiosError, "Không đăng nhập được.");
 }

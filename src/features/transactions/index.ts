@@ -1,5 +1,6 @@
 export { TransactionsPage } from "./pages/TransactionsPage";
 export { AddTransactionPage } from "./pages/AddTransactionPage";
+export { TransactionDetailPage } from "./pages/TransactionDetailPage";
 export { transactionService } from "./services";
 export type {
   TransactionItem,
@@ -9,6 +10,7 @@ export type {
   UpdateTransactionPayload,
 } from "./types";
 export {
+  useTransaction,
   useTransactions,
   useCreateTransaction,
   useUpdateTransaction,

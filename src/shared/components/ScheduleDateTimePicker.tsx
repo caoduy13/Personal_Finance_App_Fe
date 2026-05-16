@@ -29,6 +29,13 @@ function fromDatetimeLocalValue(s: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function clampPastTime(d: Date, disablePastTime: boolean) {
+  if (!disablePastTime || d.getTime() >= Date.now()) return d;
+  const n = new Date();
+  n.setSeconds(0, 0);
+  return n;
+}
+
 export type ScheduleDateTimePickerProps = {
   id?: string;
   value: string;
@@ -36,6 +43,10 @@ export type ScheduleDateTimePickerProps = {
   className?: string;
   /** Mặc định true (lịch broadcast). Đặt false khi cần ngày quá khứ (audit, giao dịch…). */
   disablePast?: boolean;
+  /** Đặt true để không cho chọn ngày sau hôm nay. */
+  disableFuture?: boolean;
+  /** Khi `disablePast` bật, khóa cả giờ/phút đã qua nếu ngày đang chọn là hôm nay. */
+  disablePastTime?: boolean;
   /** Hiện nút «Xóa» để để trống. Mặc định true; đặt false khi bắt buộc có ngày giờ. */
   allowClear?: boolean;
 };
@@ -46,12 +57,14 @@ function TimeColumn({
   selected,
   onSelect,
   formatLabel,
+  isDisabled,
 }: {
   label: string;
   values: number[];
   selected: number;
   onSelect: (v: number) => void;
   formatLabel: (v: number) => string;
+  isDisabled?: (v: number) => boolean;
 }) {
   const selectedRef = React.useRef<HTMLButtonElement>(null);
 
@@ -65,22 +78,28 @@ function TimeColumn({
         {label}
       </p>
       <div className="scrollbar-none flex max-h-[13.5rem] w-11 flex-col gap-0.5 overflow-y-auto rounded-lg border border-indigo-100/90 bg-slate-50/90 py-1 pr-0.5">
-        {values.map((v) => (
-          <button
-            key={v}
-            ref={selected === v ? selectedRef : undefined}
-            type="button"
-            onClick={() => onSelect(v)}
-            className={cn(
-              "mx-0.5 min-h-8 shrink-0 rounded-md px-1 py-1 text-center text-xs tabular-nums transition-colors",
-              selected === v
-                ? "bg-[#6366F1] font-medium text-white shadow-sm"
-                : "text-slate-700 hover:bg-indigo-100/70",
-            )}
-          >
-            {formatLabel(v)}
-          </button>
-        ))}
+        {values.map((v) => {
+          const disabled = isDisabled?.(v) ?? false;
+          return (
+            <button
+              key={v}
+              ref={selected === v ? selectedRef : undefined}
+              type="button"
+              disabled={disabled}
+              onClick={() => onSelect(v)}
+              className={cn(
+                "mx-0.5 min-h-8 shrink-0 rounded-md px-1 py-1 text-center text-xs tabular-nums transition-colors",
+                selected === v
+                  ? "bg-[#6366F1] font-medium text-white shadow-sm"
+                  : "text-slate-700 hover:bg-indigo-100/70",
+                disabled &&
+                  "cursor-not-allowed text-slate-300 hover:bg-transparent",
+              )}
+            >
+              {formatLabel(v)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -92,6 +111,8 @@ export function ScheduleDateTimePicker({
   onChange,
   className,
   disablePast = true,
+  disableFuture = false,
+  disablePastTime = false,
   allowClear = true,
 }: ScheduleDateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
@@ -114,8 +135,12 @@ export function ScheduleDateTimePicker({
     const m = next.m ?? effectiveMinute;
     const d = new Date(base);
     d.setHours(h, m, 0, 0);
-    onChange(toDatetimeLocalValue(d));
+    onChange(toDatetimeLocalValue(clampPastTime(d, disablePastTime)));
   }
+
+  const isSelectedToday = Boolean(
+    selectedDate && selectedDate.toDateString() === now.toDateString(),
+  );
 
   const displayLabel = parsed
     ? format(parsed, "dd/MM/yyyy HH:mm", { locale: vi })
@@ -165,6 +190,26 @@ export function ScheduleDateTimePicker({
                     },
                   }
                 : {})}
+              {...(disableFuture
+                ? {
+                    disabled: {
+                      ...(disablePast
+                        ? {
+                            before: (() => {
+                              const t = new Date();
+                              t.setHours(0, 0, 0, 0);
+                              return t;
+                            })(),
+                          }
+                        : {}),
+                      after: (() => {
+                        const t = new Date();
+                        t.setHours(23, 59, 59, 999);
+                        return t;
+                      })(),
+                    },
+                  }
+                : {})}
               initialFocus
             />
             <div
@@ -202,6 +247,9 @@ export function ScheduleDateTimePicker({
               selected={hour}
               onSelect={(h) => applyDateTime({ h })}
               formatLabel={(v) => pad2(v)}
+              isDisabled={(v) =>
+                disablePastTime && isSelectedToday && v < now.getHours()
+              }
             />
             <TimeColumn
               label="Phút"
@@ -209,6 +257,12 @@ export function ScheduleDateTimePicker({
               selected={effectiveMinute}
               onSelect={(m) => applyDateTime({ m })}
               formatLabel={(v) => pad2(v)}
+              isDisabled={(v) =>
+                disablePastTime &&
+                isSelectedToday &&
+                hour === now.getHours() &&
+                v < now.getMinutes()
+              }
             />
           </div>
         </div>

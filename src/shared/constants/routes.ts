@@ -6,6 +6,8 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
   TRANSACTIONS: "/transactions",
   TRANSACTIONS_ADD: "/transactions/add",
+  TRANSACTION_DETAIL: "/transactions/:id",
+  TRANSACTION_DETAIL_PATH: (id: string) => `/transactions/${id}`,
   ACCOUNTS: "/accounts",
   JARS: "/jars",
   BUDGET: "/budget",

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -14,10 +15,12 @@ import {
   useUpdateNotificationStatus,
   type NotificationItem,
 } from "@/features/notifications";
+import { ROUTES } from "@/shared/constants/routes";
 
 const PAGE_SIZE = 10;
 
 export function UserNotificationsPage() {
+  const navigate = useNavigate();
   const [pageIndex, setPageIndex] = useState(1);
   const [status, setStatus] = useState<"" | "read" | "unread">("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -43,6 +46,35 @@ export function UserNotificationsPage() {
   const markRead = async (item: NotificationItem) => {
     if (item.isRead) return;
     await updateStatus({ ids: [item.id], isRead: true, markAll: false });
+  };
+
+  const openRelatedTarget = (item: NotificationItem) => {
+    const metadata = item.metadata ?? {};
+    const transactionId = String(metadata.transactionId ?? "").trim();
+    const limitId = String(metadata.limitId ?? "").trim();
+    const goalId = String(metadata.goalId ?? "").trim();
+    const jarId = String(metadata.jarId ?? "").trim();
+
+    if (transactionId) {
+      navigate(ROUTES.TRANSACTION_DETAIL_PATH(transactionId));
+      return;
+    }
+    if (limitId || item.type === "SpendingAlert") {
+      navigate(ROUTES.LIMITS);
+      return;
+    }
+    if (goalId || item.type === "GoalUpdate") {
+      navigate(ROUTES.GOALS);
+      return;
+    }
+    if (jarId) {
+      navigate(ROUTES.JARS);
+    }
+  };
+
+  const handleNotificationClick = async (item: NotificationItem) => {
+    await markRead(item);
+    openRelatedTarget(item);
   };
 
   const markAllRead = async () => {
@@ -142,7 +174,7 @@ export function UserNotificationsPage() {
                     className={`flex w-full cursor-pointer gap-3 px-4 py-3 text-left transition hover:bg-violet-50/60 ${
                       item.isRead ? "bg-white" : "bg-[#6366F1]/[0.06]"
                     }`}
-                    onClick={() => void markRead(item)}
+                    onClick={() => void handleNotificationClick(item)}
                   >
                     {!item.isRead ? (
                       <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#6366F1]" />

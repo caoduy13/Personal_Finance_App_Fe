@@ -13,6 +13,23 @@ export function useTransactions(params?: TransactionListParams) {
   });
 }
 
+export function useTransaction(id: string | undefined) {
+  return useQuery({
+    queryKey: ["transactions", "detail", id],
+    queryFn: () => transactionService.getById(id!),
+    enabled: Boolean(id),
+  });
+}
+
+function invalidateTransactionSideEffects(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  queryClient.invalidateQueries({ queryKey: ["jars"] });
+  queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
+  queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+  queryClient.invalidateQueries({ queryKey: ["budget", "limits"] });
+  queryClient.invalidateQueries({ queryKey: ["notifications"] });
+}
+
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
 
@@ -20,10 +37,7 @@ export function useCreateTransaction() {
     mutationFn: (payload: CreateTransactionPayload) =>
       transactionService.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
-      queryClient.invalidateQueries({ queryKey: ["jars"] });
-      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      invalidateTransactionSideEffects(queryClient);
     },
   });
 }
@@ -40,10 +54,7 @@ export function useUpdateTransaction() {
       payload: UpdateTransactionPayload;
     }) => transactionService.update(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
-      queryClient.invalidateQueries({ queryKey: ["jars"] });
-      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      invalidateTransactionSideEffects(queryClient);
     },
   });
 }
@@ -54,10 +65,7 @@ export function useDeleteTransaction() {
   return useMutation({
     mutationFn: (id: string) => transactionService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
-      queryClient.invalidateQueries({ queryKey: ["jars"] });
-      queryClient.invalidateQueries({ queryKey: ["financial-accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      invalidateTransactionSideEffects(queryClient);
     },
   });
 }

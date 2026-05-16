@@ -1,6 +1,14 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Landmark, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  ExternalLink,
+  Landmark,
+  Pencil,
+  Plus,
+  RefreshCw,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -34,9 +42,10 @@ import {
 import { ROUTES } from "@/shared/constants/routes";
 import { useFinancialAccounts } from "../hooks/useFinancialAccounts";
 import {
-  useCreateLinkApiFinancialAccount,
+  useConnectCassoFinancialAccount,
   useCreateManualFinancialAccount,
   useDeactivateFinancialAccount,
+  useSyncCassoFinancialAccount,
   useUpdateFinancialAccount,
 } from "../hooks/useFinancialAccountMutations";
 import type { FinancialAccountItem } from "../types";
@@ -56,12 +65,18 @@ function connectionLabel(mode: string) {
   return mode;
 }
 
+function buildCassoReturnUrl() {
+  return new URL(ROUTES.ACCOUNTS, window.location.origin).toString();
+}
+
 export function AccountsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data = [], isLoading, isError, refetch } = useFinancialAccounts();
   const { mutateAsync: createManual, isPending: creatingManual } =
     useCreateManualFinancialAccount();
-  const { mutateAsync: createLink, isPending: creatingLink } =
-    useCreateLinkApiFinancialAccount();
+  const { mutateAsync: connectCasso, isPending: connectingCasso } =
+    useConnectCassoFinancialAccount();
+  const { mutateAsync: syncCasso } = useSyncCassoFinancialAccount();
   const { mutateAsync: updateAcc, isPending: updating } =
     useUpdateFinancialAccount();
   const { mutateAsync: deactivate, isPending: deactivating } =
@@ -78,11 +93,9 @@ export function AccountsPage() {
   const [mCurrency, setMCurrency] = useState("VND");
   const [mDefault, setMDefault] = useState(false);
 
-  const [lBank, setLBank] = useState("");
-  const [lCode, setLCode] = useState("");
-  const [lNumber, setLNumber] = useState("");
-  const [lHolder, setLHolder] = useState("");
-  const [lDefault, setLDefault] = useState(false);
+  const [cassoDefault, setCassoDefault] = useState(false);
+  const [cassoAutoSync, setCassoAutoSync] = useState(true);
+  const [syncingAccountId, setSyncingAccountId] = useState<string | null>(null);
 
   const [eName, setEName] = useState("");
   const [eBalance, setEBalance] = useState("");
@@ -98,11 +111,8 @@ export function AccountsPage() {
   };
 
   const openLink = () => {
-    setLBank("");
-    setLCode("");
-    setLNumber("");
-    setLHolder("");
-    setLDefault(false);
+    setCassoDefault(false);
+    setCassoAutoSync(true);
     setLinkOpen(true);
   };
 
@@ -112,6 +122,38 @@ export function AccountsPage() {
     setEBalance(String(a.currentBalance));
     setEDefault(a.isDefault);
   };
+
+  useEffect(() => {
+    const cassoStatus = searchParams.get("cassoStatus");
+    if (!cassoStatus) return;
+
+    const callbackMessage =
+      searchParams.get("message") ??
+      searchParams.get("error") ??
+      searchParams.get("cassoMessage");
+
+    if (cassoStatus === "success") {
+      toast.success("Đã liên kết ngân hàng qua Casso", {
+        description: callbackMessage ?? "Danh sách tài khoản đang được làm mới.",
+      });
+      void refetch();
+    } else {
+      toast.error("Liên kết Casso thất bại", {
+        description: callbackMessage ?? "Bạn có thể thử lại sau.",
+      });
+    }
+
+    const next = new URLSearchParams(searchParams);
+    [
+      "cassoStatus",
+      "message",
+      "error",
+      "cassoMessage",
+      "financialAccountId",
+      "sessionId",
+    ].forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  }, [refetch, searchParams, setSearchParams]);
 
   const submitManual = async () => {
     try {
@@ -129,19 +171,19 @@ export function AccountsPage() {
     }
   };
 
-  const submitLink = async () => {
+  const submitCassoConnect = async () => {
     try {
-      await createLink({
-        bankName: lBank.trim(),
-        bankCode: lCode.trim() || null,
-        accountNumber: lNumber.trim(),
-        accountHolderName: lHolder.trim() || null,
-        isDefault: lDefault,
+      const session = await connectCasso({
+        returnUrl: buildCassoReturnUrl(),
+        isDefault: cassoDefault,
+        autoSync: cassoAutoSync,
       });
-      toast.success("Đã tạo tài khoản liên kết");
-      setLinkOpen(false);
+      toast.message("Đang chuyển sang Casso", {
+        description: "Hoàn tất cấp quyền ở Casso để quay lại FinJar.",
+      });
+      window.location.assign(session.authorizationUrl);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Không liên kết được");
+      toast.error(e instanceof Error ? e.message : "Không tạo được phiên Casso");
     }
   };
 
@@ -175,11 +217,26 @@ export function AccountsPage() {
     }
   };
 
-  const onSyncCasso = () => {
-    toast.message("Đồng bộ Casso", {
-      description:
-        "API đồng bộ chưa được nối trên FE. Dùng dashboard nhà cung cấp hoặc chờ endpoint sync.",
-    });
+  const onSyncCasso = async (account: FinancialAccountItem) => {
+    setSyncingAccountId(account.id);
+    try {
+      const result = await syncCasso({
+        id: account.id,
+        payload: {
+          page: 1,
+          pageSize: 100,
+          sort: "DESC",
+          triggerProviderSync: true,
+        },
+      });
+      toast.success(result.message || "Đã đồng bộ Casso", {
+        description: `${result.createdCount} giao dịch mới, ${result.skippedCount} giao dịch bỏ qua.`,
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Không đồng bộ được Casso");
+    } finally {
+      setSyncingAccountId(null);
+    }
   };
 
   if (isLoading) {
@@ -235,7 +292,7 @@ export function AccountsPage() {
             <Button
               type="button"
               variant="outline"
-              className="cursor-pointer gap-2 border-violet-200/80 bg-white/80 hover:bg-violet-50"
+              className="hidden cursor-pointer gap-2 border-violet-200/80 bg-white/80 hover:bg-violet-50"
               onClick={openLink}
             >
               <Landmark className="h-4 w-4" />
@@ -251,7 +308,7 @@ export function AccountsPage() {
             <Landmark className="mx-auto mb-3 h-10 w-10 text-violet-300" />
             <p>Chưa có nguồn tiền nào.</p>
             <p className="mt-1">
-              Tạo tài khoản Cash thủ công hoặc liên kết STK ngân hàng.
+              Tạo tài khoản Cash thủ công hoặc liên kết ngân hàng qua Casso.
             </p>
             <div className="mt-4 flex justify-center gap-2">
               <Button
@@ -264,7 +321,7 @@ export function AccountsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-violet-200/80 hover:bg-violet-50"
+                className="hidden border-violet-200/80 hover:bg-violet-50"
                 onClick={openLink}
               >
                 Liên kết ngân hàng
@@ -330,16 +387,17 @@ export function AccountsPage() {
                     <Pencil className="h-3.5 w-3.5" />
                     Sửa
                   </Button>
-                  {a.connectionMode === "LinkedApi" ? (
+                  {a.connectionMode === "LinkedApi" && a.isActive ? (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="cursor-pointer gap-1.5 border-violet-200/80 hover:bg-violet-50"
-                      onClick={onSyncCasso}
+                      disabled={syncingAccountId === a.id}
+                      onClick={() => void onSyncCasso(a)}
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
-                      Sync Casso
+                      {syncingAccountId === a.id ? "Đang sync..." : "Sync Casso"}
                     </Button>
                   ) : null}
                   {a.isActive ? (
@@ -455,54 +513,46 @@ export function AccountsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Liên kết API */}
+      {/* Liên kết Casso */}
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Liên kết ngân hàng</DialogTitle>
+            <DialogTitle>Liên kết ngân hàng qua Casso</DialogTitle>
+            <DialogDescription>
+              Bạn sẽ được chuyển sang Casso để cấp quyền truy cập tài khoản.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="acc-l-bank">Tên ngân hàng</Label>
-              <Input
-                id="acc-l-bank"
-                value={lBank}
-                onChange={(e) => setLBank(e.target.value)}
-                placeholder="Vietcombank"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="acc-l-code">Mã ngân hàng (tuỳ chọn)</Label>
-              <Input
-                id="acc-l-code"
-                value={lCode}
-                onChange={(e) => setLCode(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="acc-l-num">Số tài khoản</Label>
-              <Input
-                id="acc-l-num"
-                value={lNumber}
-                onChange={(e) => setLNumber(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="acc-l-holder">Chủ tài khoản (tuỳ chọn)</Label>
-              <Input
-                id="acc-l-holder"
-                value={lHolder}
-                onChange={(e) => setLHolder(e.target.value)}
-              />
+            <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-[#6366F1]" />
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p className="font-medium text-slate-800">OAuth Casso</p>
+                  <p>
+                    FinJar không yêu cầu nhập số tài khoản thủ công. Backend sẽ
+                    nhận callback từ Casso và tạo tài khoản liên kết sau khi cấp
+                    quyền thành công.
+                  </p>
+                </div>
+              </div>
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={lDefault}
-                onChange={(e) => setLDefault(e.target.checked)}
+                checked={cassoDefault}
+                onChange={(e) => setCassoDefault(e.target.checked)}
                 className="h-4 w-4 accent-[#6366F1]"
               />
-              Đặt làm mặc định
+              Đặt làm tài khoản mặc định
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={cassoAutoSync}
+                onChange={(e) => setCassoAutoSync(e.target.checked)}
+                className="h-4 w-4 accent-[#6366F1]"
+              />
+              Tự đồng bộ giao dịch ban đầu sau khi liên kết
             </label>
           </div>
           <DialogFooter>
@@ -515,13 +565,12 @@ export function AccountsPage() {
             </Button>
             <Button
               type="button"
-              className="bg-[#6366F1] text-white"
-              disabled={
-                creatingLink || !lBank.trim() || !lNumber.trim()
-              }
-              onClick={() => void submitLink()}
+              className="gap-2 bg-[#6366F1] text-white"
+              disabled={connectingCasso}
+              onClick={() => void submitCassoConnect()}
             >
-              {creatingLink ? "Đang lưu…" : "Liên kết"}
+              <ExternalLink className="h-4 w-4" />
+              {connectingCasso ? "Đang tạo phiên..." : "Tiếp tục với Casso"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -619,3 +668,4 @@ export function AccountsPage() {
     </section>
   );
 }
+

@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { financialAccountService } from "../services";
 import type {
+  CassoSyncPayload,
+  CreateCassoConnectionPayload,
   CreateLinkApiFinancialAccountPayload,
   CreateManualFinancialAccountPayload,
   UpdateFinancialAccountPayload,
@@ -27,6 +29,31 @@ export function useCreateLinkApiFinancialAccount() {
       financialAccountService.createLinkApi(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QK });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+    },
+  });
+}
+
+export function useConnectCassoFinancialAccount() {
+  return useMutation({
+    mutationFn: (payload: CreateCassoConnectionPayload) =>
+      financialAccountService.connectCasso(payload),
+  });
+}
+
+export function useSyncCassoFinancialAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload?: CassoSyncPayload;
+    }) => financialAccountService.syncCasso(id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QK });
+      void queryClient.invalidateQueries({ queryKey: ["transactions", "list"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
     },
   });

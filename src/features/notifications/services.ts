@@ -10,9 +10,24 @@ import type {
 
 const BASE = API_ENDPOINT.NOTIFICATIONS;
 
+function parseMetadata(value: unknown): Record<string, unknown> | null {
+  if (!value) return null;
+  if (typeof value === "object") return value as Record<string, unknown>;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function mapItem(raw: Record<string, unknown>): NotificationItem {
   const id = raw.id ?? raw.Id;
   const occurredAt = raw.occurredAt ?? raw.OccurredAt;
+  const metadata = raw.metadataJson ?? raw.MetadataJson ?? raw.metadata ?? raw.Metadata;
   return {
     id: String(id ?? ""),
     type: String(raw.type ?? raw.Type ?? ""),
@@ -25,6 +40,7 @@ function mapItem(raw: Record<string, unknown>): NotificationItem {
         : occurredAt != null
           ? new Date(occurredAt as string | number).toISOString()
           : "",
+    metadata: parseMetadata(metadata),
   };
 }
 

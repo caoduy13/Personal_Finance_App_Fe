@@ -4,6 +4,7 @@ import { vi } from "date-fns/locale";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUserCategories } from "@/features/categories";
+import { parseApiError } from "@/lib/apiError";
 import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -81,6 +82,7 @@ export function RemindersPage() {
   const [cCategory, setCCategory] = useState("__none__");
   const [cNotify, setCNotify] = useState("1");
   const [cNote, setCNote] = useState("");
+  const [cStartError, setCStartError] = useState<string | null>(null);
   const [cStart, setCStart] = useState(() => {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -105,6 +107,7 @@ export function RemindersPage() {
     setCCategory("__none__");
     setCNotify("1");
     setCNote("");
+    setCStartError(null);
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
     setCStart(
@@ -133,8 +136,17 @@ export function RemindersPage() {
       return;
     }
     const parsedStart = new Date(cStart);
+    setCStartError(null);
     if (Number.isNaN(parsedStart.getTime())) {
+      setCStartError("Ngày bắt đầu không hợp lệ.");
       toast.error("Ngày bắt đầu không hợp lệ.");
+      return;
+    }
+    const now = new Date();
+    now.setSeconds(0, 0);
+    if (parsedStart.getTime() < now.getTime()) {
+      setCStartError("Ngày bắt đầu nhắc lịch không được ở quá khứ.");
+      toast.error("Ngày bắt đầu nhắc lịch không được ở quá khứ.");
       return;
     }
     const dayNum = cDay.trim() === "" ? undefined : Number(cDay);
@@ -161,7 +173,9 @@ export function RemindersPage() {
       toast.success("Đã tạo nhắc lịch");
       setCreateOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không tạo được.");
+      const apiError = parseApiError(err, "Không tạo được nhắc lịch.");
+      if (apiError.field === "startDate") setCStartError(apiError.message);
+      toast.error(apiError.message);
     }
   };
 
@@ -384,9 +398,13 @@ export function RemindersPage() {
                 <ScheduleDateTimePicker
                   value={cStart}
                   onChange={setCStart}
-                  disablePast={false}
+                  disablePast
+                  disablePastTime
                   allowClear={false}
                 />
+                {cStartError ? (
+                  <p className="text-sm text-red-500">{cStartError}</p>
+                ) : null}
               </div>
               <div className="grid gap-2">
                 <Label>Danh mục (tùy chọn)</Label>

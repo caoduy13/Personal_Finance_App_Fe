@@ -1,7 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage } from "@/features/auth";
 import { DashboardPage } from "@/features/dashboard";
-import { TransactionsPage, AddTransactionPage } from "@/features/transactions";
+import {
+  AddTransactionPage,
+  TransactionDetailPage,
+  TransactionsPage,
+} from "@/features/transactions";
 import { AccountsPage } from "@/features/financial-accounts";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
@@ -70,6 +74,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.DASHBOARD, element: <DashboardPage /> },
       { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
+      { path: ROUTES.TRANSACTION_DETAIL, element: <TransactionDetailPage /> },
       { path: ROUTES.ACCOUNTS, element: <AccountsPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },
       { path: ROUTES.BUDGET, element: <BudgetPage /> },

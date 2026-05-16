@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, PiggyBank, Plus, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useJars } from "@/features/jars/hooks/useJars";
+import { parseApiError } from "@/lib/apiError";
 import {
   useCreateGoal,
   useDeleteGoal,
@@ -74,6 +75,16 @@ function toDatetimeLocalValue(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function todayInputMin() {
+  return toDatetimeLocalValue(startOfToday());
+}
+
 export function UserGoalsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useGoals();
@@ -85,18 +96,27 @@ export function UserGoalsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editListItem, setEditListItem] = useState<GoalListItem | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "Active" | "Completed"
+  >("all");
 
   const [cTitle, setCTitle] = useState("");
   const [cTarget, setCTarget] = useState("");
   const [cDue, setCDue] = useState(() => toDatetimeLocalValue(new Date()));
   const [cJar, setCJar] = useState("__none__");
   const [cNote, setCNote] = useState("");
+  const [cDueError, setCDueError] = useState<string | null>(null);
 
   const [eTitle, setETitle] = useState("");
   const [eTarget, setETarget] = useState("");
   const [eDue, setEDue] = useState("");
   const [eJar, setEJar] = useState("__none__");
   const [eNote, setENote] = useState("");
+  const [eDueError, setEDueError] = useState<string | null>(null);
+  const visibleGoals =
+    statusFilter === "all"
+      ? data ?? []
+      : (data ?? []).filter((goal) => goal.status === statusFilter);
 
   const openEdit = async (g: GoalListItem) => {
     try {
@@ -110,6 +130,7 @@ export function UserGoalsPage() {
       setEDue(toDatetimeLocalValue(Number.isNaN(d.getTime()) ? new Date() : d));
       setEJar(detail.linkedJarId ?? "__none__");
       setENote(detail.note ?? "");
+      setEDueError(null);
       setEditListItem(g);
     } catch (err) {
       toast.error(
@@ -124,6 +145,7 @@ export function UserGoalsPage() {
     setCDue(toDatetimeLocalValue(new Date()));
     setCJar("__none__");
     setCNote("");
+    setCDueError(null);
     setCreateOpen(true);
   };
 
@@ -136,8 +158,15 @@ export function UserGoalsPage() {
       return;
     }
     const parsedDue = new Date(cDue);
+    setCDueError(null);
     if (Number.isNaN(parsedDue.getTime())) {
+      setCDueError("Hạn không hợp lệ.");
       toast.error("Hạn không hợp lệ.");
+      return;
+    }
+    if (parsedDue < startOfToday()) {
+      setCDueError("Hạn mục tiêu không được ở quá khứ.");
+      toast.error("Hạn mục tiêu không được ở quá khứ.");
       return;
     }
     try {
@@ -151,7 +180,9 @@ export function UserGoalsPage() {
       toast.success("Đã tạo mục tiêu");
       setCreateOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không tạo được.");
+      const apiError = parseApiError(err, "Không tạo được mục tiêu.");
+      if (apiError.field === "dueDate") setCDueError(apiError.message);
+      toast.error(apiError.message);
     }
   };
 
@@ -165,8 +196,15 @@ export function UserGoalsPage() {
       return;
     }
     const parsedDue = new Date(eDue);
+    setEDueError(null);
     if (Number.isNaN(parsedDue.getTime())) {
+      setEDueError("Hạn không hợp lệ.");
       toast.error("Hạn không hợp lệ.");
+      return;
+    }
+    if (parsedDue < startOfToday()) {
+      setEDueError("Hạn mục tiêu không được ở quá khứ.");
+      toast.error("Hạn mục tiêu không được ở quá khứ.");
       return;
     }
     try {
@@ -183,7 +221,9 @@ export function UserGoalsPage() {
       toast.success("Đã cập nhật mục tiêu");
       setEditListItem(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không cập nhật được.");
+      const apiError = parseApiError(err, "Không cập nhật được mục tiêu.");
+      if (apiError.field === "dueDate") setEDueError(apiError.message);
+      toast.error(apiError.message);
     }
   };
 
@@ -260,12 +300,32 @@ export function UserGoalsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          ["all", "Tất cả"],
+          ["Active", "Đang làm"],
+          ["Completed", "Đã hoàn thành"],
+        ].map(([value, label]) => (
+          <Button
+            key={value}
+            type="button"
+            variant={statusFilter === value ? "default" : "outline"}
+            className="cursor-pointer"
+            onClick={() =>
+              setStatusFilter(value as "all" | "Active" | "Completed")
+            }
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        {data.length === 0 ? (
+        {visibleGoals.length === 0 ? (
           <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none md:col-span-2">
             <CardContent className="py-10 text-center text-sm text-slate-600">
               <Target className="mx-auto mb-3 h-10 w-10 text-violet-300" />
-              <p>Chưa có mục tiêu nào.</p>
+              <p>Chưa có mục tiêu phù hợp.</p>
               <Button
                 type="button"
                 className="mt-4 cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
@@ -276,7 +336,7 @@ export function UserGoalsPage() {
             </CardContent>
           </Card>
         ) : (
-          data.map((goal) => (
+          visibleGoals.map((goal) => (
             <Card
               key={goal.id}
               className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
@@ -405,9 +465,13 @@ export function UserGoalsPage() {
                 <Input
                   id="g-c-due"
                   type="datetime-local"
+                  min={todayInputMin()}
                   value={cDue}
                   onChange={(ev) => setCDue(ev.target.value)}
                 />
+                {cDueError ? (
+                  <p className="text-sm text-red-500">{cDueError}</p>
+                ) : null}
               </div>
               <div className="grid gap-2">
                 <Label>Hũ tiết kiệm (tùy chọn)</Label>
@@ -487,9 +551,13 @@ export function UserGoalsPage() {
                 <Label>Hạn</Label>
                 <Input
                   type="datetime-local"
+                  min={todayInputMin()}
                   value={eDue}
                   onChange={(ev) => setEDue(ev.target.value)}
                 />
+                {eDueError ? (
+                  <p className="text-sm text-red-500">{eDueError}</p>
+                ) : null}
               </div>
               <div className="grid gap-2">
                 <Label>Hũ tiết kiệm</Label>

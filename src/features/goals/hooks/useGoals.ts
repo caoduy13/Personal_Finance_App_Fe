@@ -26,6 +26,7 @@ export function useCreateGoal() {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -40,6 +41,7 @@ export function useUpdateGoal() {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
       queryClient.invalidateQueries({ queryKey: ["jars"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

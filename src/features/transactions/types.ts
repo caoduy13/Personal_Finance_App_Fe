@@ -10,10 +10,14 @@ export interface TransactionItem {
   financialAccountName?: string | null;
   jarName?: string | null;
   categoryName?: string | null;
+  financialAccountId?: string | null;
+  jarId?: string | null;
+  categoryId?: string | null;
 }
 
 export interface TransactionPagination {
-  page: number;
+  page?: number;
+  pageIndex: number;
   pageSize: number;
   totalCount: number;
   totalPages: number;

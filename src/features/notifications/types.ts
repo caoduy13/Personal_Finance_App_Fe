@@ -5,6 +5,7 @@ export interface NotificationItem {
   body: string;
   isRead: boolean;
   occurredAt: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface NotificationListParams {

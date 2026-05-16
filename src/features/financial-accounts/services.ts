@@ -1,6 +1,10 @@
 import { apiClient } from "@/lib/axios";
 import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 import type {
+  CassoConnectionSession,
+  CassoSyncPayload,
+  CassoSyncResult,
+  CreateCassoConnectionPayload,
   CreateLinkApiFinancialAccountPayload,
   CreateManualFinancialAccountPayload,
   FinancialAccountItem,
@@ -18,6 +22,11 @@ function optStr(v: unknown): string | null {
   return String(v);
 }
 
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function normalizeRow(raw: Record<string, unknown>): FinancialAccountItem {
   return {
     id: strId(raw.id),
@@ -25,7 +34,7 @@ function normalizeRow(raw: Record<string, unknown>): FinancialAccountItem {
     accountType: String(raw.accountType ?? ""),
     connectionMode: String(raw.connectionMode ?? ""),
     currency: String(raw.currency ?? "VND"),
-    currentBalance: Number(raw.currentBalance ?? 0),
+    currentBalance: num(raw.currentBalance),
     isActive: Boolean(raw.isActive),
     isDefault: Boolean(raw.isDefault),
     providerName: optStr(raw.providerName),
@@ -37,6 +46,25 @@ function normalizeRow(raw: Record<string, unknown>): FinancialAccountItem {
 function asRowArray(raw: unknown): FinancialAccountItem[] {
   const list = Array.isArray(raw) ? raw : [];
   return list.map((x) => normalizeRow(x as Record<string, unknown>));
+}
+
+function normalizeCassoSession(raw: unknown): CassoConnectionSession {
+  const r = raw as Record<string, unknown>;
+  return {
+    sessionId: strId(r.sessionId),
+    authorizationUrl: String(r.authorizationUrl ?? ""),
+    expiresAt: String(r.expiresAt ?? ""),
+  };
+}
+
+function normalizeSyncResult(raw: unknown): CassoSyncResult {
+  const r = raw as Record<string, unknown>;
+  return {
+    receivedCount: num(r.receivedCount),
+    createdCount: num(r.createdCount),
+    skippedCount: num(r.skippedCount),
+    message: String(r.message ?? ""),
+  };
 }
 
 export const financialAccountService = {
@@ -74,6 +102,40 @@ export const financialAccountService = {
       accountHolderName: payload.accountHolderName?.trim() || null,
       isDefault: payload.isDefault,
     });
+  },
+
+  async connectCasso(
+    payload: CreateCassoConnectionPayload,
+  ): Promise<CassoConnectionSession> {
+    const session = normalizeCassoSession(
+      await apiClient.post(`${BASE}/casso/connect`, {
+        returnUrl: payload.returnUrl ?? null,
+        isDefault: payload.isDefault ?? null,
+        autoSync: payload.autoSync ?? true,
+      }),
+    );
+
+    if (!session.authorizationUrl) {
+      throw new Error("Backend không trả authorizationUrl từ Casso.");
+    }
+
+    return session;
+  },
+
+  async syncCasso(
+    id: string,
+    payload: CassoSyncPayload = {},
+  ): Promise<CassoSyncResult> {
+    const raw = await apiClient.post(`${BASE}/${id}/sync`, {
+      fromDate: payload.fromDate ?? null,
+      toDate: payload.toDate ?? null,
+      page: payload.page ?? 1,
+      pageSize: payload.pageSize ?? 100,
+      sort: payload.sort ?? "DESC",
+      triggerProviderSync: payload.triggerProviderSync ?? true,
+    });
+
+    return normalizeSyncResult(raw);
   },
 
   async update(

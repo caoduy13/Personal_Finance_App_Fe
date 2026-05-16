@@ -15,8 +15,9 @@ import { ROUTES } from "@/shared/constants";
 import { useFinancialAccounts } from "@/features/financial-accounts";
 import { useUserCategories } from "@/features/categories";
 import { useJars } from "@/features/jars/hooks/useJars";
+import { parseApiError } from "@/lib/apiError";
 import { useCreateTransaction } from "../hooks/useTransactions";
-import type { TransactionType } from "../types";
+import type { CreateTransactionPayload, TransactionType } from "../types";
 
 type TransferMode = "jarToJar" | "accountToJar" | "jarToAccount";
 
@@ -50,42 +51,44 @@ export function AddTransactionPage() {
   });
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const loadingDeps = loadingAccounts || loadingCategories || loadingJars;
 
-  const validateAndBuild = (): {
-    type: TransactionType;
-    amount: number;
-    note?: string;
-    categoryId?: string | null;
-    financialAccountId?: string | null;
-    fromJarId?: string | null;
-    toJarId?: string | null;
-    date: string;
-  } | null => {
+  const validateAndBuild = (): CreateTransactionPayload | null => {
     setFormError(null);
+    setFieldErrors({});
     const num = Number(amount);
     if (!Number.isFinite(num) || num <= 0) {
-      setFormError("Số tiền phải lớn hơn 0.");
+      setFieldErrors({ amount: "Số tiền giao dịch phải lớn hơn 0." });
       return null;
     }
 
-    if (!dateLocal?.trim()) {
-      setFormError("Chọn thời gian giao dịch.");
-      return null;
+    let dateIso = new Date().toISOString();
+    if (type !== "Transfer") {
+      if (!dateLocal?.trim()) {
+        setFieldErrors({ date: "Chọn thời gian giao dịch." });
+        return null;
+      }
+      const parsedAt = new Date(dateLocal);
+      if (Number.isNaN(parsedAt.getTime())) {
+        setFieldErrors({ date: "Thời gian giao dịch không hợp lệ." });
+        return null;
+      }
+      if (parsedAt.getTime() > Date.now()) {
+        setFieldErrors({
+          date: "Không thể tạo giao dịch trong tương lai.",
+        });
+        return null;
+      }
+      dateIso = parsedAt.toISOString();
     }
-    const parsedAt = new Date(dateLocal);
-    if (Number.isNaN(parsedAt.getTime())) {
-      setFormError("Thời gian giao dịch không hợp lệ.");
-      return null;
-    }
-    const dateIso = parsedAt.toISOString();
     const cat = categoryId || null;
     const noteTrim = note.trim() || undefined;
 
     if (type === "Expense") {
       if (!fromJarId) {
-        setFormError("Chi tiêu: chọn hũ nguồn (fromJarId).");
+        setFormError("Chi tiêu: chọn hũ nguồn.");
         return null;
       }
       return {
@@ -102,7 +105,7 @@ export function AddTransactionPage() {
 
     if (type === "Income") {
       if (!financialAccountId) {
-        setFormError("Thu nhập: chọn tài khoản tiền (chỉ tài khoản thủ công).");
+        setFormError("Thu nhập: chọn tài khoản tiền thủ công.");
         return null;
       }
       return {
@@ -120,7 +123,7 @@ export function AddTransactionPage() {
     if (type === "Transfer") {
       if (transferMode === "jarToJar") {
         if (!fromJarId || !toJarId) {
-          setFormError("Chuyển hũ → hũ: chọn cả hũ nguồn và hũ đích.");
+          setFormError("Chuyển hũ sang hũ: chọn cả hũ nguồn và hũ đích.");
           return null;
         }
         if (fromJarId === toJarId) {
@@ -140,7 +143,7 @@ export function AddTransactionPage() {
       }
       if (transferMode === "accountToJar") {
         if (!financialAccountId || !toJarId) {
-          setFormError("Chuyển tài khoản → hũ: chọn tài khoản và hũ đích.");
+          setFormError("Chuyển tài khoản sang hũ: chọn tài khoản và hũ đích.");
           return null;
         }
         return {
@@ -155,7 +158,7 @@ export function AddTransactionPage() {
         };
       }
       if (!fromJarId || !financialAccountId) {
-        setFormError("Chuyển hũ → tài khoản: chọn hũ nguồn và tài khoản đích.");
+        setFormError("Chuyển hũ sang tài khoản: chọn hũ nguồn và tài khoản đích.");
         return null;
       }
       return {
@@ -182,7 +185,11 @@ export function AddTransactionPage() {
       await createTransaction(payload);
       navigate(ROUTES.TRANSACTIONS, { replace: true });
     } catch (e) {
-      setFormError((e as Error)?.message ?? "Không tạo được giao dịch.");
+      const apiError = parseApiError(e, "Không tạo được giao dịch.");
+      if (apiError.field) {
+        setFieldErrors({ [apiError.field]: apiError.message });
+      }
+      setFormError(apiError.message);
     }
   };
 
@@ -216,9 +223,9 @@ export function AddTransactionPage() {
                   setType(event.target.value as TransactionType)
                 }
               >
-                <option value="Expense">Chi tiêu (Expense)</option>
-                <option value="Income">Thu nhập (Income)</option>
-                <option value="Transfer">Chuyển (Transfer)</option>
+                <option value="Expense">Chi tiêu</option>
+                <option value="Income">Thu nhập</option>
+                <option value="Transfer">Chuyển tiền</option>
               </select>
             </div>
 
@@ -242,7 +249,7 @@ export function AddTransactionPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="amount">Số tiền (transactionsAmount)</Label>
+                <Label htmlFor="amount">Số tiền</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -252,22 +259,42 @@ export function AddTransactionPage() {
                   onChange={(event) => setAmount(event.target.value)}
                   required
                 />
+                {fieldErrors.amount ? (
+                  <p className="text-sm text-red-500">{fieldErrors.amount}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Thời gian giao dịch</Label>
-                <ScheduleDateTimePicker
-                  id="date"
-                  value={dateLocal}
-                  onChange={setDateLocal}
-                  disablePast={false}
-                  allowClear={false}
-                  className="max-w-none"
-                />
+                {type === "Transfer" ? (
+                  <>
+                    <Label>Thời gian giao dịch</Label>
+                    <div className="flex h-10 items-center rounded-md border border-input bg-slate-50 px-3 text-sm text-slate-600">
+                      Hôm nay, ngay khi lưu
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Label htmlFor="date">Thời gian giao dịch</Label>
+                    <ScheduleDateTimePicker
+                      id="date"
+                      value={dateLocal}
+                      onChange={setDateLocal}
+                      disablePast={false}
+                      disableFuture
+                      allowClear={false}
+                      className="max-w-none"
+                    />
+                    {fieldErrors.date ? (
+                      <p className="text-sm text-red-500">
+                        {fieldErrors.date}
+                      </p>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Danh mục (categoryId — tuỳ chọn)</Label>
+              <Label htmlFor="category">Danh mục tuỳ chọn</Label>
               <select
                 id="category"
                 className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -287,7 +314,7 @@ export function AddTransactionPage() {
 
             {type === "Expense" ? (
               <div className="space-y-2">
-                <Label htmlFor="fromJar">Hũ nguồn (fromJarId)</Label>
+                <Label htmlFor="fromJar">Hũ nguồn</Label>
                 <select
                   id="fromJar"
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -309,7 +336,7 @@ export function AddTransactionPage() {
             {type === "Income" ? (
               <div className="space-y-2">
                 <Label htmlFor="account">
-                  Tài khoản tiền (financialAccountId)
+                  Tài khoản tiền
                 </Label>
                 <select
                   id="account"
@@ -321,7 +348,7 @@ export function AddTransactionPage() {
                   required
                   disabled={loadingDeps}
                 >
-                  <option value="">— Chọn tài khoản (Manual) —</option>
+                  <option value="">— Chọn tài khoản thủ công —</option>
                   {manualAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} · {a.accountType}
@@ -329,8 +356,7 @@ export function AddTransactionPage() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground">
-                  Backend từ chối tài khoản liên kết ngân hàng (LinkedApi) cho
-                  giao dịch tay.
+                  Chỉ dùng tài khoản nhập thủ công cho giao dịch tay.
                 </p>
               </div>
             ) : null}
@@ -338,7 +364,7 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "jarToJar" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="fromJarT">Hũ nguồn (fromJarId)</Label>
+                  <Label htmlFor="fromJarT">Hũ nguồn</Label>
                   <select
                     id="fromJarT"
                     className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -355,7 +381,7 @@ export function AddTransactionPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="toJarT">Hũ đích (toJarId)</Label>
+                  <Label htmlFor="toJarT">Hũ đích</Label>
                   <select
                     id="toJarT"
                     className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -377,7 +403,7 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "accountToJar" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="faAj">Tài khoản (financialAccountId)</Label>
+                  <Label htmlFor="faAj">Tài khoản</Label>
                   <select
                     id="faAj"
                     className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -387,7 +413,7 @@ export function AddTransactionPage() {
                     }
                     disabled={loadingDeps}
                   >
-                    <option value="">— Manual —</option>
+                    <option value="">— Chọn tài khoản thủ công —</option>
                     {manualAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name}
@@ -396,7 +422,7 @@ export function AddTransactionPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="toJarAj">Hũ đích (toJarId)</Label>
+                  <Label htmlFor="toJarAj">Hũ đích</Label>
                   <select
                     id="toJarAj"
                     className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -418,7 +444,7 @@ export function AddTransactionPage() {
             {type === "Transfer" && transferMode === "jarToAccount" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="fromJarJa">Hũ nguồn (fromJarId)</Label>
+                  <Label htmlFor="fromJarJa">Hũ nguồn</Label>
                   <select
                     id="fromJarJa"
                     className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -436,7 +462,7 @@ export function AddTransactionPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="faJa">
-                    Tài khoản đích (financialAccountId)
+                    Tài khoản đích
                   </Label>
                   <select
                     id="faJa"
@@ -447,7 +473,7 @@ export function AddTransactionPage() {
                     }
                     disabled={loadingDeps}
                   >
-                    <option value="">— Manual —</option>
+                    <option value="">— Chọn tài khoản thủ công —</option>
                     {manualAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name}
@@ -459,7 +485,7 @@ export function AddTransactionPage() {
             ) : null}
 
             <div className="space-y-2">
-              <Label htmlFor="note">Ghi chú (note)</Label>
+              <Label htmlFor="note">Ghi chú</Label>
               <Input
                 id="note"
                 value={note}

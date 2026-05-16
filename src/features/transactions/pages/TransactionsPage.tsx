@@ -1,9 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { ROUTES } from "@/shared/constants/routes";
 import { useTransactions } from "../hooks/useTransactions";
+import type { TransactionType } from "../types";
+
+const PAGE_SIZE = 10;
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -24,18 +33,29 @@ function amountPrefix(type: string) {
   return "-";
 }
 
+function typeLabel(type: TransactionType) {
+  if (type === "Income") return "Thu nhập";
+  if (type === "Expense") return "Chi tiêu";
+  return "Chuyển tiền";
+}
+
 export function TransactionsPage() {
-  const { data, isLoading, isError, refetch } = useTransactions();
+  const [pageIndex, setPageIndex] = useState(1);
+  const { data, isLoading, isError, refetch } = useTransactions({
+    pageIndex,
+    pageSize: PAGE_SIZE,
+  });
 
   if (isLoading) {
-    return (
-      <p className="text-sm text-violet-600/80">Đang tải giao dịch...</p>
-    );
+    return <p className="text-sm text-violet-600/80">Đang tải giao dịch...</p>;
   }
+
   if (isError || !data) {
     return (
       <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
-        <p className="text-sm text-red-600">Không tải được danh sách giao dịch.</p>
+        <p className="text-sm text-red-600">
+          Không tải được danh sách giao dịch.
+        </p>
         <Button
           type="button"
           variant="outline"
@@ -49,20 +69,20 @@ export function TransactionsPage() {
   }
 
   const rows = data.items;
+  const pagination = data.pagination;
+  const totalPages = Math.max(1, pagination.totalPages || 1);
 
   return (
     <section className="space-y-6">
       <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
               Thu · Chi · Chuyển
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Giao dịch</h1>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">
+              Giao dịch
+            </h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
               Thu, chi và chuyển khoản.
             </p>
@@ -78,6 +98,7 @@ export function TransactionsPage() {
           </Button>
         </div>
       </div>
+
       <Card className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-base text-[#0f172a]">
@@ -87,13 +108,14 @@ export function TransactionsPage() {
         <CardContent className="space-y-3">
           {rows.length === 0 ? (
             <p className="text-sm text-slate-600">
-              Chưa có giao dịch. Thêm giao dịch thủ công hoặc đồng bộ từ ngân hàng
-              liên kết.
+              Chưa có giao dịch. Thêm giao dịch thủ công hoặc đồng bộ từ ngân
+              hàng liên kết.
             </p>
           ) : (
             rows.map((item) => (
-              <div
+              <Link
                 key={item.id}
+                to={ROUTES.TRANSACTION_DETAIL_PATH(item.id)}
                 className="flex items-center justify-between rounded-lg border border-violet-200/80 bg-white/90 p-3 transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
               >
                 <div>
@@ -101,22 +123,61 @@ export function TransactionsPage() {
                     {item.note?.trim()
                       ? item.note
                       : item.categoryName ||
-                      item.financialAccountName ||
-                      item.jarName ||
-                      item.type}
+                        item.financialAccountName ||
+                        item.jarName ||
+                        typeLabel(item.type)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(item.transactionDate).toLocaleString("vi-VN")}
-                    {item.type ? ` · ${item.type}` : ""}
+                    {new Date(item.transactionDate).toLocaleString("vi-VN")} ·{" "}
+                    {typeLabel(item.type)}
                   </p>
                 </div>
-                <p className={`font-medium tabular-nums ${amountClass(item.type)}`}>
+                <p
+                  className={`font-medium tabular-nums ${amountClass(
+                    item.type,
+                  )}`}
+                >
                   {amountPrefix(item.type)}
                   {formatCurrency(Math.abs(item.amount))}
                 </p>
-              </div>
+              </Link>
             ))
           )}
+
+          {pagination.totalCount > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-violet-100 pt-4">
+              <p className="text-xs text-slate-500">
+                Trang {pagination.pageIndex}/{totalPages} ·{" "}
+                {pagination.totalCount} giao dịch
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  disabled={pageIndex <= 1}
+                  onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Trước
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  disabled={pageIndex >= totalPages}
+                  onClick={() =>
+                    setPageIndex((p) => Math.min(totalPages, p + 1))
+                  }
+                >
+                  Sau
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </section>

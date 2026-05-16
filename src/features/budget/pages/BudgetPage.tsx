@@ -202,7 +202,7 @@ export function BudgetPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
               Hạn mức chi tiêu
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Ngân sách</h1>
+            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Hạn mức</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
               Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo.
             </p>

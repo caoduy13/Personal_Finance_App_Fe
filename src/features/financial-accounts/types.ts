@@ -28,6 +28,34 @@ export interface CreateLinkApiFinancialAccountPayload {
   isDefault: boolean;
 }
 
+export interface CreateCassoConnectionPayload {
+  returnUrl?: string | null;
+  isDefault?: boolean | null;
+  autoSync?: boolean | null;
+}
+
+export interface CassoConnectionSession {
+  sessionId: string;
+  authorizationUrl: string;
+  expiresAt: string;
+}
+
+export interface CassoSyncPayload {
+  fromDate?: string | null;
+  toDate?: string | null;
+  page?: number | null;
+  pageSize?: number | null;
+  sort?: "ASC" | "DESC" | null;
+  triggerProviderSync?: boolean | null;
+}
+
+export interface CassoSyncResult {
+  receivedCount: number;
+  createdCount: number;
+  skippedCount: number;
+  message: string;
+}
+
 export interface UpdateFinancialAccountPayload {
   name?: string | null;
   currentBalance?: number | null;

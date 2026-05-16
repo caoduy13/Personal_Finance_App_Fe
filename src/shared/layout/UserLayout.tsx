@@ -39,7 +39,7 @@ const userNavItems = [
   { label: "Giao dịch", to: ROUTES.TRANSACTIONS, icon: ReceiptText },
   { label: "Nguồn tiền", to: ROUTES.ACCOUNTS, icon: Landmark },
   { label: "Danh mục", to: ROUTES.CATEGORIES, icon: Tags },
-  { label: "Ngân sách", to: ROUTES.BUDGET, icon: WalletCards },
+  { label: "Hạn mức", to: ROUTES.BUDGET, icon: WalletCards },
   { label: "Mục tiêu", to: ROUTES.GOALS, icon: Goal },
   { label: "Hũ", to: ROUTES.JARS, icon: PiggyBank },
 ] as const;
@@ -408,7 +408,7 @@ export function UserLayout() {
                       )}
                     />
                     {item.to === ROUTES.NOTIFICATIONS &&
-                    hasUnreadNotifications ? (
+                      hasUnreadNotifications ? (
                       <span
                         className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-red-500"
                         aria-hidden
