@@ -1,17 +1,22 @@
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/routes";
-import { Button } from "@/shared/components/ui/button";
 
 export function NotFoundPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-3xl font-bold">404</h1>
-      <p className="text-muted-foreground">
-        The page you requested was not found.
-      </p>
-      <Button asChild>
-        <Link to={ROUTES.ROOT}>Go Home</Link>
-      </Button>
+    <main className="brutal-auth flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
+      <div className="brutal-card max-w-md border-0 p-8">
+        <p className="text-6xl font-extrabold">404</p>
+        <h1 className="mt-2 text-xl font-extrabold">Không tìm thấy trang</h1>
+        <p className="mt-2 text-sm font-medium text-neutral-600">
+          Đường dẫn bạn truy cập không tồn tại hoặc đã bị gỡ.
+        </p>
+        <Link
+          to={ROUTES.ROOT}
+          className="brutal-btn-primary mt-6 inline-flex h-10 items-center justify-center px-6 text-sm"
+        >
+          Về trang chủ
+        </Link>
+      </div>
     </main>
   );
 }

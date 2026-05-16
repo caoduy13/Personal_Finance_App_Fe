@@ -7,8 +7,6 @@ export type UserPreferences = {
   twoFactor: boolean;
   currency: Currency;
   language: Language;
-  /** Data URL ảnh tải từ máy */
-  avatarImageUrl: string | null;
 };
 
 import type { TranslationKey } from "./i18n";

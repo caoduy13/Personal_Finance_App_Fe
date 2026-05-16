@@ -20,6 +20,7 @@ export interface AuthUser {
   lastName: string;
   email: string;
   role: string;
+  avatarUrl?: string | null;
   isOnboardingCompleted?: boolean;
 }
 

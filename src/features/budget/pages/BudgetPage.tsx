@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { useUserCategories } from "@/features/categories";
 import { useJars } from "@/features/jars/hooks/useJars";
 import { Button } from "@/shared/components/ui/button";
@@ -44,14 +45,13 @@ import {
   useUpdateBudgetLimit,
 } from "../hooks/useBudgetMutations";
 import { useBudgetLimits } from "../hooks/useBudget";
+import {
+  BUDGET_STATUS_LABELS,
+  getCategoryDisplayName,
+  labelOf,
+} from "@/shared/constants/userCopy";
+import { formatVnd } from "@/shared/lib/formatCurrency";
 import type { BudgetLimit } from "../types";
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
 
 export function BudgetPage() {
   const { data, isLoading, isError, refetch } = useBudgetLimits();
@@ -78,7 +78,10 @@ export function BudgetPage() {
     if (cTargetType === "Jar") {
       return jars.map((j) => ({ id: j.id, label: j.name }));
     }
-    return categories.map((c) => ({ id: c.id, label: c.name }));
+    return categories.map((c) => ({
+      id: c.id,
+      label: getCategoryDisplayName(c.name, c.kind),
+    }));
   }, [cTargetType, jars, categories]);
 
   const openCreate = () => {
@@ -171,17 +174,17 @@ export function BudgetPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải ngân sách...</p>
+      <p className="brutal-loading text-sm">Đang tải ngân sách...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được hạn mức chi tiêu.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -192,31 +195,21 @@ export function BudgetPage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Hạn mức chi tiêu
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Ngân sách</h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo.
-            </p>
-          </div>
+      <BrutalPageHeader
+        eyebrow="Hạn mức chi tiêu"
+        title="Ngân sách"
+        description="Hạn mức theo hũ hoặc danh mục, kỳ ngày/tháng và ngưỡng cảnh báo."
+        actions={
           <Button
             type="button"
-            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            className="brutal-btn-primary cursor-pointer"
             onClick={openCreate}
           >
             <Plus className="mr-2 h-4 w-4" />
             Thêm hạn mức
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         {data.length === 0 ? (
@@ -227,7 +220,7 @@ export function BudgetPage() {
           data.map((item) => (
             <Card
               key={item.id}
-              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+              className="brutal-card border-0 shadow-none transition hover:bg-neutral-50"
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-[#0f172a]">
@@ -243,30 +236,30 @@ export function BudgetPage() {
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-600">
                   <span>
                     Hạn mức:{" "}
-                    <span className="font-semibold text-[#6366F1]">
-                      {formatCurrency(item.limitAmount)}
+                    <span className="font-semibold">
+                      {formatVnd(item.limitAmount)}
                     </span>
                   </span>
-                  <span>Đã chi: {formatCurrency(item.currentSpent)}</span>
+                  <span>Đã chi: {formatVnd(item.currentSpent)}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-violet-100/80">
+                <div className="h-2 overflow-hidden rounded-full bg-neutral-200">
                   <div
-                    className="h-full rounded-full bg-linear-to-r from-violet-500 to-indigo-500 transition-all"
+                    className="h-full rounded-full bg-[#a8e087] transition-all"
                     style={{
                       width: `${Math.min(100, Math.max(0, item.currentPercentage))}%`,
                     }}
                   />
                 </div>
                 <p className="text-xs text-slate-500">
-                  {item.currentPercentage.toFixed(1)}% hạn mức · Trạng thái:{" "}
-                  {item.status}
+                  {item.currentPercentage.toFixed(1)}% hạn mức ·{" "}
+                  {labelOf(BUDGET_STATUS_LABELS, item.status)}
                 </p>
                 <div className="flex gap-2 pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
+                    className="brutal-btn-outline cursor-pointer"
                     onClick={() => openEdit(item)}
                   >
                     <Pencil className="mr-1 h-3.5 w-3.5" />
@@ -276,7 +269,7 @@ export function BudgetPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
+                    className="brutal-btn-outline cursor-pointer text-red-600 hover:bg-red-50"
                     onClick={() => setDeleteId(item.id)}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
@@ -370,15 +363,14 @@ export function BudgetPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setCreateOpen(false)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -420,15 +412,14 @@ export function BudgetPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setEditItem(null)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}

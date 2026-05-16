@@ -15,7 +15,7 @@ export const AlertDialogAction = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
-    className={cn(buttonVariants({ variant: "default", size: "sm" }), className)}
+    className={cn(buttonVariants({ variant: "default", size: "sm" }), "brutal-btn-primary", className)}
     {...props}
   />
 ));
@@ -27,7 +27,7 @@ export const AlertDialogCancel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
-    className={cn(buttonVariants({ variant: "outline", size: "sm" }), className)}
+    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "brutal-btn-outline", className)}
     {...props}
   />
 ));
@@ -39,7 +39,7 @@ export function AlertDialogOverlay({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
   return (
     <AlertDialogPrimitive.Overlay
-      className={cn("fixed inset-0 z-50 bg-black/60 backdrop-blur-[1px]", className)}
+      className={cn("fixed inset-0 z-50 bg-black/45", className)}
       {...props}
     />
   );
@@ -54,7 +54,7 @@ export function AlertDialogContent({
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-white p-6 shadow-2xl scrollbar-none",
+          "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border-2 border-[#0a0a0a] bg-white p-6 shadow-[4px_4px_0_0_#0a0a0a] scrollbar-none",
           className,
         )}
         {...props}

@@ -9,7 +9,15 @@ export interface TransactionItem {
   transactionDate: string;
   financialAccountName?: string | null;
   jarName?: string | null;
+  toJarName?: string | null;
   categoryName?: string | null;
+}
+
+export interface TransactionDetail extends TransactionItem {
+  financialAccountId?: string | null;
+  fromJarId?: string | null;
+  toJarId?: string | null;
+  categoryId?: string | null;
 }
 
 export interface TransactionPagination {

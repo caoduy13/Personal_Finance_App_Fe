@@ -1,6 +1,6 @@
-import type { AxiosError } from "axios";
 import axios from "axios";
 import { apiClient } from "@/lib/axios";
+import { parseApiError } from "@/shared/lib/apiErrors";
 import type { AuthResponse } from "./types";
 import { API_ENDPOINT } from "@/shared/constants";
 
@@ -59,6 +59,8 @@ export async function buildAuthResponse(
   const lastName = (me.lastName ?? "").trim();
   const role = me.role ?? bootstrap.role ?? "User";
 
+  const avatarUrl = me.avatarUrl?.trim() || null;
+
   return {
     accessToken,
     id: me.id ?? bootstrap.id,
@@ -71,6 +73,7 @@ export async function buildAuthResponse(
     lastName,
     email: me.email ?? bootstrap.email ?? "",
     role: String(role),
+    avatarUrl,
     isOnboardingCompleted: me.isOnboardingCompleted ?? true,
   };
 }
@@ -79,17 +82,6 @@ export function mapAxiosAuthError(error: unknown): Error {
   if (!axios.isAxiosError(error))
     return error instanceof Error ? error : new Error(String(error));
 
-  const ax = error as AxiosError<{
-    error?: string;
-    message?: string;
-    title?: string;
-  }>;
-  const data = ax.response?.data;
-  const msg =
-    (typeof data === "object" && data?.error && String(data.error)) ||
-    (typeof data === "object" && data?.message && String(data.message)) ||
-    (typeof data === "object" && data?.title && String(data.title)) ||
-    ax.message ||
-    "Không đăng nhập được.";
-  return new Error(msg);
+  const parsed = parseApiError(error);
+  return new Error(parsed.message);
 }

@@ -1,3 +1,10 @@
+export interface NotificationMetadata {
+  goalId?: string;
+  jarId?: string;
+  limitId?: string;
+  transactionId?: string;
+}
+
 export interface NotificationItem {
   id: string;
   type: string;
@@ -5,6 +12,7 @@ export interface NotificationItem {
   body: string;
   isRead: boolean;
   occurredAt: string;
+  metadata?: NotificationMetadata | null;
 }
 
 export interface NotificationListParams {

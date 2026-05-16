@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../types";
+import { profileService } from "@/features/profile/services";
 import { authService } from "../services";
 import { useAuthStore } from "../store";
 import { ROUTES } from "@/shared/constants/routes";
@@ -65,16 +66,30 @@ export function useLoginMutation() {
 
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (payload) => authService.login(payload),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       void queryClient.invalidateQueries({ queryKey: ["user"] });
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      let user = authResponseToUserPayload(response);
+      try {
+        const me = await profileService.getMe();
+        user = {
+          ...user,
+          username: me.username || user.username,
+          firstName: me.firstName || user.firstName,
+          lastName: me.lastName || user.lastName,
+          email: me.email || user.email,
+          isOnboardingCompleted: me.isOnboardingCompleted,
+        };
+      } catch {
+        /* giữ payload từ login nếu /user/me lỗi */
+      }
       setAuth({
         accessToken: response.accessToken,
         role: apiRoleToAppRole(response.role),
-        user: authResponseToUserPayload(response),
+        user,
       });
-      goAfterAuth(response);
+      goAfterAuth({ ...response, isOnboardingCompleted: user.isOnboardingCompleted });
     },
   });
 }
@@ -86,16 +101,30 @@ export function useRegisterMutation() {
 
   return useMutation<AuthResponse, Error, RegisterRequest>({
     mutationFn: (payload) => authService.register(payload),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       void queryClient.invalidateQueries({ queryKey: ["user"] });
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      let user = authResponseToUserPayload(response);
+      try {
+        const me = await profileService.getMe();
+        user = {
+          ...user,
+          username: me.username || user.username,
+          firstName: me.firstName || user.firstName,
+          lastName: me.lastName || user.lastName,
+          email: me.email || user.email,
+          isOnboardingCompleted: me.isOnboardingCompleted,
+        };
+      } catch {
+        /* giữ payload từ register nếu /user/me lỗi */
+      }
       setAuth({
         accessToken: response.accessToken,
         role: apiRoleToAppRole(response.role),
-        user: authResponseToUserPayload(response),
+        user,
       });
-      goAfterAuth(response);
+      goAfterAuth({ ...response, isOnboardingCompleted: user.isOnboardingCompleted });
     },
   });
 }

@@ -9,13 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import {
+  readImageFileAsDataUrl,
+  useUpdateProfile,
+  useUserAvatarUrl,
+} from "@/features/profile";
+import { UserAvatar } from "@/shared/components/UserAvatar";
 import { mockUser } from "../mockData";
 import { useFinanceDashboard } from "../context/FinanceDashboardContext";
 import type { Currency, Language, ProfileSection } from "../types";
-import { UserAvatar } from "./UserAvatar";
 import { SectionCard } from "./shared";
-
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 type ProfileScreenProps = {
   section: ProfileSection;
@@ -32,11 +35,13 @@ export function ProfileScreen({
     preferences,
     setPreferences,
     updatePreferences,
-    avatarImageUrl,
     tr,
     format,
     currency,
   } = useFinanceDashboard();
+  const avatarUrl = useUserAvatarUrl();
+  const { mutateAsync: saveProfile, isPending: savingAvatar } =
+    useUpdateProfile();
 
   const [displayName, setDisplayName] = useState(mockUser.name);
   const [copied, setCopied] = useState(false);
@@ -61,27 +66,28 @@ export function ProfileScreen({
     toast.success(tr("languageUpdated"));
   };
 
-  const handleAvatarFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error(tr("avatarImageOnly"));
-      return;
-    }
-    if (file.size > MAX_AVATAR_BYTES) {
-      toast.error(tr("avatarMaxSize"));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      updatePreferences({ avatarImageUrl: url });
+  const handleAvatarFile = async (file: File) => {
+    try {
+      const url = await readImageFileAsDataUrl(file);
+      await saveProfile({ avatarUrl: url });
       toast.success(tr("avatarUpdated"));
-    };
-    reader.readAsDataURL(file);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : tr("avatarImageOnly");
+      toast.error(msg);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
-  const removeAvatar = () => {
-    updatePreferences({ avatarImageUrl: null });
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const removeAvatar = async () => {
+    try {
+      await saveProfile({ avatarUrl: null });
+      toast.success(tr("avatarUpdated"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Không xóa được ảnh.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const copyAccountId = async () => {
@@ -132,7 +138,7 @@ export function ProfileScreen({
       {section === "profile" && (
         <>
           <SectionCard className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left">
-            <UserAvatar size="lg" imageUrl={avatarImageUrl} />
+            <UserAvatar size="lg" imageUrl={avatarUrl} />
             <div className="mt-4 sm:mt-0 sm:ml-6">
               <h2 className="text-2xl font-bold">{displayName}</h2>
               <p className="text-neutral-500">{mockUser.role}</p>
@@ -203,10 +209,11 @@ export function ProfileScreen({
             onCurrencyChange={onCurrencyChange}
             onLanguageChange={onLanguageChange}
             onAvatarUpload={() => fileInputRef.current?.click()}
-            onAvatarRemove={removeAvatar}
-            onAvatarFile={handleAvatarFile}
+            onAvatarRemove={() => void removeAvatar()}
+            onAvatarFile={(file) => void handleAvatarFile(file)}
             fileInputRef={fileInputRef}
-            avatarImageUrl={avatarImageUrl}
+            avatarUrl={avatarUrl}
+            savingAvatar={savingAvatar}
             onToggle={(patch) => updatePreferences(patch)}
             onSave={handleSave}
             tr={tr}
@@ -231,10 +238,11 @@ export function ProfileScreen({
             onCurrencyChange={onCurrencyChange}
             onLanguageChange={onLanguageChange}
             onAvatarUpload={() => fileInputRef.current?.click()}
-            onAvatarRemove={removeAvatar}
-            onAvatarFile={handleAvatarFile}
+            onAvatarRemove={() => void removeAvatar()}
+            onAvatarFile={(file) => void handleAvatarFile(file)}
             fileInputRef={fileInputRef}
-            avatarImageUrl={avatarImageUrl}
+            avatarUrl={avatarUrl}
+            savingAvatar={savingAvatar}
             onToggle={(patch) => updatePreferences(patch)}
             onSave={handleSave}
             tr={tr}
@@ -312,7 +320,8 @@ function PreferencesPanel({
   onAvatarRemove,
   onAvatarFile,
   fileInputRef,
-  avatarImageUrl,
+  avatarUrl,
+  savingAvatar,
   onToggle,
   onSave,
   tr,
@@ -325,7 +334,8 @@ function PreferencesPanel({
   onAvatarRemove: () => void;
   onAvatarFile: (file: File) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  avatarImageUrl: string | null;
+  avatarUrl: string | null;
+  savingAvatar?: boolean;
   onToggle: (patch: Partial<typeof preferences>) => void;
   onSave: () => void;
   tr: (key: import("../i18n").TranslationKey) => string;
@@ -351,17 +361,18 @@ function PreferencesPanel({
           }}
         />
         <div className="flex flex-wrap items-center gap-4">
-          <UserAvatar size="md" imageUrl={avatarImageUrl} />
+          <UserAvatar size="md" imageUrl={avatarUrl} />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={onAvatarUpload}
-              className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
+              disabled={savingAvatar}
+              className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
             >
               <Upload className="h-4 w-4" />
-              {tr("avatarUpload")}
+              {savingAvatar ? "…" : tr("avatarUpload")}
             </button>
-            {avatarImageUrl ? (
+            {avatarUrl ? (
               <button
                 type="button"
                 onClick={onAvatarRemove}

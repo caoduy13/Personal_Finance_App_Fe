@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { registerSchema, type RegisterFormData } from "../schema";
@@ -28,150 +27,113 @@ export function RegisterForm() {
     },
   });
 
-  const onSubmit = (data: RegisterFormData) => {
-    registerUser({
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      firstName: data.firstName,
-      lastName: data.lastName,
-    });
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form
+      onSubmit={handleSubmit((data) =>
+        registerUser({
+          username: data.username,
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }),
+      )}
+      className="space-y-5"
+    >
       <div className="space-y-2">
-        <Label
-          htmlFor="username"
-          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-        >
-          Tên đăng nhập
-        </Label>
+        <Label htmlFor="username">Tên đăng nhập</Label>
         <Input
           id="username"
           type="text"
-          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="tên_đăng_nhập"
           {...register("username")}
         />
         {errors.username ? (
-          <p className="text-sm text-red-400">{errors.username.message}</p>
+          <p className="brutal-field-error">{errors.username.message}</p>
         ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label
-            htmlFor="lastName"
-            className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-          >
-            Họ
-          </Label>
+          <Label htmlFor="lastName">Họ</Label>
           <Input
             id="lastName"
             type="text"
             autoComplete="family-name"
-            className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
             placeholder="Nguyễn"
             {...register("lastName")}
           />
           {errors.lastName ? (
-            <p className="text-sm text-red-400">{errors.lastName.message}</p>
+            <p className="brutal-field-error">{errors.lastName.message}</p>
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label
-            htmlFor="firstName"
-            className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-          >
-            Tên
-          </Label>
+          <Label htmlFor="firstName">Tên</Label>
           <Input
             id="firstName"
             type="text"
             autoComplete="given-name"
-            className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
             placeholder="Văn A"
             {...register("firstName")}
           />
           {errors.firstName ? (
-            <p className="text-sm text-red-400">{errors.firstName.message}</p>
+            <p className="brutal-field-error">{errors.firstName.message}</p>
           ) : null}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label
-          htmlFor="registerEmail"
-          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-        >
-          Địa chỉ email
-        </Label>
+        <Label htmlFor="registerEmail">Địa chỉ email</Label>
         <Input
           id="registerEmail"
           type="email"
           autoComplete="email"
-          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="ten@email.com"
           {...register("email")}
         />
         {errors.email ? (
-          <p className="text-sm text-red-400">{errors.email.message}</p>
+          <p className="brutal-field-error">{errors.email.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label
-          htmlFor="registerPassword"
-          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-        >
-          Mật khẩu
-        </Label>
+        <Label htmlFor="registerPassword">Mật khẩu</Label>
         <Input
           id="registerPassword"
           type="password"
           autoComplete="new-password"
-          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="••••••••"
           {...register("password")}
         />
         {errors.password ? (
-          <p className="text-sm text-red-400">{errors.password.message}</p>
+          <p className="brutal-field-error">{errors.password.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label
-          htmlFor="confirmPassword"
-          className="mb-1.5 inline-block text-sm font-medium text-slate-700"
-        >
-          Xác nhận mật khẩu
-        </Label>
+        <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
         <Input
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className="h-11 rounded-md border-[#cdd5ee] bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#6366F1]/40"
           placeholder="••••••••"
           {...register("confirmPassword")}
         />
         {errors.confirmPassword ? (
-          <p className="text-sm text-red-400">
-            {errors.confirmPassword.message}
-          </p>
+          <p className="brutal-field-error">{errors.confirmPassword.message}</p>
         ) : null}
       </div>
 
-      {error ? <p className="text-sm text-red-400">{error.message}</p> : null}
+      {error ? <p className="brutal-field-error">{error.message}</p> : null}
 
-      <Button
+      <button
         type="submit"
-        className="h-11 w-full rounded-md bg-[#0f172a] text-white hover:bg-[#111827]"
+        className="brutal-btn-primary inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 disabled:cursor-not-allowed"
         disabled={isPending}
       >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        <span>{isPending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</span>
-      </Button>
+        <span>{isPending ? "Đang tạo tài khoản…" : "Tạo tài khoản"}</span>
+      </button>
     </form>
   );
 }

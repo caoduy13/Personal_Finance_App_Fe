@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateFinanceQueries } from "@/shared/lib/invalidateFinanceQueries";
 import { jarService } from "../services";
 import type { CreateJarPayload, UpdateJarPayload } from "../types";
 
@@ -47,8 +48,7 @@ export function useDeleteJar() {
   return useMutation({
     mutationFn: (id: string) => jarService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jars"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard", "user"] });
+      invalidateFinanceQueries(queryClient);
     },
   });
 }

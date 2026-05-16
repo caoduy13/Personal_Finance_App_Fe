@@ -31,6 +31,7 @@ export function useUpdateProfile() {
             firstName: me.firstName,
             lastName: me.lastName,
             email: me.email,
+            avatarUrl: me.avatarUrl,
             isOnboardingCompleted: me.isOnboardingCompleted,
           },
         });

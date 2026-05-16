@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Landmark, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -184,18 +185,18 @@ export function AccountsPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải nguồn tiền...</p>
+      <p className="brutal-loading text-sm">Đang tải nguồn tiền...</p>
     );
   }
 
   if (isError) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được danh sách.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -206,27 +207,15 @@ export function AccountsPage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Tài khoản
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">
-              Nguồn tiền
-            </h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Tài khoản thủ công và liên kết ngân hàng (Casso).
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+      <BrutalPageHeader
+        eyebrow="Tài khoản"
+        title="Nguồn tiền"
+        description="Tài khoản thủ công và liên kết ngân hàng (Casso)."
+        actions={
+          <>
             <Button
               type="button"
-              className="cursor-pointer gap-2 bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+              className="brutal-btn-primary cursor-pointer gap-2"
               onClick={openManual}
             >
               <Plus className="h-4 w-4" />
@@ -235,20 +224,20 @@ export function AccountsPage() {
             <Button
               type="button"
               variant="outline"
-              className="cursor-pointer gap-2 border-violet-200/80 bg-white/80 hover:bg-violet-50"
+              className="brutal-btn-outline cursor-pointer gap-2"
               onClick={openLink}
             >
               <Landmark className="h-4 w-4" />
               Liên kết ngân hàng
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {data.length === 0 ? (
-        <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none">
+        <Card className="brutal-card border-0 border-dashed shadow-none">
           <CardContent className="py-12 text-center text-sm text-slate-600">
-            <Landmark className="mx-auto mb-3 h-10 w-10 text-violet-300" />
+            <Landmark className="mx-auto mb-3 h-10 w-10 text-neutral-400" />
             <p>Chưa có nguồn tiền nào.</p>
             <p className="mt-1">
               Tạo tài khoản Cash thủ công hoặc liên kết STK ngân hàng.
@@ -256,7 +245,7 @@ export function AccountsPage() {
             <div className="mt-4 flex justify-center gap-2">
               <Button
                 type="button"
-                className="bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 onClick={openManual}
               >
                 Thêm thủ công
@@ -264,7 +253,7 @@ export function AccountsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-violet-200/80 hover:bg-violet-50"
+                className="brutal-btn-outline"
                 onClick={openLink}
               >
                 Liên kết ngân hàng
@@ -277,7 +266,7 @@ export function AccountsPage() {
           {data.map((a) => (
             <Card
               key={a.id}
-              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+              className="brutal-card border-0 shadow-none transition hover:bg-neutral-50"
             >
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -298,7 +287,7 @@ export function AccountsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <p className="text-2xl font-semibold text-[#6366F1]">
+                <p className="text-2xl font-semibold">
                   {formatCurrency(a.currentBalance, a.currency)}
                 </p>
                 <dl className="grid gap-1 text-slate-600">
@@ -319,12 +308,12 @@ export function AccountsPage() {
                     </div>
                   ) : null}
                 </dl>
-                <div className="flex flex-wrap gap-2 border-t border-violet-100 pt-3">
+                <div className="flex flex-wrap gap-2 border-t border-neutral-200 pt-3">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer gap-1.5 border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
+                    className="cursor-pointer gap-1.5 brutal-btn-outline hover:text-[#4F46E5]"
                     onClick={() => openEdit(a)}
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -335,7 +324,7 @@ export function AccountsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer gap-1.5 border-violet-200/80 hover:bg-violet-50"
+                      className="cursor-pointer gap-1.5 brutal-btn-outline"
                       onClick={onSyncCasso}
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
@@ -347,7 +336,7 @@ export function AccountsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer gap-1.5 border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
+                      className="cursor-pointer gap-1.5 border-neutral-200 text-red-600 hover:border-red-200 hover:bg-red-50"
                       onClick={() => setDeleteId(a.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -361,10 +350,10 @@ export function AccountsPage() {
         </div>
       )}
 
-      <p className="rounded-xl border border-violet-100 bg-violet-50/40 py-3 text-center text-sm text-slate-600">
+      <p className="brutal-card border-0 py-3 text-center text-sm text-slate-600">
         <Link
           to={ROUTES.TRANSACTIONS_ADD}
-          className="font-medium text-[#6366F1] underline-offset-2 hover:underline"
+          className="font-semibold underline-offset-2 hover:underline"
         >
           Thêm giao dịch
         </Link>{" "}
@@ -430,7 +419,7 @@ export function AccountsPage() {
                 type="checkbox"
                 checked={mDefault}
                 onChange={(e) => setMDefault(e.target.checked)}
-                className="h-4 w-4 accent-[#6366F1]"
+                className="h-4 w-4 accent-[#a8e087]"
               />
               Đặt làm tài khoản mặc định
             </label>
@@ -445,7 +434,7 @@ export function AccountsPage() {
             </Button>
             <Button
               type="button"
-              className="bg-[#6366F1] text-white"
+              className="brutal-btn-primary cursor-pointer"
               disabled={creatingManual || !mName.trim()}
               onClick={() => void submitManual()}
             >
@@ -500,7 +489,7 @@ export function AccountsPage() {
                 type="checkbox"
                 checked={lDefault}
                 onChange={(e) => setLDefault(e.target.checked)}
-                className="h-4 w-4 accent-[#6366F1]"
+                className="h-4 w-4 accent-[#a8e087]"
               />
               Đặt làm mặc định
             </label>
@@ -515,7 +504,7 @@ export function AccountsPage() {
             </Button>
             <Button
               type="button"
-              className="bg-[#6366F1] text-white"
+              className="brutal-btn-primary cursor-pointer"
               disabled={
                 creatingLink || !lBank.trim() || !lNumber.trim()
               }
@@ -564,7 +553,7 @@ export function AccountsPage() {
                   type="checkbox"
                   checked={eDefault}
                   onChange={(e) => setEDefault(e.target.checked)}
-                  className="h-4 w-4 accent-[#6366F1]"
+                  className="h-4 w-4 accent-[#a8e087]"
                 />
                 Mặc định
               </label>
@@ -576,7 +565,7 @@ export function AccountsPage() {
             </Button>
             <Button
               type="button"
-              className="bg-[#6366F1] text-white"
+              className="brutal-btn-primary cursor-pointer"
               disabled={updating || !editItem}
               onClick={() => void submitEdit()}
             >

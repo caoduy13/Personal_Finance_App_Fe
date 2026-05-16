@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -19,6 +20,14 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  CategoryAppearancePicker,
+  CATEGORY_COLOR_OPTIONS,
+  CATEGORY_ICON_OPTIONS,
+  isValidHexColor,
+} from "@/shared/components/CategoryAppearancePicker";
+import { getCategoryDisplayName } from "@/shared/constants/userCopy";
+import { parseApiError } from "@/shared/lib/apiErrors";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,8 +66,8 @@ export function CategoriesPage() {
 
   const openCreate = () => {
     setCName("");
-    setCIcon("");
-    setCColor("");
+    setCIcon(CATEGORY_ICON_OPTIONS[0].id);
+    setCColor(CATEGORY_COLOR_OPTIONS[0]);
     setCreateOpen(true);
   };
 
@@ -72,6 +81,14 @@ export function CategoriesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cName.trim()) return;
+    if (!cIcon.trim()) {
+      toast.error("Chọn icon cho danh mục.");
+      return;
+    }
+    if (cColor.trim() && !isValidHexColor(cColor)) {
+      toast.error("Màu không hợp lệ. Chọn từ bảng màu có sẵn.");
+      return;
+    }
     try {
       await createCat({
         name: cName.trim(),
@@ -81,13 +98,17 @@ export function CategoriesPage() {
       toast.success("Đã tạo danh mục");
       setCreateOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không tạo được.");
+      toast.error(parseApiError(err).message);
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editItem || !eName.trim()) return;
+    if (eColor.trim() && !isValidHexColor(eColor)) {
+      toast.error("Màu không hợp lệ. Chọn từ bảng màu có sẵn.");
+      return;
+    }
     try {
       await updateCat({
         id: editItem.id,
@@ -100,7 +121,7 @@ export function CategoriesPage() {
       toast.success("Đã cập nhật danh mục");
       setEditItem(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không cập nhật được.");
+      toast.error(parseApiError(err).message);
     }
   };
 
@@ -117,17 +138,17 @@ export function CategoriesPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải danh mục...</p>
+      <p className="brutal-loading text-sm">Đang tải danh mục...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được danh mục.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -138,36 +159,24 @@ export function CategoriesPage() {
 
   return (
     <section className="space-y-8">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Phân loại
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">
-              Danh mục
-            </h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Danh mục hệ thống (chỉ xem) và danh mục của bạn.
-            </p>
-          </div>
+      <BrutalPageHeader
+        eyebrow="Phân loại"
+        title="Danh mục"
+        description="Danh mục hệ thống (chỉ xem) và danh mục của bạn."
+        actions={
           <Button
             type="button"
-            className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            className="brutal-btn-primary cursor-pointer"
             onClick={openCreate}
           >
             <Plus className="mr-2 h-4 w-4" />
             Tạo danh mục
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-[#6366F1]">
+        <h2 className="mb-3 text-sm font-semibold">
           Danh mục mặc định
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -177,9 +186,9 @@ export function CategoriesPage() {
             data.defaultCategories.map((c) => (
               <span
                 key={c.id}
-                className="inline-flex items-center rounded-full border border-violet-200/90 bg-white/90 px-3 py-1 text-sm text-slate-700 shadow-sm shadow-violet-500/5"
+                className="brutal-pill inline-flex items-center px-3 py-1 text-sm text-slate-700"
               >
-                {c.name}
+                {getCategoryDisplayName(c.name, "default")}
               </span>
             ))
           )}
@@ -187,7 +196,7 @@ export function CategoriesPage() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-[#6366F1]">
+        <h2 className="mb-3 text-sm font-semibold">
           Danh mục của bạn
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -199,14 +208,22 @@ export function CategoriesPage() {
             data.customCategories.map((c) => (
               <Card
                 key={c.id}
-                className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+                className="brutal-card border-0 shadow-none transition hover:bg-neutral-50"
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base text-[#0f172a]">{c.name}</CardTitle>
                   <CardDescription>
-                    {[c.icon && `Icon: ${c.icon}`, c.color && `Màu: ${c.color}`]
-                      .filter(Boolean)
-                      .join(" · ") || "Không mô tả thêm"}
+                    {c.color ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border border-white shadow-sm"
+                          style={{ backgroundColor: c.color }}
+                        />
+                        Danh mục của bạn
+                      </span>
+                    ) : (
+                      "Danh mục của bạn"
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex gap-2">
@@ -214,7 +231,7 @@ export function CategoriesPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
+                    className="brutal-btn-outline cursor-pointer"
                     onClick={() => openEdit(c)}
                   >
                     <Pencil className="mr-1 h-3.5 w-3.5" />
@@ -224,7 +241,7 @@ export function CategoriesPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="cursor-pointer border-violet-200/80 text-red-600 hover:border-red-200 hover:bg-red-50"
+                    className="brutal-btn-outline cursor-pointer text-red-600 hover:bg-red-50"
                     onClick={() => setDeleteId(c.id)}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
@@ -254,37 +271,24 @@ export function CategoriesPage() {
                   placeholder="Ví dụ: Ăn ngoài"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="cc-icon">Icon (tùy chọn)</Label>
-                <Input
-                  id="cc-icon"
-                  value={cIcon}
-                  onChange={(ev) => setCIcon(ev.target.value)}
-                  placeholder="shopping"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="cc-color">Màu (tùy chọn)</Label>
-                <Input
-                  id="cc-color"
-                  value={cColor}
-                  onChange={(ev) => setCColor(ev.target.value)}
-                  placeholder="#6366F1"
-                />
-              </div>
+              <CategoryAppearancePicker
+                icon={cIcon}
+                color={cColor}
+                onIconChange={setCIcon}
+                onColorChange={setCColor}
+              />
             </div>
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setCreateOpen(false)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -309,35 +313,24 @@ export function CategoriesPage() {
                   onChange={(ev) => setEName(ev.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="ee-icon">Icon</Label>
-                <Input
-                  id="ee-icon"
-                  value={eIcon}
-                  onChange={(ev) => setEIcon(ev.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="ee-color">Màu</Label>
-                <Input
-                  id="ee-color"
-                  value={eColor}
-                  onChange={(ev) => setEColor(ev.target.value)}
-                />
-              </div>
+              <CategoryAppearancePicker
+                icon={eIcon}
+                color={eColor}
+                onIconChange={setEIcon}
+                onColorChange={setEColor}
+              />
             </div>
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setEditItem(null)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}

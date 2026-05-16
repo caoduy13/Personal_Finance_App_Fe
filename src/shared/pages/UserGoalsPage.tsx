@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, PiggyBank, Plus, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { useJars } from "@/features/jars/hooks/useJars";
 import {
   useCreateGoal,
@@ -12,6 +13,9 @@ import {
 } from "@/features/goals";
 import { goalService } from "@/features/goals/services";
 import type { GoalListItem } from "@/features/goals";
+import { ScheduleDateTimePicker } from "@/shared/components/ScheduleDateTimePicker";
+import { parseApiError } from "@/shared/lib/apiErrors";
+import { GOAL_STATUS_LABELS, labelOf } from "@/shared/constants/userCopy";
 import { ROUTES } from "@/shared/constants/routes";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -48,13 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+import { formatVnd } from "@/shared/lib/formatCurrency";
 
 function formatDue(iso: string) {
   if (!iso) return "—";
@@ -74,9 +72,12 @@ function toDatetimeLocalValue(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+type GoalStatusFilter = "all" | "active" | "completed";
+
 export function UserGoalsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useGoals();
+  const [statusFilter, setStatusFilter] = useState<GoalStatusFilter>("all");
   const { data: jars = [] } = useJars();
   const { mutateAsync: createGoal, isPending: creating } = useCreateGoal();
   const { mutateAsync: updateGoal, isPending: updating } = useUpdateGoal();
@@ -97,6 +98,17 @@ export function UserGoalsPage() {
   const [eDue, setEDue] = useState("");
   const [eJar, setEJar] = useState("__none__");
   const [eNote, setENote] = useState("");
+  const [cDueError, setCDueError] = useState<string | null>(null);
+  const [eDueError, setEDueError] = useState<string | null>(null);
+
+  const filteredGoals = useMemo(() => {
+    if (!data) return [];
+    if (statusFilter === "all") return data;
+    if (statusFilter === "completed") {
+      return data.filter((g) => g.status.toLowerCase() === "completed");
+    }
+    return data.filter((g) => g.status.toLowerCase() !== "completed");
+  }, [data, statusFilter]);
 
   const openEdit = async (g: GoalListItem) => {
     try {
@@ -137,9 +149,16 @@ export function UserGoalsPage() {
     }
     const parsedDue = new Date(cDue);
     if (Number.isNaN(parsedDue.getTime())) {
-      toast.error("Hạn không hợp lệ.");
+      setCDueError("Hạn không hợp lệ.");
       return;
     }
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (parsedDue < todayStart) {
+      setCDueError("Hạn mục tiêu không được ở quá khứ.");
+      return;
+    }
+    setCDueError(null);
     try {
       await createGoal({
         title: cTitle.trim(),
@@ -151,7 +170,9 @@ export function UserGoalsPage() {
       toast.success("Đã tạo mục tiêu");
       setCreateOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không tạo được.");
+      const parsed = parseApiError(err);
+      if (parsed.field === "dueDate") setCDueError(parsed.message);
+      toast.error(parsed.message);
     }
   };
 
@@ -166,9 +187,16 @@ export function UserGoalsPage() {
     }
     const parsedDue = new Date(eDue);
     if (Number.isNaN(parsedDue.getTime())) {
-      toast.error("Hạn không hợp lệ.");
+      setEDueError("Hạn không hợp lệ.");
       return;
     }
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (parsedDue < todayStart) {
+      setEDueError("Hạn mục tiêu không được ở quá khứ.");
+      return;
+    }
+    setEDueError(null);
     try {
       await updateGoal({
         id: editListItem.id,
@@ -183,7 +211,9 @@ export function UserGoalsPage() {
       toast.success("Đã cập nhật mục tiêu");
       setEditListItem(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không cập nhật được.");
+      const parsed = parseApiError(err);
+      if (parsed.field === "dueDate") setEDueError(parsed.message);
+      toast.error(parsed.message);
     }
   };
 
@@ -200,17 +230,17 @@ export function UserGoalsPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải mục tiêu...</p>
+      <p className="brutal-loading text-sm">Đang tải mục tiêu...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được danh sách mục tiêu.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -221,54 +251,67 @@ export function UserGoalsPage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Tiết kiệm có đích
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Mục tiêu</h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Gắn một{" "}
-              <Link
-                to={ROUTES.JARS}
-                className="font-medium text-[#6366F1] underline-offset-2 hover:underline"
-              >
-                hũ tiết kiệm
-              </Link>{" "}
-              với mục tiêu: tiến độ &quot;đã tiết kiệm&quot; lấy theo{" "}
-              <strong>số dư hũ đó</strong> (giao dịch vào hũ = tiến gần mục tiêu).
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
-              onClick={openCreate}
+      <BrutalPageHeader
+        eyebrow="Tiết kiệm có đích"
+        title="Mục tiêu"
+        description={
+          <>
+            Gắn với một{" "}
+            <Link
+              to={ROUTES.JARS}
+              className="font-semibold underline-offset-2 hover:underline"
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Tạo mục tiêu
-            </Button>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-200/80 bg-white/80 text-[#6366F1] shadow-sm shadow-violet-500/10">
-              <Target className="h-6 w-6" aria-hidden />
-            </div>
-          </div>
-        </div>
+              hũ tiết kiệm
+            </Link>{" "}
+            để theo dõi tiến độ theo số tiền trong hũ.
+          </>
+        }
+        actions={
+          <Button
+            type="button"
+            className="brutal-btn-primary cursor-pointer"
+            onClick={openCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo mục tiêu
+          </Button>
+        }
+      />
+
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["all", "Tất cả"],
+            ["active", "Đang thực hiện"],
+            ["completed", "Hoàn thành"],
+          ] as const
+        ).map(([value, label]) => (
+          <Button
+            key={value}
+            type="button"
+            size="sm"
+            variant={statusFilter === value ? "default" : "outline"}
+            className={
+              statusFilter === value
+                ? "brutal-btn-primary cursor-pointer"
+                : "brutal-btn-outline cursor-pointer"
+            }
+            onClick={() => setStatusFilter(value)}
+          >
+            {label}
+          </Button>
+        ))}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {data.length === 0 ? (
-          <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none md:col-span-2">
+        {filteredGoals.length === 0 ? (
+          <Card className="brutal-card border-0 border-dashed shadow-none md:col-span-2">
             <CardContent className="py-10 text-center text-sm text-slate-600">
-              <Target className="mx-auto mb-3 h-10 w-10 text-violet-300" />
+              <Target className="mx-auto mb-3 h-10 w-10 text-neutral-400" />
               <p>Chưa có mục tiêu nào.</p>
               <Button
                 type="button"
-                className="mt-4 cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="mt-4 brutal-btn-primary cursor-pointer"
                 onClick={openCreate}
               >
                 Tạo mục tiêu đầu tiên
@@ -276,10 +319,10 @@ export function UserGoalsPage() {
             </CardContent>
           </Card>
         ) : (
-          data.map((goal) => (
+          filteredGoals.map((goal) => (
             <Card
               key={goal.id}
-              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+              className="brutal-card border-0 shadow-none transition hover:bg-neutral-50"
             >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
@@ -288,9 +331,9 @@ export function UserGoalsPage() {
                       {goal.title}
                     </CardTitle>
                     <CardDescription>
-                      Gợi ý / tháng:{" "}
-                      <span className="font-medium text-[#6366F1]">
-                        {formatCurrency(goal.suggestedMonthlyContribution)}
+                      Gợi ý mỗi tháng:{" "}
+                      <span className="font-semibold">
+                        {formatVnd(goal.suggestedMonthlyContribution)}
                       </span>
                     </CardDescription>
                   </div>
@@ -299,7 +342,7 @@ export function UserGoalsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer h-8 border-violet-200/80 px-2 hover:bg-violet-50 hover:text-[#4F46E5]"
+                      className="brutal-btn-outline cursor-pointer h-8 px-2"
                       onClick={() => void openEdit(goal)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -308,7 +351,7 @@ export function UserGoalsPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer h-8 border-violet-200/80 px-2 text-red-600 hover:border-red-200 hover:bg-red-50"
+                      className="cursor-pointer h-8 border-neutral-200 px-2 text-red-600 hover:border-red-200 hover:bg-red-50"
                       onClick={() => setDeleteId(goal.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -319,18 +362,18 @@ export function UserGoalsPage() {
               <CardContent className="space-y-3 text-sm">
                 {goal.linkedJarId && goal.linkedJarName ? (
                   <p className="flex flex-wrap items-center gap-1.5 text-slate-700">
-                    <PiggyBank className="h-4 w-4 shrink-0 text-[#6366F1]" />
+                    <PiggyBank className="h-4 w-4 shrink-0 text-neutral-900" />
                     <span>Tiết kiệm qua hũ</span>
                     <Link
                       to={ROUTES.JARS}
-                      className="font-semibold text-[#6366F1] underline-offset-2 hover:underline"
+                      className="font-semibold underline-offset-2 hover:underline"
                     >
                       {goal.linkedJarName}
                     </Link>
                   </p>
                 ) : (
                   <p className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-900">
-                    Chưa gắn hũ — &quot;Đã tiết kiệm&quot; đang là 0₫. Chọn hũ khi{" "}
+                    Chưa gắn hũ nên tiến độ đang là 0₫. Bạn có thể chọn hũ khi{" "}
                     <button
                       type="button"
                       className="font-semibold underline-offset-2 hover:underline"
@@ -343,28 +386,29 @@ export function UserGoalsPage() {
                 )}
                 <p className="text-slate-600">
                   Đã tiết kiệm:{" "}
-                  <span className="font-semibold text-[#6366F1]">
-                    {formatCurrency(goal.savedAmount)}
+                  <span className="font-semibold">
+                    {formatVnd(goal.savedAmount)}
                   </span>{" "}
                   /{" "}
                   <span className="font-medium text-slate-800">
-                    {formatCurrency(goal.targetAmount)}
+                    {formatVnd(goal.targetAmount)}
                   </span>
                 </p>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-violet-100/80">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
                   <div
-                    className="h-full rounded-full bg-linear-to-r from-violet-500 to-indigo-500 transition-all"
+                    className="h-full rounded-full bg-[#a8e087] transition-all"
                     style={{
                       width: `${Math.min(100, goal.progressPercentage)}%`,
                     }}
                   />
                 </div>
                 <p className="text-xs text-slate-500">
-                  <span className="font-medium text-[#6366F1]">
+                  <span className="font-semibold">
                     {goal.progressPercentage.toFixed(1)}%
                   </span>
                   {" · "}
-                  Hạn: {formatDue(goal.dueDate)} · {goal.status}
+                  Hạn: {formatDue(goal.dueDate)} ·{" "}
+                  {labelOf(GOAL_STATUS_LABELS, goal.status)}
                 </p>
               </CardContent>
             </Card>
@@ -378,7 +422,7 @@ export function UserGoalsPage() {
             <DialogHeader>
               <DialogTitle>Tạo mục tiêu</DialogTitle>
               <DialogDescription>
-                Hũ tùy chọn: nếu có, tiến độ theo số dư hũ đó.
+                Có thể gắn hũ để tự cập nhật tiến độ theo số dư hũ.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -402,12 +446,19 @@ export function UserGoalsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="g-c-due">Hạn (ngày giờ)</Label>
-                <Input
+                <ScheduleDateTimePicker
                   id="g-c-due"
-                  type="datetime-local"
                   value={cDue}
-                  onChange={(ev) => setCDue(ev.target.value)}
+                  onChange={(v) => {
+                    setCDue(v);
+                    setCDueError(null);
+                  }}
+                  disablePast
+                  allowClear={false}
                 />
+                {cDueError ? (
+                  <p className="text-sm text-red-500">{cDueError}</p>
+                ) : null}
               </div>
               <div className="grid gap-2">
                 <Label>Hũ tiết kiệm (tùy chọn)</Label>
@@ -419,7 +470,7 @@ export function UserGoalsPage() {
                     <SelectItem value="__none__">Không gắn hũ</SelectItem>
                     {jars.map((j) => (
                       <SelectItem key={j.id} value={j.id}>
-                        {j.name} ({formatCurrency(j.balance)})
+                        {j.name} ({formatVnd(j.balance)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -437,15 +488,14 @@ export function UserGoalsPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setCreateOpen(false)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1]"
+                className="cursor-pointer bg-[#a8e087] text-[#0a0a0a]"
                 disabled={creating}
               >
                 {creating ? "Đang lưu..." : "Tạo"}
@@ -485,11 +535,18 @@ export function UserGoalsPage() {
               </div>
               <div className="grid gap-2">
                 <Label>Hạn</Label>
-                <Input
-                  type="datetime-local"
+                <ScheduleDateTimePicker
                   value={eDue}
-                  onChange={(ev) => setEDue(ev.target.value)}
+                  onChange={(v) => {
+                    setEDue(v);
+                    setEDueError(null);
+                  }}
+                  disablePast
+                  allowClear={false}
                 />
+                {eDueError ? (
+                  <p className="text-sm text-red-500">{eDueError}</p>
+                ) : null}
               </div>
               <div className="grid gap-2">
                 <Label>Hũ tiết kiệm</Label>
@@ -501,7 +558,7 @@ export function UserGoalsPage() {
                     <SelectItem value="__none__">Không gắn hũ</SelectItem>
                     {jars.map((j) => (
                       <SelectItem key={j.id} value={j.id}>
-                        {j.name} ({formatCurrency(j.balance)})
+                        {j.name} ({formatVnd(j.balance)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -518,15 +575,14 @@ export function UserGoalsPage() {
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
-                className="cursor-pointer"
+                variant="outline" className="brutal-btn-outline cursor-pointer"
                 onClick={() => setEditListItem(null)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="cursor-pointer bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={updating}
               >
                 {updating ? "Đang lưu..." : "Lưu"}

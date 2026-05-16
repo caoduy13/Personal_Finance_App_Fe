@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { BrutalPageHeader } from "@/shared/components/layout/BrutalPageHeader";
 import { useGoals } from "@/features/goals";
 import { ROUTES } from "@/shared/constants/routes";
 import { Button } from "@/shared/components/ui/button";
@@ -21,15 +23,21 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { useCreateJar, useJars, useUpdateJar } from "../hooks/useJars";
+import { parseApiError } from "@/shared/lib/apiErrors";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import { useCreateJar, useDeleteJar, useJars, useUpdateJar } from "../hooks/useJars";
 import type { JarItem } from "../types";
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+import { formatVnd } from "@/shared/lib/formatCurrency";
 
 export function JarsPage() {
   const { data, isLoading, isError, refetch } = useJars();
@@ -46,21 +54,23 @@ export function JarsPage() {
     isError: isUpdateError,
     error: updateError,
   } = useUpdateJar();
+  const { mutateAsync: deleteJar, isPending: deleting } = useDeleteJar();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editItem, setEditItem] = useState<JarItem | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [cName, setCName] = useState("");
-  const [cColor, setCColor] = useState("#6366F1");
+  const [cColor, setCColor] = useState("#a8e087");
   const [cIcon, setCIcon] = useState("wallet");
 
   const [eName, setEName] = useState("");
-  const [eColor, setEColor] = useState("#6366F1");
+  const [eColor, setEColor] = useState("#a8e087");
   const [eIcon, setEIcon] = useState("wallet");
 
   const openCreate = () => {
     setCName("");
-    setCColor("#6366F1");
+    setCColor("#a8e087");
     setCIcon("wallet");
     setCreateOpen(true);
   };
@@ -68,7 +78,7 @@ export function JarsPage() {
   const openEdit = (jar: JarItem) => {
     setEditItem(jar);
     setEName(jar.name);
-    setEColor(jar.color || "#6366F1");
+    setEColor(jar.color || "#a8e087");
     setEIcon(jar.icon || "wallet");
   };
 
@@ -85,6 +95,17 @@ export function JarsPage() {
       setCreateOpen(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Không tạo được hũ.");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await deleteJar(deleteId);
+      toast.success("Đã xóa hũ");
+      setDeleteId(null);
+    } catch (e) {
+      toast.error(parseApiError(e).message);
     }
   };
 
@@ -109,17 +130,17 @@ export function JarsPage() {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-violet-600/80">Đang tải hũ...</p>
+      <p className="brutal-loading text-sm">Đang tải hũ...</p>
     );
   }
   if (isError || !data) {
     return (
-      <div className="space-y-3 rounded-2xl border border-violet-200/80 bg-violet-50/50 p-5">
+      <div className="brutal-error-box space-y-3">
         <p className="text-sm text-red-600">Không tải được danh sách hũ.</p>
         <Button
           type="button"
           variant="outline"
-          className="cursor-pointer border-violet-200 bg-white hover:bg-violet-50"
+          className="brutal-btn-outline cursor-pointer"
           onClick={() => void refetch()}
         >
           Thử lại
@@ -130,46 +151,40 @@ export function JarsPage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 via-white to-indigo-50/90 px-5 py-6 shadow-sm sm:px-6">
-        <div
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-400/15 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6366F1]">
-              Phân bổ tiền
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">Hũ</h1>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Số dư hũ có thể gắn với{" "}
-              <Link
-                to={ROUTES.GOALS}
-                className="font-medium text-[#6366F1] underline-offset-2 hover:underline"
-              >
-                mục tiêu tiết kiệm
-              </Link>{" "}
-              — tiến độ mục tiêu lấy theo số dư hũ đó.
-            </p>
-          </div>
+      <BrutalPageHeader
+        eyebrow="Phân bổ tiền"
+        title="Hũ"
+        description={
+          <>
+            Số dư hũ có thể gắn với{" "}
+            <Link
+              to={ROUTES.GOALS}
+              className="font-semibold underline-offset-2 hover:underline"
+            >
+              mục tiêu tiết kiệm
+            </Link>{" "}
+            để theo dõi mục tiêu tiết kiệm.
+          </>
+        }
+        actions={
           <Button
             type="button"
-            className="shrink-0 gap-2 bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+            className="brutal-btn-primary shrink-0 cursor-pointer gap-2"
             onClick={openCreate}
           >
             <Plus className="h-4 w-4" />
             Tạo hũ mới
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {data.length === 0 ? (
-        <Card className="border-dashed border-violet-200/80 bg-violet-50/30 shadow-none">
+        <Card className={cn("brutal-card border-0 border-dashed shadow-none")}>
           <CardContent className="py-12 text-center text-sm text-slate-600">
             <p>Chưa có hũ nào.</p>
             <Button
               type="button"
-              className="mt-4 bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+              className="brutal-btn-primary mt-4 cursor-pointer"
               onClick={openCreate}
             >
               <Plus className="h-4 w-4" />
@@ -184,37 +199,45 @@ export function JarsPage() {
             return (
             <Card
               key={jar.id}
-              className="border-violet-200/80 bg-white/80 shadow-none backdrop-blur-sm transition hover:border-violet-300 hover:shadow-sm hover:shadow-violet-500/10"
+              className={cn("brutal-card border-0 shadow-none transition hover:bg-neutral-50")}
             >
               <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold text-[#0f172a]">
                   <span
-                    className="inline-block h-3 w-3 shrink-0 rounded-full border border-white shadow-sm ring-1 ring-violet-200/80"
+                    className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-neutral-900"
                     style={{ backgroundColor: jar.color }}
                   />
                   <span className="line-clamp-2">{jar.name}</span>
                 </CardTitle>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 cursor-pointer gap-1 border-violet-200/80 hover:bg-violet-50 hover:text-[#4F46E5]"
-                  onClick={() => openEdit(jar)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Sửa
-                </Button>
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="brutal-btn-outline cursor-pointer gap-1"
+                    onClick={() => openEdit(jar)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Sửa
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="brutal-btn-outline cursor-pointer px-2 text-red-600 hover:bg-red-50"
+                    onClick={() => setDeleteId(jar.id)}
+                    aria-label="Xóa hũ"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
                 <p className="text-slate-600">
                   Số dư:{" "}
-                  <span className="font-semibold text-[#6366F1]">
-                    {formatCurrency(jar.balance)}
+                  <span className="font-semibold">
+                    {formatVnd(jar.balance)}
                   </span>
-                </p>
-                <p className="text-slate-500">
-                  Icon:{" "}
-                  <span className="font-mono text-xs">{jar.icon || "—"}</span>
                 </p>
                 <p className="text-xs text-slate-500">
                   Phân bổ:{" "}
@@ -222,7 +245,7 @@ export function JarsPage() {
                   {jar.status}
                 </p>
                 {jarGoals.length > 0 ? (
-                  <div className="mt-3 border-t border-violet-100 pt-2">
+                  <div className="mt-3 border-t border-neutral-200 pt-2">
                     <p className="text-xs font-medium text-slate-600">
                       Mục tiêu dùng hũ này
                     </p>
@@ -231,7 +254,7 @@ export function JarsPage() {
                         <li key={g.id}>
                           <Link
                             to={ROUTES.GOALS}
-                            className="text-xs text-[#6366F1] underline-offset-2 hover:underline"
+                            className="text-xs font-semibold underline-offset-2 hover:underline"
                           >
                             {g.title} · {g.progressPercentage.toFixed(0)}%
                           </Link>
@@ -240,11 +263,11 @@ export function JarsPage() {
                     </ul>
                   </div>
                 ) : (
-                  <p className="mt-3 border-t border-violet-100 pt-2 text-xs text-slate-400">
+                  <p className="mt-3 border-t border-neutral-200 pt-2 text-xs text-slate-400">
                     Chưa gắn mục tiêu.{" "}
                     <Link
                       to={ROUTES.GOALS}
-                      className="text-[#6366F1] underline-offset-2 hover:underline"
+                      className="font-semibold underline-offset-2 hover:underline"
                     >
                       Tạo / sửa mục tiêu
                     </Link>
@@ -313,13 +336,14 @@ export function JarsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="brutal-btn-outline cursor-pointer"
                 onClick={() => setCreateOpen(false)}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                className="brutal-btn-primary cursor-pointer"
                 disabled={creating}
               >
                 {creating ? "Đang tạo…" : "Tạo hũ"}
@@ -393,7 +417,7 @@ export function JarsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-[#6366F1] text-white shadow-md shadow-violet-500/25 hover:bg-[#4F46E5]"
+                  className="brutal-btn-primary cursor-pointer"
                   disabled={updating}
                 >
                   {updating ? "Đang lưu…" : "Lưu"}
@@ -403,6 +427,28 @@ export function JarsPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa hũ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc muốn xóa hũ này? Nếu hũ còn giao dịch hoặc mục tiêu, có thể
+              không xóa được.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="cursor-pointer bg-red-600 hover:bg-red-700"
+              onClick={() => void confirmDelete()}
+              disabled={deleting}
+            >
+              {deleting ? "Đang xóa…" : "Xóa hũ"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

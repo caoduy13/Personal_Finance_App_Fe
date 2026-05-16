@@ -24,7 +24,7 @@ const vndFormatter = new Intl.NumberFormat("vi-VN", {
 const formatVnd = (amount: number) => vndFormatter.format(amount);
 
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition-colors focus-visible:border-[#6366F1]/50 focus-visible:ring-2 focus-visible:ring-[#6366F1]/25";
+  "mt-1.5 w-full rounded-lg border-2 border-neutral-900 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#a8e087]";
 
 function toggleInList<T>(list: T[], value: T): T[] {
   if (list.includes(value)) return list.filter((v) => v !== value);
@@ -77,9 +77,9 @@ function OnboardingWizard() {
   return (
     <div className="flex min-h-screen flex-col justify-center bg-[#eef1fb] px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
-        <div className="rounded-2xl border-2 border-[#6366F1] bg-[#e9edfa] p-3 md:p-4">
-          <div className="rounded-xl border border-[#d7def5] bg-[#f3f6ff] px-4 py-6 md:px-8 md:py-8">
-            <p className="text-xs font-medium text-[#6366F1]">
+        <div className="rounded-2xl border-2 border-neutral-900 bg-[#f4f4f5] p-3 md:p-4">
+          <div className="rounded-xl border border-neutral-900 bg-[#f3f6ff] px-4 py-6 md:px-8 md:py-8">
+            <p className="text-xs font-medium text-neutral-900">
               {ONBOARDING_UI.stepLabel(step, totalSteps)} — {ONBOARDING_UI.pageTitle}
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-[#0f172a]">
@@ -97,14 +97,14 @@ function OnboardingWizard() {
                 <div
                   key={n}
                   className={`h-1.5 min-w-16 flex-1 rounded-full ${
-                    n <= step ? "bg-[#6366F1]" : "bg-slate-200"
+                    n <= step ? "bg-[#a8e087] text-[#0a0a0a]" : "bg-slate-200"
                   } ${n < totalSteps ? "mr-1" : ""}`}
                 />
               ))}
             </div>
 
             {step === 1 && (
-              <Card className="mb-4 border border-[#d7def5] bg-white/80 shadow-none">
+              <Card className="mb-4 border border-neutral-900 bg-white/80 shadow-none">
                 <CardContent className="pt-6">
                   <h2 className="mb-3 text-base font-semibold text-[#0f172a]">
                     Thông tin cơ bản
@@ -168,7 +168,7 @@ function OnboardingWizard() {
             )}
 
             {step === 2 && (
-              <Card className="mb-4 border border-[#d7def5] bg-white/80 shadow-none">
+              <Card className="mb-4 border border-neutral-900 bg-white/80 shadow-none">
                 <CardContent className="pt-6">
                   <h2 className="mb-3 text-base font-semibold text-[#0f172a]">
                     {ONBOARDING_UI.financialGoals}
@@ -189,7 +189,7 @@ function OnboardingWizard() {
                               onChange={() =>
                                 field.onChange(toggleInList(field.value, g.value))
                               }
-                              className="h-4 w-4 accent-[#6366F1]"
+                              className="h-4 w-4 accent-[#a8e087]"
                             />
                             {g.label}
                           </label>
@@ -222,7 +222,7 @@ function OnboardingWizard() {
                               onChange={() =>
                                 field.onChange(toggleInList(field.value, g.value))
                               }
-                              className="h-4 w-4 accent-[#6366F1]"
+                              className="h-4 w-4 accent-[#a8e087]"
                             />
                             {g.label}
                           </label>
@@ -240,7 +240,7 @@ function OnboardingWizard() {
             )}
 
             {step === 3 && (
-              <Card className="mb-4 border border-[#d7def5] bg-white/80 shadow-none">
+              <Card className="mb-4 border border-neutral-900 bg-white/80 shadow-none">
                 <CardContent className="pt-6">
                   <h2 className="mb-3 text-base font-semibold text-[#0f172a]">
                     {ONBOARDING_UI.methodTitle}
@@ -259,11 +259,11 @@ function OnboardingWizard() {
                               onClick={() => field.onChange(m.id)}
                               className={`cursor-pointer rounded-xl border p-4 text-left transition-colors ${
                                 active
-                                  ? "border-2 border-[#6366F1] bg-indigo-50/90"
+                                  ? "border-2 border-neutral-900 bg-[#a5a6f6]/40"
                                   : "border border-slate-200 bg-white hover:bg-slate-50"
                               }`}
                             >
-                              <div className="text-sm font-semibold text-[#6366F1]">
+                              <div className="text-sm font-semibold text-neutral-900">
                                 {m.title}
                               </div>
                               <p className="mt-2 text-xs text-slate-600">
@@ -285,7 +285,7 @@ function OnboardingWizard() {
             )}
 
             {step === 4 && (
-              <Card className="mb-4 border border-[#d7def5] bg-white/80 shadow-none">
+              <Card className="mb-4 border border-neutral-900 bg-white/80 shadow-none">
                 <CardContent className="pt-6">
                   <h2 className="mb-3 text-base font-semibold text-[#0f172a]">
                     {budgetingMethod === BUDGET_METHOD.CUSTOM
@@ -307,7 +307,7 @@ function OnboardingWizard() {
                             <span aria-hidden>{j.icon}</span> {j.name} —{" "}
                             {j.percentage}%
                           </span>
-                          <span className="font-semibold text-[#6366F1]">
+                          <span className="font-semibold text-neutral-900">
                             {formatVnd(j.monthlyAmount)}/tháng
                           </span>
                         </li>
@@ -345,7 +345,7 @@ function OnboardingWizard() {
                     type="button"
                     onClick={goNext}
                     disabled={submitting}
-                    className="bg-[#6366F1] text-white hover:bg-[#4F46E5]"
+                    className="brutal-btn-primary cursor-pointer"
                   >
                     {ONBOARDING_UI.next}
                   </Button>
@@ -355,7 +355,7 @@ function OnboardingWizard() {
                     type="button"
                     onClick={() => void submit()}
                     disabled={submitting}
-                    className="bg-[#6366F1] text-white hover:bg-[#4F46E5]"
+                    className="brutal-btn-primary cursor-pointer"
                   >
                     {submitting ? "Đang lưu…" : ONBOARDING_UI.reviewSubmit}
                   </Button>

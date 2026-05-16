@@ -10,9 +10,36 @@ import type {
 
 const BASE = API_ENDPOINT.NOTIFICATIONS;
 
+function parseMetadata(raw: unknown): NotificationItem["metadata"] {
+  if (!raw || typeof raw !== "object") {
+    if (typeof raw === "string" && raw.trim()) {
+      try {
+        return parseMetadata(JSON.parse(raw) as Record<string, unknown>);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+  const m = raw as Record<string, unknown>;
+  return {
+    goalId: m.goalId != null ? String(m.goalId) : m.GoalId != null ? String(m.GoalId) : undefined,
+    jarId: m.jarId != null ? String(m.jarId) : m.JarId != null ? String(m.JarId) : undefined,
+    limitId:
+      m.limitId != null ? String(m.limitId) : m.LimitId != null ? String(m.LimitId) : undefined,
+    transactionId:
+      m.transactionId != null
+        ? String(m.transactionId)
+        : m.TransactionId != null
+          ? String(m.TransactionId)
+          : undefined,
+  };
+}
+
 function mapItem(raw: Record<string, unknown>): NotificationItem {
   const id = raw.id ?? raw.Id;
   const occurredAt = raw.occurredAt ?? raw.OccurredAt;
+  const metaRaw = raw.metadata ?? raw.Metadata ?? raw.metadataJson ?? raw.MetadataJson;
   return {
     id: String(id ?? ""),
     type: String(raw.type ?? raw.Type ?? ""),
@@ -25,6 +52,7 @@ function mapItem(raw: Record<string, unknown>): NotificationItem {
         : occurredAt != null
           ? new Date(occurredAt as string | number).toISOString()
           : "",
+    metadata: parseMetadata(metaRaw),
   };
 }
 

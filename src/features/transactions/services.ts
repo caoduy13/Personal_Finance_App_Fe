@@ -3,6 +3,7 @@ import { API_ENDPOINT } from "@/shared/constants/apiEndpoint";
 import type {
   CreateTransactionPayload,
   DeleteTransactionResult,
+  TransactionDetail,
   TransactionItem,
   TransactionListParams,
   TransactionListResult,
@@ -42,6 +43,23 @@ function mapRow(row: TransactionApiRow): TransactionItem {
   };
 }
 
+function mapDetail(row: TransactionApiRow & {
+  financialAccountId?: string | null;
+  fromJarId?: string | null;
+  toJarId?: string | null;
+  categoryId?: string | null;
+  toJar?: { id?: string | null; name?: string | null };
+}): TransactionDetail {
+  return {
+    ...mapRow(row),
+    financialAccountId: row.financialAccountId ?? row.financialAccount?.id ?? null,
+    fromJarId: row.fromJarId ?? null,
+    toJarId: row.toJarId ?? row.toJar?.id ?? null,
+    toJarName: row.toJar?.name ?? null,
+    categoryId: row.categoryId ?? row.category?.id ?? null,
+  };
+}
+
 function buildListParams(params?: TransactionListParams) {
   if (!params) return undefined;
   return {
@@ -70,8 +88,19 @@ export const transactionService = {
     };
   },
 
+  async getById(id: string): Promise<TransactionDetail> {
+    const row = (await apiClient.get(`${BASE}/${id}`)) as TransactionApiRow & {
+      financialAccountId?: string | null;
+      fromJarId?: string | null;
+      toJarId?: string | null;
+      categoryId?: string | null;
+      toJar?: { id?: string | null; name?: string | null };
+    };
+    return mapDetail(row);
+  },
+
   async create(payload: CreateTransactionPayload): Promise<TransactionItem> {
-    const body = {
+    const body: Record<string, unknown> = {
       financialAccountId: payload.financialAccountId ?? undefined,
       type: payload.type,
       transactionsAmount: payload.amount,
@@ -79,8 +108,10 @@ export const transactionService = {
       fromJarId: payload.fromJarId ?? undefined,
       toJarId: payload.toJarId ?? undefined,
       note: payload.note ?? null,
-      date: payload.date ?? new Date().toISOString(),
     };
+    if (payload.type !== "Transfer") {
+      body.date = payload.date ?? new Date().toISOString();
+    }
     const row = (await apiClient.post(BASE, body)) as {
       id: string;
       type: string;

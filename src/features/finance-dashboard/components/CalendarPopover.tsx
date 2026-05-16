@@ -5,6 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
+import { BrutalIconButton } from "@/shared/components/layout/BrutalIconButton";
 import { cn } from "@/lib/utils";
 import { CASH_FLOW_MONTHS, calendarEvents } from "../mockData";
 import { useFinanceDashboard } from "../context/FinanceDashboardContext";
@@ -26,24 +27,6 @@ const MONTH_LABELS = [
   "Dec",
 ];
 
-function IconCircleButton({
-  children,
-  "aria-label": ariaLabel,
-}: {
-  children: React.ReactNode;
-  "aria-label"?: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
-    >
-      {children}
-    </button>
-  );
-}
-
 export function CalendarPopover() {
   const { selectedMonth, setSelectedMonth, tr, language } = useFinanceDashboard();
   const [viewYear, setViewYear] = useState(2021);
@@ -58,38 +41,35 @@ export function CalendarPopover() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <span>
-          <IconCircleButton aria-label={tr("calendar")}>
-            <CalendarIcon className="h-4 w-4" />
-          </IconCircleButton>
+          <BrutalIconButton aria-label={tr("calendar")}>
+            <CalendarIcon className="h-4 w-4 stroke-[2.5]" />
+          </BrutalIconButton>
         </span>
       </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="w-[320px] p-0 dark:border-neutral-700 dark:bg-neutral-900"
-      >
-        <div className="border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
-          <p className="font-semibold">{tr("calendar")}</p>
-          <p className="text-xs text-neutral-500">{tr("selectMonth")}</p>
+      <PopoverContent align="end" className="w-[320px] overflow-hidden p-0">
+        <div className="brutal-popover-header">
+          <p className="brutal-popover-header-title">{tr("calendar")}</p>
+          <p className="brutal-popover-header-sub">{tr("selectMonth")}</p>
         </div>
 
-        <div className="border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
+        <div className="brutal-popover-section">
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"
               onClick={() => setViewYear((y) => y - 1)}
-              className="rounded-lg p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              aria-label="Previous year"
+              className="brutal-nav-btn"
+              aria-label="Năm trước"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 stroke-[2.5]" />
             </button>
-            <span className="text-sm font-semibold">{viewYear}</span>
+            <span className="text-sm font-extrabold">{viewYear}</span>
             <button
               type="button"
               onClick={() => setViewYear((y) => y + 1)}
-              className="rounded-lg p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              aria-label="Next year"
+              className="brutal-nav-btn"
+              aria-label="Năm sau"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 stroke-[2.5]" />
             </button>
           </div>
           <div className="grid grid-cols-4 gap-1.5">
@@ -105,12 +85,8 @@ export function CalendarPopover() {
                   disabled={!exists}
                   onClick={() => exists && quickSelect(key)}
                   className={cn(
-                    "rounded-lg py-2 text-xs font-medium transition",
-                    !exists && "cursor-not-allowed opacity-30",
-                    exists &&
-                      (isActive
-                        ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                        : "hover:bg-neutral-100 dark:hover:bg-neutral-800"),
+                    "brutal-month-btn",
+                    isActive && exists && "brutal-month-btn-active",
                   )}
                 >
                   {formatCalendarMonthShort(label, language)}
@@ -124,23 +100,25 @@ export function CalendarPopover() {
           <MonthTimeline />
         </div>
 
-        <div className="border-t border-neutral-100 dark:border-neutral-800">
-          <p className="px-4 py-2 text-xs font-semibold uppercase text-neutral-500">
+        <div className="brutal-popover-footer">
+          <p className="brutal-popover-header px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-neutral-600">
             {tr("upcomingEvents")}
           </p>
-          <ul className="max-h-40 overflow-y-auto px-2 pb-2">
+          <ul className="brutal-scroll max-h-40 overflow-y-auto px-2 pb-2">
             {calendarEvents.map((ev) => (
               <li key={ev.id}>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  className="brutal-menu-item"
                 >
-                  <p className="font-medium">{tr(ev.titleKey)}</p>
-                  <p className="text-xs text-neutral-500">
-                    {ev.date} ·{" "}
-                    {"timeKey" in ev ? tr(ev.timeKey) : ev.time}
-                  </p>
+                  <div>
+                    <p className="font-bold">{tr(ev.titleKey)}</p>
+                    <p className="text-xs font-medium text-neutral-500">
+                      {ev.date} ·{" "}
+                      {"timeKey" in ev ? tr(ev.timeKey) : ev.time}
+                    </p>
+                  </div>
                 </button>
               </li>
             ))}
