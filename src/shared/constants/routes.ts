@@ -7,6 +7,7 @@ export const ROUTES = {
   TRANSACTIONS: "/transactions",
   TRANSACTIONS_ADD: "/transactions/add",
   TRANSACTION_DETAIL: "/transactions/:id",
+  IMPORTS_OCR: "/imports/ocr",
   ACCOUNTS: "/accounts",
   JARS: "/jars",
   BUDGET: "/budget",

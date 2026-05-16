@@ -1,10 +1,11 @@
 /** Gốc API kèm `/api/v1` — axios ghép thêm path trong `API_ENDPOINT` (không lặp `/api/v1`). */
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
+const API_URL =
+  import.meta.env.VITE_API_LOCAL_URL ?? "http://localhost:5284/api/v1";
 
 if (!API_URL) {
   throw new Error(
-    "❌ MISSING ENVIRONMENT VARIABLE: VITE_API_URL\n" +
-      "Please create .env file with: VITE_API_URL=http://localhost:3000/api/v1",
+    "❌ MISSING ENVIRONMENT VARIABLE: VITE_API_LOCAL_URL\n" +
+      "Please create .env file with: VITE_API_LOCAL_URL=http://localhost:5284/api/v1",
   );
 }
 

@@ -10,6 +10,7 @@ import {
   LogOut,
   PiggyBank,
   ReceiptText,
+  ScanLine,
   Tags,
   WalletCards,
   X,
@@ -42,6 +43,7 @@ const userNavItems = [
 ] as const;
 
 const userNavSecondaryItems = [
+  { label: "OCR hóa đơn", to: ROUTES.IMPORTS_OCR, icon: ScanLine },
   { label: "Nhắc lịch", to: ROUTES.REMINDERS, icon: CalendarClock },
 ] as const;
 

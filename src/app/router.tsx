@@ -6,6 +6,7 @@ import {
   AddTransactionPage,
   TransactionDetailPage,
 } from "@/features/transactions";
+import { OcrImportPage } from "@/features/imports";
 import { AccountsPage } from "@/features/financial-accounts";
 import { JarsPage } from "@/features/jars";
 import { BudgetPage } from "@/features/budget";
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.TRANSACTIONS_ADD, element: <AddTransactionPage /> },
       { path: ROUTES.TRANSACTION_DETAIL, element: <TransactionDetailPage /> },
+      { path: ROUTES.IMPORTS_OCR, element: <OcrImportPage /> },
       { path: ROUTES.ACCOUNTS, element: <AccountsPage /> },
       { path: ROUTES.JARS, element: <JarsPage /> },
       { path: ROUTES.BUDGET, element: <BudgetPage /> },

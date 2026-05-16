@@ -19,7 +19,11 @@ export const API_ENDPOINT = {
     DETAIL: (id: string) => `admin/categories/${id}`,
   },
   IMPORTS: {
+    BASE: "imports",
     IMAGE: "imports/image",
+    DETAIL: (id: string) => `imports/${id}`,
+    DRAFT: (id: string, draftId: string) => `imports/${id}/drafts/${draftId}`,
+    CONFIRM: (id: string) => `imports/${id}/confirm`,
   },
   LIMITS: "limits",
   REMINDERS: "reminders",
