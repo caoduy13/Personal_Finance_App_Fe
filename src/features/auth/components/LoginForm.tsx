@@ -1,18 +1,27 @@
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { env } from "@/lib/env";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { loginSchema, type LoginFormData } from "../schema";
 import { useLoginMutation } from "../hooks/useAuth";
+import type { LoginIllustrationState } from "./LoginIllustration";
 
-export function LoginForm() {
+type LoginFormProps = {
+  onIllustrationStateChange?: (state: LoginIllustrationState) => void;
+};
+
+export function LoginForm({ onIllustrationStateChange }: LoginFormProps) {
   const { mutate: login, isPending, error } = useLoginMutation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -30,9 +39,37 @@ export function LoginForm() {
     },
   });
 
+  const password = watch("password");
+  const {
+    ref: passwordRef,
+    onBlur: passwordOnBlur,
+    ...passwordField
+  } = register("password");
+
+  useEffect(() => {
+    if (!onIllustrationStateChange) return;
+
+    const hasPassword = (password?.length ?? 0) > 0;
+    const isPasswordActive = passwordFocused || (showPassword && hasPassword);
+
+    if (!isPasswordActive) {
+      onIllustrationStateChange("normal");
+      return;
+    }
+
+    onIllustrationStateChange(
+      showPassword ? "password-visible" : "password-hidden",
+    );
+  }, [
+    onIllustrationStateChange,
+    password,
+    passwordFocused,
+    showPassword,
+  ]);
+
   return (
-    <form onSubmit={handleSubmit((data) => login(data))} className="space-y-5">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit((data) => login(data))} className="space-y-3">
+      <div className="space-y-1">
         <Label htmlFor="email">Địa chỉ email</Label>
         <Input
           id="email"
@@ -46,15 +83,37 @@ export function LoginForm() {
         ) : null}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="password">Mật khẩu</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          {...register("password")}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="pr-11"
+            {...passwordField}
+            ref={passwordRef}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={(event) => {
+              setPasswordFocused(false);
+              void passwordOnBlur(event);
+            }}
+          />
+          <button
+            type="button"
+            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-neutral-500 transition-colors hover:text-[#0a0a0a]"
+            onClick={() => setShowPassword((value) => !value)}
+            aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" aria-hidden />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden />
+            )}
+          </button>
+        </div>
         {errors.password ? (
           <p className="brutal-field-error">{errors.password.message}</p>
         ) : null}
@@ -64,7 +123,7 @@ export function LoginForm() {
 
       <button
         type="submit"
-        className="brutal-btn-primary inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 disabled:cursor-not-allowed"
+        className="brutal-btn-primary inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 disabled:cursor-not-allowed"
         disabled={isPending}
       >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

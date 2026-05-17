@@ -1,9 +1,11 @@
 import { Button } from "@/shared/components/ui/button";
 import { FinanceDashboard } from "@/features/finance-dashboard";
 import { useUserDashboard } from "../hooks/useUserDashboard";
+import { getDashboardErrorMessage } from "../services";
 
 export function DashboardPage() {
-  const { data, isLoading, isError, refetch } = useUserDashboard();
+  const { data, isLoading, isError, error, refetch, isFetching } =
+    useUserDashboard();
 
   if (isLoading) {
     return (
@@ -14,13 +16,21 @@ export function DashboardPage() {
   }
 
   if (isError || !data) {
+    const message =
+      error != null
+        ? getDashboardErrorMessage(error)
+        : "Không tải được dữ liệu tổng quan.";
+
     return (
       <div className="brutal-card mx-auto max-w-md space-y-3 p-6 text-center">
-        <p className="text-sm font-medium text-red-600">
-          Không tải được dữ liệu tổng quan.
-        </p>
-        <Button type="button" variant="outline" onClick={() => void refetch()}>
-          Thử lại
+        <p className="text-sm font-medium text-red-600">{message}</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? "Đang thử lại…" : "Thử lại"}
         </Button>
       </div>
     );
